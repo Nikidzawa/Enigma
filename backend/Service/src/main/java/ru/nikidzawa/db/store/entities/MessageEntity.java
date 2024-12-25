@@ -1,0 +1,33 @@
+package ru.nikidzawa.db.store.entities;
+
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity(name = "messages")
+public class MessageEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    Long id;
+
+    @Column(name = "sender_id", nullable = false)
+    Long senderId;
+
+    @Column(name = "chat_id", nullable = false)
+    Long chatId;
+
+    @Column(name = "created_at", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    LocalDateTime createdAt;
+
+    @Column(name = "text", columnDefinition = "VARCHAR(2048)", nullable = false)
+    String text;
+}

@@ -1,0 +1,179 @@
+import styled from "styled-components";
+import Send from "../../../img/send.png"
+import ActiveChatController from "../../../store/ActiveChatController";
+import CurrentUserController from "../../../store/CurrentUserController";
+import {useEffect, useState} from "react";
+import MessagesApi from "../../../api/MessagesApi";
+import DateParser from "../../../helpers/DateParser";
+import MessageDto from "../../../api/dto/MessageDto";
+
+const MainContainer = styled.div`
+    flex: 1;
+    justify-content: space-between;
+    padding: 5px 10px;
+`
+
+const UpperSection = styled.div`
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border-bottom: 1px solid #707070;
+`
+
+const MiddleSection = styled.div`
+    height: calc(100% - 110px); 
+    overflow-y: auto;  
+    padding: 10px 0px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+`;
+
+
+const BottomSection = styled.div`
+    height: 50px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #707070;
+    gap: 10px;
+`
+
+const Name = styled.div`
+    font-size: 25px;
+`
+const OnlineStatusContainer = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 5px;
+`
+
+const OnlineStatusText = styled.div`
+    font-size: 15px;
+    color: #a0a0a0;
+`
+
+const OnlineStatusCircle = styled.div`
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    background-color: green;
+`
+
+const Input = styled.input`
+    background-color: unset;
+    border: none;
+    color: white;
+    width: 100%;
+    height: 25px;
+    outline: none;
+    font-family: Rubik;
+    padding-bottom: 5px;
+    font-size: 16px;
+`
+
+const SendButton = styled.img`
+    width: 30px;
+    cursor: pointer;
+`
+
+const MyMessage = styled.div`
+    max-width: 500px;
+    background: #246adf;
+    border-radius: 15px;
+    padding: 7px 13px;
+    align-self: flex-end;
+    display: flex;
+    flex-direction: column;
+`
+
+const OtherMessage = styled.div`
+    max-width: 500px;
+    background: #575757;
+    border-radius: 15px;
+    padding: 7px 13px;
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+`
+
+const MessageSendDate = styled.div`
+    font-size: 12px;
+    color: #cacaca;
+    align-self: flex-end;
+`
+
+const MyMessageText = styled.div`
+    align-self: flex-end;
+`
+
+const OtherMessageText = styled.div`
+    align-self: flex-start;
+`
+
+export default function ActiveChat({ onMessageSend }) {
+    const [text, setText] = useState("");
+    const [messages, setMessages] = useState([]);
+
+    useEffect(() => {
+        loadMessages();
+        async function loadMessages() {
+            const messagesResponse = await MessagesApi.getMessagesByChatId(ActiveChatController.getCurrentUser().chatId);
+            setMessages(messagesResponse);
+        }
+    }, []);
+
+    async function sendMessage() {
+        if (text) {
+            const newMessage = new MessageDto(0, new Date(), text, CurrentUserController.getCurrentUser().id);
+            setMessages([...messages, newMessage]);
+            setText("");
+
+            onMessageSend(newMessage);
+        }
+    }
+
+    function handleSendMessage(e) {
+        if (e.key === "Enter") {
+            sendMessage();
+        }
+    }
+
+    return (
+        <MainContainer>
+            <UpperSection>
+                <Name>{ActiveChatController.getCurrentUser().userName}</Name>
+                <OnlineStatusContainer>
+                    <OnlineStatusCircle />
+                    <OnlineStatusText>В сети</OnlineStatusText>
+                </OnlineStatusContainer>
+            </UpperSection>
+            <MiddleSection>
+                {messages.map((message, index) => (
+                        message.senderId === CurrentUserController.getCurrentUser().id ? (
+                            <MyMessage key={index}>
+                                <MyMessageText>{message.text}</MyMessageText>
+                                <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
+                            </MyMessage>
+                        ) : (
+                            <OtherMessage key={index}>
+                                <OtherMessageText>{message.text}</OtherMessageText>
+                                <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
+                            </OtherMessage>
+                        )
+                    ))
+                }
+            </MiddleSection>
+            <BottomSection>
+                <Input
+                    value={text}
+                    onInput={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => handleSendMessage(e)}
+                    placeholder={"Введите сообщение"}
+                />
+                <SendButton onClick={sendMessage} src={Send} />
+            </BottomSection>
+        </MainContainer>
+    );
+}
