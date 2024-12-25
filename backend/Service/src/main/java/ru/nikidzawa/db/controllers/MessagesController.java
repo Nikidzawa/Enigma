@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import ru.nikidzawa.db.services.MessagesService;
 import ru.nikidzawa.db.store.dto.object.dto.MessageDto;
+import ru.nikidzawa.db.store.entities.MessageEntity;
 
 import java.util.List;
 
@@ -27,8 +28,8 @@ public class MessagesController {
         return service.getByChatId(chatId, lastMessageId);
     }
 
-    @PostMapping
-    public MessageDto save(@RequestBody MessageDto messageDto) {
-        return service.save(messageDto);
+    @PostMapping(SAVE_MESSAGE)
+    public MessageDto save(@RequestBody MessageEntity messageEntity) {
+        return service.save(messageEntity);
     }
 }

@@ -126,10 +126,11 @@ export default function ActiveChat({ onMessageSend }) {
 
     async function sendMessage() {
         if (text) {
-            const newMessage = new MessageDto(0, new Date(), text, CurrentUserController.getCurrentUser().id);
+            let newMessage = new MessageDto(null, new Date(), text, CurrentUserController.getCurrentUser().id, ActiveChatController.getCurrentUser().chatId);
             setMessages([...messages, newMessage]);
-            setText("");
+            newMessage = await MessagesApi.save(newMessage);
 
+            setText("");
             onMessageSend(newMessage);
         }
     }

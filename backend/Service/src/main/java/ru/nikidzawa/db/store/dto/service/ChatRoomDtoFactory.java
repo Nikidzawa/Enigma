@@ -1,5 +1,6 @@
 package ru.nikidzawa.db.store.dto.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.nikidzawa.db.store.dto.object.data.ChatRoomData;
 import ru.nikidzawa.db.store.dto.object.dto.ChatRoomDto;
@@ -18,6 +19,7 @@ public class ChatRoomDtoFactory {
                                 .createdAt(chatRoomData.getLastMessageSendTime())
                                 .text(chatRoomData.getLastMessageText())
                                 .senderId(chatRoomData.getLastMessageSenderId())
+                                .chatId(chatRoomData.getChatId())
                                 .build()
                 )
                 .chatId(chatRoomData.getChatId())

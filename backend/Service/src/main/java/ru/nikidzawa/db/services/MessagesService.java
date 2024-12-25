@@ -1,5 +1,6 @@
 package ru.nikidzawa.db.services;
 
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Transactional
 public class MessagesService {
 
     MessageEntityRepository repository;
@@ -24,12 +26,16 @@ public class MessagesService {
     public List<MessageDto> getByChatId (Long chatId, Long lastMessageId) {
         List<MessageEntity> messageEntities;
         if (lastMessageId == 0) {
-            messageEntities = repository.findTop20ByChatIdOrderByIdDesc(chatId);
+            messageEntities = repository.findTop20ByChatIdOrderById(chatId);
         } else {
-            messageEntities = repository.findTop20ByChatIdAndIdLessThanOrderByIdDesc(chatId, lastMessageId);
+            messageEntities = repository.findTop20ByChatIdAndIdLessThanOrderById(chatId, lastMessageId);
         }
         return messageEntities.stream()
                 .map(factory::convert)
                 .collect(Collectors.toList());
+    }
+
+    public MessageDto save (MessageEntity messageEntity) {
+        return factory.convert(repository.saveAndFlush(messageEntity));
     }
 }
