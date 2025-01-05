@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import ru.nikidzawa.db.services.MessagesService;
-import ru.nikidzawa.db.store.dto.object.dto.MessageDto;
-import ru.nikidzawa.db.store.entities.MessageEntity;
+import ru.nikidzawa.db.store.client.dto.MessageDto;
+import ru.nikidzawa.db.store.entity.MessageEntity;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import java.util.List;
 @CrossOrigin
 public class MessagesController {
     private static final String GET_MESSAGES_BY_CHAT_ID = "getByChatId/{chatId}";
-    private static final String SAVE_MESSAGE = "new";
+    private static final String SAVE_MESSAGE = "new/{chatId}";
 
     MessagesService service;
 
@@ -29,7 +29,9 @@ public class MessagesController {
     }
 
     @PostMapping(SAVE_MESSAGE)
-    public MessageDto save(@RequestBody MessageEntity messageEntity) {
-        return service.save(messageEntity);
+    public MessageDto save(@RequestBody MessageEntity messageEntity,
+                           @PathVariable Long chatId
+    ) {
+        return service.save(messageEntity, chatId);
     }
 }

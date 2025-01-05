@@ -59,20 +59,20 @@ const Date = styled.div`
 
 export default function ChatRoom({ chatRoom }) {
     function isMyMessage() {
-        return CurrentUserController.getCurrentUser().id === chatRoom.lastMessage?.senderId ? "Вы: " : "";
+        return CurrentUserController.getCurrentUser().id === chatRoom.lastMessage.senderId ? "Вы: " : "";
     }
 
     return (
         <>
             <MainContainer onClick={() => ActiveChatController.setChat(chatRoom)}>
                 <ChatRoomContainer>
-                    <UserAvatar src={DefaultAvatar} />
+                    <UserAvatar src={DefaultAvatar}/>
                     <UserData>
                         <UpperLine>
-                            <Name>{chatRoom.chatName}</Name>
-                            <Date>{DateParser.parseToWeerDay(chatRoom.lastMessage.createdAt)}</Date>
+                            <Name>{`${chatRoom.userName} ${chatRoom.userSurname}`}</Name>
+                            <Date>{chatRoom.lastMessage ? DateParser.parseToWeerDay(chatRoom.lastMessage.createdAt) : " "}</Date>
                         </UpperLine>
-                        <LastMessage>{isMyMessage() + chatRoom.lastMessage.text}</LastMessage>
+                        <LastMessage>{chatRoom.lastMessage ? chatRoom.lastMessage && (isMyMessage() + chatRoom.lastMessage.text) : "Сообщений нет"}</LastMessage>
                     </UserData>
                 </ChatRoomContainer>
             </MainContainer>

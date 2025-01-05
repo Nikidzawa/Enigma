@@ -1,9 +1,7 @@
-package ru.nikidzawa.db.store.dto.object.dto;
+package ru.nikidzawa.db.store.client.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
@@ -11,10 +9,10 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class MessageDto {
     Long id;
     LocalDateTime createdAt;
     String text;
     Long senderId;
-    Long chatId;
 }

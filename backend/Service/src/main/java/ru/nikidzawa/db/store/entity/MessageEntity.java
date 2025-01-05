@@ -1,4 +1,4 @@
-package ru.nikidzawa.db.store.entities;
+package ru.nikidzawa.db.store.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,9 +21,6 @@ public class MessageEntity {
 
     @Column(name = "sender_id", nullable = false)
     Long senderId;
-
-    @Column(name = "chat_id", nullable = false)
-    Long chatId;
 
     @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)

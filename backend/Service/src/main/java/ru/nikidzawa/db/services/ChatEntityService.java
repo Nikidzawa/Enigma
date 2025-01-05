@@ -4,10 +4,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
-import ru.nikidzawa.db.store.dto.object.data.ChatRoomData;
-import ru.nikidzawa.db.store.dto.object.dto.ChatRoomDto;
-import ru.nikidzawa.db.store.dto.service.ChatRoomDtoFactory;
-import ru.nikidzawa.db.store.repositories.ChatRoomRepository;
+import ru.nikidzawa.db.store.client.dataModel.ChatRoomDataModel;
+import ru.nikidzawa.db.store.client.dto.ChatRoomDto;
+import ru.nikidzawa.db.store.client.factory.ChatRoomDtoFactory;
+import ru.nikidzawa.db.store.repository.ChatRoomRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,7 +22,7 @@ public class ChatEntityService {
     ChatRoomDtoFactory factory;
 
     public List<ChatRoomDto> getAllChatsByUserId (Long currentUserId) {
-        List<ChatRoomData> chatRoomData = repository.findAllChatRoomsByUserId(currentUserId);
+        List<ChatRoomDataModel> chatRoomData = repository.findAllChatRoomsByUserId(currentUserId);
         return chatRoomData.stream().map(factory::convert).collect(Collectors.toList());
     }
 }

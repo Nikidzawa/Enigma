@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import ru.nikidzawa.db.services.ChatEntityService;
-import ru.nikidzawa.db.store.dto.object.dto.ChatRoomDto;
+import ru.nikidzawa.db.store.client.dto.ChatRoomDto;
 
 import java.util.List;
 
