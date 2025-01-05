@@ -12,6 +12,7 @@ public class MessageDtoFactory {
                 .text(messageEntity.getText())
                 .createdAt(messageEntity.getCreatedAt())
                 .senderId(messageEntity.getSenderId())
+                .chatId(messageEntity.getChatId())
                 .build();
     }
 }
