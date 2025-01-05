@@ -3,11 +3,9 @@ package ru.nikidzawa.db.controllers;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.nikidzawa.db.services.UserEntityService;
-import ru.nikidzawa.db.store.entities.UserEntity;
-import ru.nikidzawa.db.store.requestBody.AuthData;
+import ru.nikidzawa.db.store.entity.IndividualEntity;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,13 +20,13 @@ public class UserEntityController {
     UserEntityService userEntityService;
 
     @GetMapping(GET_USER_BY_ID)
-    public UserEntity getUserById(@PathVariable Long userId) {
+    public IndividualEntity getUserById(@PathVariable Long userId) {
         return userEntityService.getUserById(userId);
     }
 
     @GetMapping(USER_AUTHENTICATION)
-    public UserEntity userAuthenticate(@RequestParam String username,
-                                       @RequestParam String password) {
+    public IndividualEntity userAuthenticate(@RequestParam String username,
+                                             @RequestParam String password) {
         return userEntityService.authenticate(username, password);
     }
 }

@@ -1,4 +1,4 @@
-package ru.nikidzawa.db.store.entities;
+package ru.nikidzawa.db.store.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,10 +10,11 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name = "users")
-public class UserEntity {
+@Entity(name = "individual")
+public class IndividualEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE,  generator = "individual_seq")
+    @SequenceGenerator(name = "individual_seq", sequenceName = "individual_seq", initialValue = 1, allocationSize = 1)
     Long id;
 
     @Column(name = "nickname", nullable = false)

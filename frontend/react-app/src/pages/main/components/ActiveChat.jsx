@@ -2,7 +2,7 @@ import styled from "styled-components";
 import Send from "../../../img/send.png"
 import ActiveChatController from "../../../store/ActiveChatController";
 import CurrentUserController from "../../../store/CurrentUserController";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import MessagesApi from "../../../api/MessagesApi";
 import DateParser from "../../../helpers/DateParser";
 import MessageDto from "../../../api/dto/MessageDto";
@@ -21,14 +21,33 @@ const UpperSection = styled.div`
     border-bottom: 1px solid #707070;
 `
 
-const MiddleSection = styled.div`
-    height: calc(100% - 110px); 
-    overflow-y: auto;  
-    padding: 10px 0px;
+const ChatSection = styled.div`
+    height: calc(100% - 110px);
+    overflow-y: auto;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    padding: 10px 7px 10px 0;
+    -webkit-background-clip: text;
+    transition: background-color 1s ease;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: ${props => props.scrollIsVisible ? '#575757' : 'transparent'};
+        border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background-color: ${props => props.scrollIsVisible ? '#353842' : 'transparent'};
+        border-radius: 4px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+
 `;
 
 
@@ -115,6 +134,9 @@ const OtherMessageText = styled.div`
 export default function ActiveChat({ onMessageSend }) {
     const [text, setText] = useState("");
     const [messages, setMessages] = useState([]);
+    const [scrollIsVisible, setScrollIsVisible] = useState(true);
+    const scrollTimeout = useRef(null);
+    const ChatSectionRef = useRef(null);
 
     useEffect(() => {
         loadMessages();
@@ -124,14 +146,39 @@ export default function ActiveChat({ onMessageSend }) {
         }
     }, []);
 
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const scrollToBottom = () => {
+        if (ChatSectionRef.current) {
+            ChatSectionRef.current.scrollTo({
+                top: ChatSectionRef.current.scrollHeight,
+                behavior: "smooth",
+            });
+        }
+    };
+
+    async function scrolling() {
+        setScrollIsVisible(true);
+
+        if (scrollTimeout.current) {
+            clearTimeout(scrollTimeout.current);
+        }
+
+        scrollTimeout.current = setTimeout(() => {
+            setScrollIsVisible(false);
+        }, 3000);
+    }
+
     async function sendMessage() {
         if (text) {
-            let newMessage = new MessageDto(null, new Date(), text, CurrentUserController.getCurrentUser().id, ActiveChatController.getCurrentUser().chatId);
+            let newMessage = new MessageDto(null, new Date(), text, CurrentUserController.getCurrentUser().id);
             setMessages([...messages, newMessage]);
-            newMessage = await MessagesApi.save(newMessage);
-
             setText("");
             onMessageSend(newMessage);
+
+            MessagesApi.save(newMessage,  ActiveChatController.getCurrentUser().chatId);
         }
     }
 
@@ -142,7 +189,7 @@ export default function ActiveChat({ onMessageSend }) {
     }
 
     return (
-        <MainContainer>
+        <MainContainer >
             <UpperSection>
                 <Name>{ActiveChatController.getCurrentUser().userName}</Name>
                 <OnlineStatusContainer>
@@ -150,22 +197,22 @@ export default function ActiveChat({ onMessageSend }) {
                     <OnlineStatusText>В сети</OnlineStatusText>
                 </OnlineStatusContainer>
             </UpperSection>
-            <MiddleSection>
+            <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
                 {messages.map((message, index) => (
-                        message.senderId === CurrentUserController.getCurrentUser().id ? (
-                            <MyMessage key={index}>
-                                <MyMessageText>{message.text}</MyMessageText>
-                                <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
-                            </MyMessage>
-                        ) : (
-                            <OtherMessage key={index}>
-                                <OtherMessageText>{message.text}</OtherMessageText>
-                                <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
-                            </OtherMessage>
-                        )
-                    ))
+                    message.senderId === CurrentUserController.getCurrentUser().id ? (
+                        <MyMessage key={index}>
+                            <MyMessageText>{message.text}</MyMessageText>
+                            <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
+                        </MyMessage>
+                    ) : (
+                        <OtherMessage key={index}>
+                            <OtherMessageText>{message.text}</OtherMessageText>
+                            <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
+                        </OtherMessage>
+                    )
+                ))
                 }
-            </MiddleSection>
+            </ChatSection>
             <BottomSection>
                 <Input
                     value={text}

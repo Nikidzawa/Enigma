@@ -1,9 +1,14 @@
 import BaseApiPath from "./BaseApiPath";
 import MessageDto from "./dto/MessageDto";
-import ChatRoomDto from "./dto/ChatRoomDto";
+import ActiveChatController from "../store/ActiveChatController";
 
 export default class MessagesApi extends BaseApiPath {
     static path = `${this.basePath}/messages`
+
+    static async getMessagesByChatIdAndLastMessageId(chatId, lastMessageId) {
+        const url = `${this.path}/${chatId}?lastMessageId=${lastMessageId}`;
+        return await fetch(url);
+    }
 
     static async getMessagesByChatId(chatId) {
         const url = `${this.path}/getByChatId/${chatId}?lastMessageId=0`;
@@ -13,7 +18,7 @@ export default class MessagesApi extends BaseApiPath {
     }
 
     static async save(message) {
-        const url = `${this.path}/new`;
+        const url = `${this.path}/new/${ActiveChatController.getCurrentUser().chatId}`;
         const requestOptions = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
