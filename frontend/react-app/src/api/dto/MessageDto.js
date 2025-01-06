@@ -1,7 +1,7 @@
 export default class MessageDto {
     constructor(id, createdAt, text, senderId) {
         this.id = id;
-        this.createdAt = new Date(createdAt);
+        this.createdAt = createdAt;
         this.text = text;
         this.senderId = senderId;
     }
@@ -9,7 +9,7 @@ export default class MessageDto {
     static fromJSON(data) {
         return new MessageDto(
             data.id,
-            data.createdAt,
+            new Date(`${data.createdAt}Z`),
             data.text,
             data.senderId
         );

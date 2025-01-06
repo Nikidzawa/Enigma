@@ -14,15 +14,26 @@ public class IndivChatMessagesRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public List<MessageDataModel> getMessages (Long chatId, Long lastMessageId) {
+    public List<MessageDataModel> getByChatIdAndLastMessageId (Long chatId, Long lastMessageId) {
         String sql = """
                 SELECT m.* FROM indiv_chat_messages chat_messages
                 join messages m on m.id = chat_messages.message_id
-                where chat_messages.indiv_chat_id = ? and m.id > ?
+                where chat_messages.indiv_chat_id = ? and m.id < ?
                 ORDER BY m.id DESC
                 LIMIT 20
                 """;
         return jdbcTemplate.query(sql, new MessageDataModel.MessageRowMapper(), chatId, lastMessageId);
+    }
+
+    public List<MessageDataModel> getByChatId (Long chatId) {
+        String sql = """
+                SELECT m.* FROM indiv_chat_messages chat_messages
+                join messages m on m.id = chat_messages.message_id
+                where chat_messages.indiv_chat_id = ?
+                ORDER BY m.id DESC
+                LIMIT 20
+                """;
+        return jdbcTemplate.query(sql, new MessageDataModel.MessageRowMapper(), chatId);
     }
 
     @Transactional

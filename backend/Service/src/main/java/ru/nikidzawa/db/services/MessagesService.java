@@ -27,8 +27,13 @@ public class MessagesService {
 
     MessageDtoFactory factory;
 
-    public List<MessageDto> getByChatId (Long chatId, Long lastMessageId) {
-        List<MessageDataModel> messageDataModels = chatMessagesRepository.getMessages(chatId, lastMessageId);
+    public List<MessageDto> getByChatIdAndLastMessageId (Long chatId, Long lastMessageId) {
+        List<MessageDataModel> messageDataModels;
+        if (lastMessageId == 0) {
+            messageDataModels = chatMessagesRepository.getByChatId(chatId);
+        } else {
+            messageDataModels = chatMessagesRepository.getByChatIdAndLastMessageId(chatId, lastMessageId);
+        }
         return messageDataModels.stream()
                 .map(factory::convert)
                 .collect(Collectors.toList());

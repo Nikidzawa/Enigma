@@ -70,7 +70,7 @@ export default function ChatRoom({ chatRoom }) {
                     <UserData>
                         <UpperLine>
                             <Name>{`${chatRoom.userName} ${chatRoom.userSurname}`}</Name>
-                            <Date>{chatRoom.lastMessage ? DateParser.parseToWeerDay(chatRoom.lastMessage.createdAt) : " "}</Date>
+                            <Date>{chatRoom.lastMessage ? DateParser.parseDate(chatRoom.lastMessage.createdAt) : " "}</Date>
                         </UpperLine>
                         <LastMessage>{chatRoom.lastMessage ? chatRoom.lastMessage && (isMyMessage() + chatRoom.lastMessage.text) : "Сообщений нет"}</LastMessage>
                     </UserData>

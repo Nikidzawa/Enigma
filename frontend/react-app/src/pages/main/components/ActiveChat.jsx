@@ -138,17 +138,17 @@ export default function ActiveChat({ onMessageSend }) {
     const scrollTimeout = useRef(null);
     const ChatSectionRef = useRef(null);
 
-    useEffect(() => {
-        loadMessages();
-        async function loadMessages() {
-            const messagesResponse = await MessagesApi.getMessagesByChatId(ActiveChatController.getCurrentUser().chatId);
-            setMessages(messagesResponse);
-        }
-    }, []);
+    function defaultSort (array) {
+        return array.sort((a, b) => a.id - b.id);
+    }
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        loadMessages().then(() => scrollToBottom());
+        async function loadMessages() {
+            const messagesResponse = await MessagesApi.getMessagesByChatId(ActiveChatController.getCurrentUser().chatId, 0)
+            setMessages(defaultSort(messagesResponse));
+        }
+    }, []);
 
     const scrollToBottom = () => {
         if (ChatSectionRef.current) {
@@ -160,24 +160,50 @@ export default function ActiveChat({ onMessageSend }) {
     };
 
     async function scrolling() {
-        setScrollIsVisible(true);
+        scrollVisibleController();
+        scrollToTop();
 
-        if (scrollTimeout.current) {
-            clearTimeout(scrollTimeout.current);
+        async function scrollVisibleController() {
+            setScrollIsVisible(true);
+
+            if (scrollTimeout.current) {
+                clearTimeout(scrollTimeout.current);
+            }
+
+            scrollTimeout.current = setTimeout(() => {
+                setScrollIsVisible(false);
+            }, 3000);
         }
 
-        scrollTimeout.current = setTimeout(() => {
-            setScrollIsVisible(false);
-        }, 3000);
+        async function scrollToTop() {
+            if (ChatSectionRef.current) {
+                const scrollTop = ChatSectionRef.current.scrollTop;
+                const prevScrollHeight = ChatSectionRef.current.scrollHeight;
+
+                const isAtTop = scrollTop === 0;
+
+                if (isAtTop) {
+                    const newMessages = await MessagesApi.getMessagesByChatId(ActiveChatController.getCurrentUser().chatId, messages[0].id);
+                    setMessages(prevMessages => [...defaultSort(newMessages), ...prevMessages]);
+                }
+
+                setTimeout(() => {
+                    if (isAtTop) {
+                        ChatSectionRef.current.scrollTop = ChatSectionRef.current.scrollHeight - prevScrollHeight;
+                    }
+                }, 0);
+            }
+        }
     }
+
 
     async function sendMessage() {
         if (text) {
             let newMessage = new MessageDto(null, new Date(), text, CurrentUserController.getCurrentUser().id);
-            setMessages([...messages, newMessage]);
+            await setMessages([...messages, newMessage]);
             setText("");
+            scrollToBottom();
             onMessageSend(newMessage);
-
             MessagesApi.save(newMessage,  ActiveChatController.getCurrentUser().chatId);
         }
     }
@@ -198,14 +224,14 @@ export default function ActiveChat({ onMessageSend }) {
                 </OnlineStatusContainer>
             </UpperSection>
             <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
-                {messages.map((message, index) => (
+                {messages.map((message) => (
                     message.senderId === CurrentUserController.getCurrentUser().id ? (
-                        <MyMessage key={index}>
+                        <MyMessage key={message.id}>
                             <MyMessageText>{message.text}</MyMessageText>
                             <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
                         </MyMessage>
                     ) : (
-                        <OtherMessage key={index}>
+                        <OtherMessage key={message.id}>
                             <OtherMessageText>{message.text}</OtherMessageText>
                             <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
                         </OtherMessage>
