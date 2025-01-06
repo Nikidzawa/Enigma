@@ -22,10 +22,10 @@ public class MessagesController {
     MessagesService service;
 
     @GetMapping(GET_MESSAGES_BY_CHAT_ID)
-    public List<MessageDto> getByChatId (@PathVariable Long chatId,
+    public List<MessageDto> getByChatIdAndLastMessageId (@PathVariable Long chatId,
                                          @RequestParam Long lastMessageId
     ) {
-        return service.getByChatId(chatId, lastMessageId);
+        return service.getByChatIdAndLastMessageId(chatId, lastMessageId);
     }
 
     @PostMapping(SAVE_MESSAGE)
