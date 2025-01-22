@@ -1,27 +1,44 @@
 import styled from "styled-components";
-import Logo from "../img/img.png"
-import User from "../img/user.png"
-import Lock from "../img/lock.png"
+import Logo from "../../img/img.png"
+import User from "../../img/user.png"
+import Lock from "../../img/lock.png"
 import {useNavigate} from "react-router-dom";
 import {useState} from "react";
-import UserApi from "../api/UserApi";
-import CurrentUserController from "../store/CurrentUserController";
+import UserApi from "../../api/UserApi";
+import CurrentUserController from "../../store/CurrentUserController";
 
 
 const MainComponent = styled.main`
     min-height: 100vh;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     color: white;
+`
+
+const Window = styled.div`
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 40px;
+    width: calc(300px + 20vw);
+    height: calc(450px + 20vh);
+    max-width: 450px;
+    max-height: 650px;
+    border: 1px solid white;
+    box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
+    border-radius: 20px;
+    background-color: #121212;
 `
 
 const Title = styled.div`
-    font-size: 35px;
+    font-size: 38px;
     padding-bottom: 10px;
     font-weight: bold;
+    font-family: Rubik;
+    margin-bottom: 40px;
 `
 
 const Image = styled.img`
@@ -37,10 +54,14 @@ const TextAndInput = styled.div`
 `
 
 const Button = styled.button`
-    background-color: white;
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
     padding: 8px;
-    min-width: 120px;
-    font-size: 16px;
+    margin-top: 20px;
+    min-width: 150px;
+    min-height: 40px;
+    font-size: 18px;
     border-radius: 15px;
     cursor: pointer;
     font-family: Rubik;
@@ -60,13 +81,23 @@ const Input = styled.input`
     background-repeat: no-repeat;
     background-position: left;
     padding-left: 35px;
-    padding-bottom: 5px;
-    background-position-y: 0;
+    background-position-y: ${props => props.pos};
+    padding-bottom: 2px;
     font-size: 16px;
+`
 
+const LogoAndTitle = styled.div`
+    position: absolute;
+    top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
 `
 
 const LoginAndRegister = styled.div`
+    position: absolute;
+    bottom: 40px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -96,20 +127,26 @@ export default function Login () {
         }
     }
 
+    function goToRegistrationPage () {
+        navigate("/registration")
+    }
+
     return (
         <MainComponent>
-            <Image src={Logo}/>
-            <Title>Enigma</Title>
-            <TextAndInput>
-                <Input onInput={e => setNickname(e.target.value)} placeholder={"Nickname"} image={User}/>
-            </TextAndInput>
-            <TextAndInput>
-                <Input onInput={e => setPassword(e.target.value)} type={"password"} placeholder={"Password"} image={Lock}/>
-            </TextAndInput>
-            <LoginAndRegister>
-                <Button onClick={authResponse}>Login</Button>
-                <A>Register</A>
-            </LoginAndRegister>
+            <Window>
+                <LogoAndTitle>
+                    <Image src={Logo}/>
+                    <Title>Welcome Back</Title>
+                </LogoAndTitle>
+                <Input onInput={e => setNickname(e.target.value)} placeholder={"Nickname or Email"} image={User} pos={"0px"}/>
+                <TextAndInput>
+                    <Input onInput={e => setPassword(e.target.value)} type={"password"} placeholder={"Password"} image={Lock} pos={"0px"}/>
+                </TextAndInput>
+                <LoginAndRegister>
+                    <Button onClick={authResponse}>Login</Button>
+                    <A onClick={goToRegistrationPage}>Registration</A>
+                </LoginAndRegister>
+            </Window>
         </MainComponent>
     )
 }
