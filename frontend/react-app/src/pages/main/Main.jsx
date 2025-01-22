@@ -6,6 +6,8 @@ import CurrentUserController from "../../store/CurrentUserController";
 import ActiveChatController from "../../store/ActiveChatController";
 import ChatRoom from "./components/ChatRoom";
 import {observer, Observer} from "mobx-react-lite";
+import MenuImg from "../../img/menu.png";
+import SearchImg from "../../img/search.png";
 
 const MainContainer = styled.main`
     height: 100vh;
@@ -14,11 +16,45 @@ const MainContainer = styled.main`
     justify-content: space-between;
 `;
 
-const ChatList = styled.div`
+const LeftMenuContainer = styled.div`
     height: 100vh;
-    width: ${({ width }) => width}px;
+    width: ${({width}) => width}px;
     position: relative;
+    max-width: 70%;
+    min-width: 10%;
+`
+
+const ChatList = styled.div`
 `;
+
+const TopMenuContainer = styled.div`
+    display: flex;
+    padding: 10px;
+    align-items: center;
+    gap: 12px;
+`
+
+const MenuPanel = styled.img`
+    height: 22px;
+    width: 26px;
+    cursor: pointer;
+`
+
+const SearchInput = styled.input`
+    width: 100%;
+    border-radius: 15px;
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: transparent;
+    color: white;
+    font-size: 15px;
+    padding: 7px 15px 7px 35px;
+    outline: none; 
+    background-image: url("${props => props.img}");
+    background-size: 20px;
+    background-position: left;
+    background-repeat: no-repeat;
+    background-position-x: 7px;
+`
 
 const Resizer = styled.div`
     width: 2px;
@@ -31,17 +67,25 @@ const Resizer = styled.div`
 `;
 
 export default observer(function Main() {
-    const [chatListWidth, setChatListWidth] = useState(300);
+    const [chatListWidth, setChatListWidth] = useState(500);
     const [isResizing, setIsResizing] = useState(false);
     const [chatRooms, setChatRooms] = useState([]);
+    const [searchValue, setSearchValue] = useState("");
+
+    useEffect(() => {
+        if (searchValue) {
+            const filteredChatRooms = chatRooms.filter(chatRoom =>
+                chatRoom.userName.toLowerCase().includes(searchValue.toLowerCase())
+            );
+            setChatRooms(filteredChatRooms);
+        } else {
+            fetchChatRooms();
+        }
+    }, [searchValue, chatRooms]);
 
     useEffect(() => {
         fetchChatRooms();
         addHotkeys();
-
-        async function fetchChatRooms() {
-            setChatRooms(await ChatApi.getAllUserChatsByUserId(CurrentUserController.getCurrentUser().id));
-        }
 
         async function addHotkeys() {
             window.addEventListener("keydown", handleKeyDown);
@@ -50,6 +94,11 @@ export default observer(function Main() {
             window.removeEventListener("keydown", handleKeyDown);
         }
     }, [])
+
+    async function fetchChatRooms() {
+        const rooms = await ChatApi.getAllUserChatsByUserId(CurrentUserController.getCurrentUser().id);
+        setChatRooms(rooms);
+    }
 
     const handleMouseDown = () => {
         setIsResizing(true);
@@ -88,14 +137,23 @@ export default observer(function Main() {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
         >
-            <ChatList width={chatListWidth}>
-                {chatRooms.map((chatRoom) => (
-                    <ChatRoom chatRoom={chatRoom}
-                              key={chatRoom.chatId}
-                    />
-                ))}
-                <Resizer onMouseDown={handleMouseDown}/>
-            </ChatList>
+            <LeftMenuContainer width={chatListWidth}>
+                <TopMenuContainer>
+                    <MenuPanel src={MenuImg}/>
+                    <SearchInput
+                        img={SearchImg}
+                        onInput={e => setSearchValue(e.target.value)}
+                        placeholder={"Поиск"}/>
+                </TopMenuContainer>
+                <ChatList>
+                    {chatRooms.map((chatRoom) => (
+                        <ChatRoom chatRoom={chatRoom}
+                                  key={chatRoom.chatId}
+                        />
+                    ))}
+                    <Resizer onMouseDown={handleMouseDown}/>
+                </ChatList>
+            </LeftMenuContainer>
             {ActiveChatController.getCurrentUser() != null && (
                 <ActiveChat
                     onMessageSend={(newMessage) =>
