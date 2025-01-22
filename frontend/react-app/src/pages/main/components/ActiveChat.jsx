@@ -28,6 +28,7 @@ const ChatSection = styled.div`
     display: flex;
     flex-direction: column;
     gap: 10px;
+    font-size: 16px;
     padding: 10px 7px 10px 0;
     -webkit-background-clip: text;
     transition: background-color 1s ease;
@@ -137,62 +138,79 @@ export default function ActiveChat({ onMessageSend }) {
     const [scrollIsVisible, setScrollIsVisible] = useState(true);
     const scrollTimeout = useRef(null);
     const ChatSectionRef = useRef(null);
+    const [isLoadMessages, setLoadMessages] = useState(false);
 
     function defaultSort (array) {
         return array.sort((a, b) => a.id - b.id);
     }
 
     useEffect(() => {
-        loadMessages().then(() => scrollToBottom());
-        async function loadMessages() {
-            const messagesResponse = await MessagesApi.getMessagesByChatId(ActiveChatController.getCurrentUser().chatId, 0)
+        const loadMessages = async () => {
+            const messagesResponse = await MessagesApi.getMessagesByChatId(ActiveChatController.getCurrentUser().chatId, 0);
             setMessages(defaultSort(messagesResponse));
-        }
+        };
+
+        loadMessages().then(() => {
+            setTimeout(() => {
+                scrollToBottom();
+            }, 0);
+        });
     }, []);
 
     const scrollToBottom = () => {
         if (ChatSectionRef.current) {
-            ChatSectionRef.current.scrollTo({
-                top: ChatSectionRef.current.scrollHeight,
-                behavior: "smooth",
-            });
+            setTimeout(() => {
+                ChatSectionRef.current.scrollTo({
+                    top: ChatSectionRef.current.scrollHeight,
+                    behavior: "instant",
+                });
+            }, 0);
         }
     };
 
     async function scrolling() {
+        if (ChatSectionRef.current && !isLoadMessages) {
+            const scrollTop = ChatSectionRef.current.scrollTop;
+            const threshold = 250;
+            const prevScrollHeight = ChatSectionRef.current.scrollHeight;
+
+            if (scrollTop <= threshold) {
+                setLoadMessages(true);
+
+                try {
+                    const newMessages = await MessagesApi.getMessagesByChatId(
+                        ActiveChatController.getCurrentUser().chatId,
+                        messages[0]?.id
+                    );
+
+                    if (newMessages.length > 0) {
+                        setMessages((prevMessages) => {
+                            return [...defaultSort(newMessages), ...prevMessages];
+                        });
+
+                        setTimeout(() => {
+                            ChatSectionRef.current.scrollTop =
+                                ChatSectionRef.current.scrollHeight - prevScrollHeight + threshold;
+                        }, 0);
+                    }
+                } catch (error) {
+                    console.error("Ошибка при подгрузке сообщений: ", error);
+                } finally {
+                    setLoadMessages(false);
+                }
+            }
+        }
+
         scrollVisibleController();
-        scrollToTop();
 
-        async function scrollVisibleController() {
+        function scrollVisibleController() {
             setScrollIsVisible(true);
-
             if (scrollTimeout.current) {
                 clearTimeout(scrollTimeout.current);
             }
-
             scrollTimeout.current = setTimeout(() => {
                 setScrollIsVisible(false);
             }, 3000);
-        }
-
-        async function scrollToTop() {
-            if (ChatSectionRef.current) {
-                const scrollTop = ChatSectionRef.current.scrollTop;
-                const prevScrollHeight = ChatSectionRef.current.scrollHeight;
-
-                const isAtTop = scrollTop === 0;
-
-                if (isAtTop) {
-                    const newMessages = await MessagesApi.getMessagesByChatId(ActiveChatController.getCurrentUser().chatId, messages[0].id);
-                    setMessages(prevMessages => [...defaultSort(newMessages), ...prevMessages]);
-                }
-
-                setTimeout(() => {
-                    if (isAtTop) {
-                        ChatSectionRef.current.scrollTop = ChatSectionRef.current.scrollHeight - prevScrollHeight;
-                    }
-                }, 0);
-            }
         }
     }
 

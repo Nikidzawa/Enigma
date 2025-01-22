@@ -20,7 +20,7 @@ public class IndivChatMessagesRepository {
                 join messages m on m.id = chat_messages.message_id
                 where chat_messages.indiv_chat_id = ? and m.id < ?
                 ORDER BY m.id DESC
-                LIMIT 20
+                LIMIT 30
                 """;
         return jdbcTemplate.query(sql, new MessageDataModel.MessageRowMapper(), chatId, lastMessageId);
     }
@@ -31,7 +31,7 @@ public class IndivChatMessagesRepository {
                 join messages m on m.id = chat_messages.message_id
                 where chat_messages.indiv_chat_id = ?
                 ORDER BY m.id DESC
-                LIMIT 20
+                LIMIT 30
                 """;
         return jdbcTemplate.query(sql, new MessageDataModel.MessageRowMapper(), chatId);
     }
