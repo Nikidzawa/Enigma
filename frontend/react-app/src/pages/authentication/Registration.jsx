@@ -1,13 +1,10 @@
-import styled from "styled-components";
+import styled, {css, keyframes} from "styled-components";
 import Logo from "../../img/img.png"
-import User from "../../img/user.png"
 import {useNavigate} from "react-router-dom";
-import {useState} from "react";
-import UserApi from "../../api/UserApi";
-import CurrentUserController from "../../store/CurrentUserController";
-import Lock from "../../img/lock.png";
-import MailImg from "../../img/mail.png"
-
+import {useRef, useState} from "react";
+import PasswordField from "./components/PasswordField";
+import EmailField from "./components/EmailField";
+import EmailVerificationFields from "./components/EmailVerificationFields";
 
 const MainComponent = styled.main`
     min-height: 100vh;
@@ -20,14 +17,12 @@ const MainComponent = styled.main`
 const Window = styled.div`
     position: relative;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 40px;
     width: calc(300px + 20vw);
-    height: calc(450px + 20vh);
-    max-width: 450px;
-    max-height: 650px;
+    height: calc(450px + 18vh);
+    max-width: 500px;
+    max-height: 670px;
     border: 1px solid white;
     box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
     border-radius: 20px;
@@ -45,10 +40,9 @@ const Title = styled.div`
 const Image = styled.img`
     width: calc(53px + 2vh);
     height: calc(53px + 2vh);
-    padding-top: 5px;
 `
 
-const Button = styled.button`
+const NextButton = styled.button`
     background-color: transparent;
     border: 1px solid white;
     color: white;
@@ -62,32 +56,19 @@ const Button = styled.button`
     font-family: Rubik;
 `
 
-const Input = styled.input`
-    background-color: unset;
-    border: none;
-    border-bottom: 1px solid white;
-    color: white;
-    min-width: 250px;
-    height: 25px;
-    outline: none;
-    font-family: Rubik;
-    background-image: url(${props => props.image});
-    background-size: 25px;
-    background-repeat: no-repeat;
-    background-position: left;
-    padding-left: 35px;
-    background-position-y: ${props => props.pos};
-    padding-bottom: 2px;
-    font-size: 16px;
-`
-
 const LogoAndTitle = styled.div`
     position: absolute;
-    top: 40px;
+    top: 45px;
+    left: 25%;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
+`
+
+const Fields = styled.div`
+    position: relative;
+    width: 100%;
 `
 
 const LoginAndRegister = styled.div`
@@ -99,7 +80,7 @@ const LoginAndRegister = styled.div`
     gap: 20px;
 `
 
-const A = styled.a`
+const LoginPageLink = styled.a`
     cursor: pointer;
     border-top: 1px white solid;
     padding: 10px;
@@ -121,37 +102,175 @@ const StageEclipse = styled.div`
     background-color: ${props => props.isActive ? "#d8d8d8" : "#393939"};
 `
 
+
+const slideInFromRight = keyframes`
+    from {
+        transform: translateX(25%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+`;
+
+const slideOutToLeft = keyframes`
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-25%);
+        opacity: 0;
+    }
+`;
+
+const slideOutToRight = keyframes`
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(25%);
+        opacity: 0;
+    }
+`;
+
+const AnimatedLogo = styled.div`
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    ${(props) =>
+            props.isActive &&
+            css`
+            animation: ${slideInFromRight} 0.35s forwards;
+        `}
+    ${(props) =>
+            props.isExiting &&
+            css`
+            animation: ${props.direction === "left" ? slideOutToLeft : slideOutToRight} 0.35s forwards;
+        `}
+`
+
+const AnimatedSection = styled.div`
+    ${(props) =>
+    props.isActive &&
+    css`
+            animation: ${slideInFromRight} 0.35s forwards;
+        `}
+    ${(props) =>
+    props.isExiting &&
+    css`
+            animation: ${props.direction === "left" ? slideOutToLeft : slideOutToRight} 0.35s forwards;
+        `}
+`;
+
+const FirstLineContainer = styled.div`
+    position: absolute;
+    left: calc(50% - 150px);
+    top: -50px;
+`
+
+const SecondLineContainer = styled.div`
+    position: absolute;
+    left: calc(50% - 150px);
+    top: 20px;
+`
+
+const LineContainer = styled.div`
+    position: absolute;
+    left: 28%;
+`
+
+
 export default function Registration () {
     const navigate = useNavigate();
     const [password, setPassword] = useState("");
-    const [nickname, setNickname] = useState("");
+    const [email, setEmail] = useState("");
     const [currentSection, setCurrentSection] = useState(1);
+    const [visibleSections, setVisibleSections] = useState([1]);
+
+    const passwordFieldRef = useRef(null);
 
     function goToLoginPage () {
         navigate("/login")
     }
 
-    function nextSection () {
-        setCurrentSection(currentSection + 1);
+    function emailFieldKeyListener(e) {
+        if (e.code === "Enter") {
+            passwordFieldRef.current.focus();
+        }
     }
+
+    function passwordFieldKeyListener(e) {
+        if (e.code === "Enter") {
+            nextSection();
+        }
+    }
+
+    const nextSection = () => {
+        const exitingSection = currentSection;
+        const next = currentSection + 1;
+
+        setVisibleSections((prev) => [...prev, next]);
+        setCurrentSection(next);
+
+        setTimeout(() => {
+            setVisibleSections((prev) => prev.filter((s) => s !== exitingSection));
+        }, 350);
+    };
 
     return (
         <MainComponent>
             <Window>
-                <LogoAndTitle>
-                    <Image src={Logo}/>
-                    <Title>Registration</Title>
-                </LogoAndTitle>
-                    <Input onInput={e => setNickname(e.target.value)} placeholder={"Enter your email"} image={MailImg} pos={"5px"}/>
-                    <Input onInput={e => setPassword(e.target.value)} type={"password"} placeholder={"Chose password"} image={Lock} pos={"0px"}/>
+                    {visibleSections.includes(1) && (
+                        <AnimatedLogo
+                            isExiting={currentSection !== 1}
+                            direction={"left"}>
+                            <LogoAndTitle>
+                                <Image src={Logo}/>
+                                <Title>Registration</Title>
+                            </LogoAndTitle>
+                        </AnimatedLogo>
+                    )}
+                <Fields>
+                    {visibleSections.includes(1) && (
+                        <AnimatedSection
+                            isExiting={currentSection !== 1}
+                            direction={"left"}
+                        >
+                            <FirstLineContainer>
+                                <EmailField onInput={e => setEmail(e.target.value)}
+                                            onKeyDown={emailFieldKeyListener}/>
+                            </FirstLineContainer>
+                            <SecondLineContainer>
+                                <PasswordField onInput={e => setPassword(e.target.value)}
+                                               onKeyDown={passwordFieldKeyListener}
+                                               ref={passwordFieldRef}
+                                               placeholder={"Choose password"}/>
+                            </SecondLineContainer>
+                        </AnimatedSection>
+                    )}
+                    {visibleSections.includes(2) && (
+                        <AnimatedSection
+                            isActive={currentSection === 2}
+                            isExiting={currentSection !== 2}
+                            direction={"left"}
+                        >
+                            <LineContainer>
+                                <EmailVerificationFields/>
+                            </LineContainer>
+                        </AnimatedSection>
+                    )}
+                </Fields>
                 <LoginAndRegister>
                     <StageContainer>
                         <StageEclipse isActive={currentSection === 1}/>
                         <StageEclipse isActive={currentSection === 2}/>
                         <StageEclipse isActive={currentSection > 2}/>
                     </StageContainer>
-                    <Button onClick={nextSection}>Next</Button>
-                    <A onClick={goToLoginPage}>Login</A>
+                    <NextButton onClick={nextSection}>Next</NextButton>
+                    <LoginPageLink onClick={goToLoginPage}>Login</LoginPageLink>
                 </LoginAndRegister>
             </Window>
         </MainComponent>

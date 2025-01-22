@@ -1,11 +1,11 @@
 import styled from "styled-components";
 import Logo from "../../img/img.png"
-import User from "../../img/user.png"
-import Lock from "../../img/lock.png"
 import {useNavigate} from "react-router-dom";
-import {useState} from "react";
+import {useRef, useState} from "react";
 import UserApi from "../../api/UserApi";
 import CurrentUserController from "../../store/CurrentUserController";
+import PasswordField from "./components/PasswordField";
+import NicknameOrEmailField from "./components/NicknameOrEmailField";
 
 
 const MainComponent = styled.main`
@@ -19,14 +19,12 @@ const MainComponent = styled.main`
 const Window = styled.div`
     position: relative;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 40px;
     width: calc(300px + 20vw);
-    height: calc(450px + 20vh);
-    max-width: 450px;
-    max-height: 650px;
+    height: calc(450px + 18vh);
+    max-width: 500px;
+    max-height: 670px;
     border: 1px solid white;
     box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
     border-radius: 20px;
@@ -44,16 +42,9 @@ const Title = styled.div`
 const Image = styled.img`
     width: calc(53px + 2vh);
     height: calc(53px + 2vh);
-    padding-top: 5px;
 `
 
-const TextAndInput = styled.div`
-    display: flex;
-    gap: 12px;
-    align-items: center;
-`
-
-const Button = styled.button`
+const LoginButton = styled.button`
     background-color: transparent;
     border: 1px solid white;
     color: white;
@@ -67,32 +58,26 @@ const Button = styled.button`
     font-family: Rubik;
 `
 
-const Input = styled.input`
-    background-color: unset;
-    border: none;
-    border-bottom: 1px solid white;
-    color: white;
-    min-width: 250px;
-    height: 25px;
-    outline: none;
-    font-family: Rubik;
-    background-image: url(${props => props.image});
-    background-size: 25px;
-    background-repeat: no-repeat;
-    background-position: left;
-    padding-left: 35px;
-    background-position-y: ${props => props.pos};
-    padding-bottom: 2px;
-    font-size: 16px;
-`
-
 const LogoAndTitle = styled.div`
     position: absolute;
-    top: 40px;
+    top: 45px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
+`
+
+const Fields = styled.div`
+    position: relative;
+    width: 100%;
+`
+
+const ForgotPasswordLink = styled.a`
+    position: absolute;
+    bottom: -25px;
+    left: 0px;
+    font-size: 13px;
+    cursor: pointer;
 `
 
 const LoginAndRegister = styled.div`
@@ -104,16 +89,30 @@ const LoginAndRegister = styled.div`
     gap: 20px;
 `
 
-const A = styled.a`
+const RegistrationPageLink = styled.a`
     cursor: pointer;
     border-top: 1px white solid;
     padding: 10px;
+`
+
+const FirstLineContainer = styled.div`
+    position: absolute;
+    left: calc(50% - 150px);
+    top: -50px;
+`
+
+const SecondLineContainer = styled.div`
+    position: absolute;
+    left: calc(50% - 150px);
+    top: 20px;
 `
 
 export default function Login () {
     const navigate = useNavigate();
     const [password, setPassword] = useState("");
     const [nickname, setNickname] = useState("");
+
+    const passwordFieldRef = useRef(null);
 
     async function authResponse() {
         const response = await UserApi.authenticate(nickname, password);
@@ -124,6 +123,18 @@ export default function Login () {
             navigate("/main");
         } else {
             console.log("Not authenticated");
+        }
+    }
+
+    function emailFieldKeyListener(e) {
+        if (e.code === "Enter") {
+            passwordFieldRef.current.focus();
+        }
+    }
+
+    function passwordFieldKeyListener(e) {
+        if (e.code === "Enter") {
+            authResponse();
         }
     }
 
@@ -138,13 +149,24 @@ export default function Login () {
                     <Image src={Logo}/>
                     <Title>Welcome Back</Title>
                 </LogoAndTitle>
-                <Input onInput={e => setNickname(e.target.value)} placeholder={"Nickname or Email"} image={User} pos={"0px"}/>
-                <TextAndInput>
-                    <Input onInput={e => setPassword(e.target.value)} type={"password"} placeholder={"Password"} image={Lock} pos={"0px"}/>
-                </TextAndInput>
+                <Fields>
+                    <FirstLineContainer>
+                        <NicknameOrEmailField onKeyDown={emailFieldKeyListener}
+                                              onInput={e => setNickname(e.target.value)}
+                        />
+                    </FirstLineContainer>
+                    <SecondLineContainer>
+                        <PasswordField onKeyDown={passwordFieldKeyListener}
+                                       onInput={e => setPassword(e.target.value)}
+                                       ref={passwordFieldRef}
+                                       placeholder={"Password"}
+                        />
+                        <ForgotPasswordLink>Forgot password?</ForgotPasswordLink>
+                    </SecondLineContainer>
+                </Fields>
                 <LoginAndRegister>
-                    <Button onClick={authResponse}>Login</Button>
-                    <A onClick={goToRegistrationPage}>Registration</A>
+                    <LoginButton onClick={authResponse}>Log in</LoginButton>
+                    <RegistrationPageLink onClick={goToRegistrationPage}>Registration</RegistrationPageLink>
                 </LoginAndRegister>
             </Window>
         </MainComponent>
