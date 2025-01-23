@@ -2,7 +2,7 @@ import {HashRouter, Routes, Route, Navigate} from "react-router-dom";
 import Login from "./pages/authentication/Login";
 import Main from "./pages/main/Main";
 import ProtectedRoute from "./pages/protect/Protected";
-import Registration from "./pages/authentication/Registration";
+import Registration from "./pages/authentication/registration/Registration";
 
 export default function App() {
     return (

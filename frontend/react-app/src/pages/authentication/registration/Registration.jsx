@@ -1,10 +1,9 @@
 import styled, {css, keyframes} from "styled-components";
-import Logo from "../../img/img.png"
+import Logo from "../../../img/img.png"
 import {useNavigate} from "react-router-dom";
-import {useRef, useState} from "react";
-import PasswordField from "./components/PasswordField";
-import EmailField from "./components/EmailField";
-import EmailVerificationFields from "./components/EmailVerificationFields";
+import {useState} from "react";
+import EmailAndPasswordSection from "./sections/EmailAndPasswordSection";
+import EmailVerificationSection from "./sections/EmailVerificationSection";
 
 const MainComponent = styled.main`
     min-height: 100vh;
@@ -12,6 +11,7 @@ const MainComponent = styled.main`
     align-items: center;
     justify-content: center;
     color: white;
+    overflow-x: hidden;
 `
 
 const Window = styled.div`
@@ -165,23 +165,6 @@ const AnimatedSection = styled.div`
         `}
 `;
 
-const FirstLineContainer = styled.div`
-    position: absolute;
-    left: calc(50% - 150px);
-    top: -50px;
-`
-
-const SecondLineContainer = styled.div`
-    position: absolute;
-    left: calc(50% - 150px);
-    top: 20px;
-`
-
-const LineContainer = styled.div`
-    position: absolute;
-    left: 28%;
-`
-
 
 export default function Registration () {
     const navigate = useNavigate();
@@ -190,35 +173,33 @@ export default function Registration () {
     const [currentSection, setCurrentSection] = useState(1);
     const [visibleSections, setVisibleSections] = useState([1]);
 
-    const passwordFieldRef = useRef(null);
-
     function goToLoginPage () {
         navigate("/login")
     }
 
-    function emailFieldKeyListener(e) {
-        if (e.code === "Enter") {
-            passwordFieldRef.current.focus();
+    function submitEmail (result) {
+        console.log(result)
+    }
+
+    function nextSectionOnKeyDown (e) {
+        if (e.code === 'Enter') {
+            nextSection()
         }
     }
 
-    function passwordFieldKeyListener(e) {
-        if (e.code === "Enter") {
-            nextSection();
+    function nextSection () {
+        if (currentSection !== 3) {
+            const exitingSection = currentSection;
+            const next = currentSection + 1;
+
+            setVisibleSections((prev) => [...prev, next]);
+            setCurrentSection(next);
+
+            setTimeout(() => {
+                setVisibleSections((prev) => prev.filter((s) => s !== exitingSection));
+            }, 350);
         }
     }
-
-    const nextSection = () => {
-        const exitingSection = currentSection;
-        const next = currentSection + 1;
-
-        setVisibleSections((prev) => [...prev, next]);
-        setCurrentSection(next);
-
-        setTimeout(() => {
-            setVisibleSections((prev) => prev.filter((s) => s !== exitingSection));
-        }, 350);
-    };
 
     return (
         <MainComponent>
@@ -239,16 +220,11 @@ export default function Registration () {
                             isExiting={currentSection !== 1}
                             direction={"left"}
                         >
-                            <FirstLineContainer>
-                                <EmailField onInput={e => setEmail(e.target.value)}
-                                            onKeyDown={emailFieldKeyListener}/>
-                            </FirstLineContainer>
-                            <SecondLineContainer>
-                                <PasswordField onInput={e => setPassword(e.target.value)}
-                                               onKeyDown={passwordFieldKeyListener}
-                                               ref={passwordFieldRef}
-                                               placeholder={"Choose password"}/>
-                            </SecondLineContainer>
+                            <EmailAndPasswordSection
+                                onInputEmail={e => setEmail(e.target.value)}
+                                onInputPassword={e => setPassword(e.target.value)}
+                                onKeyDown={nextSectionOnKeyDown}
+                            />
                         </AnimatedSection>
                     )}
                     {visibleSections.includes(2) && (
@@ -257,9 +233,7 @@ export default function Registration () {
                             isExiting={currentSection !== 2}
                             direction={"left"}
                         >
-                            <LineContainer>
-                                <EmailVerificationFields/>
-                            </LineContainer>
+                            <EmailVerificationSection submitEmail={submitEmail}/>
                         </AnimatedSection>
                     )}
                 </Fields>
@@ -267,7 +241,7 @@ export default function Registration () {
                     <StageContainer>
                         <StageEclipse isActive={currentSection === 1}/>
                         <StageEclipse isActive={currentSection === 2}/>
-                        <StageEclipse isActive={currentSection > 2}/>
+                        <StageEclipse isActive={currentSection === 3}/>
                     </StageContainer>
                     <NextButton onClick={nextSection}>Next</NextButton>
                     <LoginPageLink onClick={goToLoginPage}>Login</LoginPageLink>

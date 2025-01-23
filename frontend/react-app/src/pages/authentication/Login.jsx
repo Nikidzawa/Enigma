@@ -4,8 +4,8 @@ import {useNavigate} from "react-router-dom";
 import {useRef, useState} from "react";
 import UserApi from "../../api/UserApi";
 import CurrentUserController from "../../store/CurrentUserController";
-import PasswordField from "./components/PasswordField";
-import NicknameOrEmailField from "./components/NicknameOrEmailField";
+import PasswordField from "./components/fields/PasswordField";
+import NicknameOrEmailField from "./components/fields/NicknameOrEmailField";
 
 
 const MainComponent = styled.main`

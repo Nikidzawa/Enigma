@@ -1,4 +1,4 @@
-import MailImg from "../../../img/mail.png";
+import MailImg from "../../../../img/mail.png";
 import styled from "styled-components";
 
 const EmailInput = styled.input`

@@ -1,4 +1,4 @@
-import User from "../../../img/user.png";
+import User from "../../../../img/user.png";
 import styled from "styled-components";
 
 const NicknameOrEmailFieldInput = styled.input`
