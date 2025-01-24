@@ -3,7 +3,8 @@ import styled from "styled-components";
 
 const LineContainer = styled.div`
     position: absolute;
-    left: 28%;
+    left: calc(50% - 120px);
+    bottom: 50%;
 `
 
 export default function EmailVerificationSection({onKeyDown, submitEmail}) {

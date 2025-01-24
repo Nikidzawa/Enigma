@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 
 
 const MainContainer = styled.div`
@@ -15,10 +15,10 @@ const Field = styled.input`
     background-color: transparent;
     border: none;
     border-bottom: 1px solid white;
-    width: 35px;
+    width: 40px;
     height: 70px;
     color: white;
-    font-size: 50px;
+    font-size: 40px;
     outline: none;
     text-align: center;
 `
@@ -34,15 +34,19 @@ export default function EmailVerificationFields({submitEmail}) {
     const thirdRef = useRef(null)
     const fourthRef = useRef(null)
 
-    function setValue (value, set, e, nextRef) {
+    useEffect(() => {
+        firstRef.current.focus()
+    }, [])
+
+    function setValue(value, set, e, nextRef) {
         const newValue = e.target.value;
         if (value.length === 0) {
             if (newValue.length === 1) {
-                set(newValue)
+                set(newValue.toUpperCase())
                 if (nextRef && !nextRef.current.value) {
                     nextRef.current.focus();
                 } else {
-                    submit();
+                    submit(e.target.value);
                 }
             } else if (newValue.length === 4) {
                 setFirstValue(newValue.substring(0, 1))
@@ -75,9 +79,9 @@ export default function EmailVerificationFields({submitEmail}) {
         }
     }
 
-    function submit () {
-        if (firstValue && secondValue && thirdValue && fourthValue) {
-            submitEmail(firstValue + secondValue + thirdValue + fourthValue)
+    function submit(value) {
+        if (firstValue && secondValue && thirdValue && (fourthValue || value)) {
+            submitEmail(firstValue + secondValue + thirdValue + (fourthValue || value))
         }
     }
 

@@ -20,7 +20,7 @@ const EmailInput = styled.input`
     font-size: 17px;
 `
 
-export default function EmailField ({onKeyDown, onInput}) {
+export default function EmailField({onKeyDown, onInput}) {
     return (
         <EmailInput
             onKeyDown={onKeyDown}

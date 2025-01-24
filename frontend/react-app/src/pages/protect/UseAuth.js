@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import UserApi from "../../api/UserApi";
 import CurrentUserController from "../../store/CurrentUserController";
 
@@ -42,7 +42,7 @@ const useAuth = () => {
         navigate('/login');
     };
 
-    return { isAuthenticated, loading, logout };
+    return {isAuthenticated, loading, logout};
 };
 
 export default useAuth;

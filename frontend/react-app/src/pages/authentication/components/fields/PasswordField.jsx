@@ -1,4 +1,4 @@
-import {forwardRef, useEffect, useRef, useState} from "react";
+import {forwardRef, useState} from "react";
 import Lock from "../../../../img/lock.png";
 import OpenedEyeImg from "../../../../img/opened_eye.png";
 import ClosedEyeImg from "../../../../img/closed_eye.png";
@@ -37,7 +37,7 @@ const Eye = styled.img`
     cursor: pointer;
 `
 
-const PasswordField = forwardRef(({ onInput, placeholder, onKeyDown}, ref) => {
+const PasswordField = forwardRef(({onInput, placeholder, onKeyDown}, ref) => {
     const [passwordIsVisible, setPasswordIsVisible] = useState(false);
 
     return (

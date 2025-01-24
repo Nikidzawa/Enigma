@@ -132,7 +132,7 @@ const OtherMessageText = styled.div`
     align-self: flex-start;
 `
 
-export default function ActiveChat({ onMessageSend }) {
+export default function ActiveChat({onMessageSend}) {
     const [text, setText] = useState("");
     const [messages, setMessages] = useState([]);
     const [scrollIsVisible, setScrollIsVisible] = useState(true);
@@ -140,7 +140,7 @@ export default function ActiveChat({ onMessageSend }) {
     const ChatSectionRef = useRef(null);
     const [isLoadMessages, setLoadMessages] = useState(false);
 
-    function defaultSort (array) {
+    function defaultSort(array) {
         return array.sort((a, b) => a.id - b.id);
     }
 
@@ -222,7 +222,7 @@ export default function ActiveChat({ onMessageSend }) {
             setText("");
             scrollToBottom();
             onMessageSend(newMessage);
-            MessagesApi.save(newMessage,  ActiveChatController.getCurrentUser().chatId);
+            MessagesApi.save(newMessage, ActiveChatController.getCurrentUser().chatId);
         }
     }
 
@@ -233,11 +233,11 @@ export default function ActiveChat({ onMessageSend }) {
     }
 
     return (
-        <MainContainer >
+        <MainContainer>
             <UpperSection>
                 <Name>{ActiveChatController.getCurrentUser().userName}</Name>
                 <OnlineStatusContainer>
-                    <OnlineStatusCircle />
+                    <OnlineStatusCircle/>
                     <OnlineStatusText>В сети</OnlineStatusText>
                 </OnlineStatusContainer>
             </UpperSection>
@@ -264,7 +264,7 @@ export default function ActiveChat({ onMessageSend }) {
                     onKeyDown={(e) => handleSendMessage(e)}
                     placeholder={"Введите сообщение"}
                 />
-                <SendButton onClick={sendMessage} src={Send} />
+                <SendButton onClick={sendMessage} src={Send}/>
             </BottomSection>
         </MainContainer>
     );
