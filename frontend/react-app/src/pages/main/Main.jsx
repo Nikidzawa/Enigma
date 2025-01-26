@@ -14,6 +14,7 @@ const MainContainer = styled.main`
     width: 100vw;
     display: flex;
     justify-content: space-between;
+    background-color: #121212;
 `;
 
 const LeftMenuContainer = styled.div`

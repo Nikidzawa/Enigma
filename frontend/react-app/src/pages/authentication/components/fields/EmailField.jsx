@@ -6,27 +6,28 @@ const EmailInput = styled.input`
     border: none;
     border-bottom: 1px solid white;
     color: white;
-    min-width: 250px;
+    min-width: calc(225px + 1vh);
     height: 25px;
     outline: none;
     font-family: Rubik;
     background-image: url(${props => props.image});
     background-size: 25px;
     background-repeat: no-repeat;
-    background-position: left;
+    background-position: left center;
     padding-left: 35px;
-    background-position-y: 5px;
     padding-bottom: 2px;
     font-size: 17px;
 `
 
-export default function EmailField({onKeyDown, onInput}) {
+export default function EmailField({onKeyDown, onInput, value}) {
     return (
         <EmailInput
+            autoFocus={true}
             onKeyDown={onKeyDown}
             onInput={onInput}
             placeholder={"Enter your email"}
             image={MailImg}
+            value={value}
         />
     )
 }

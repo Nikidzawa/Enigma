@@ -17,7 +17,10 @@ public class IndividualEntity {
     @SequenceGenerator(name = "individual_seq", sequenceName = "individual_seq", initialValue = 1, allocationSize = 1)
     Long id;
 
-    @Column(name = "nickname", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
+    String email;
+
+    @Column(name = "nickname", nullable = true, unique = true)
     String nickname;
 
     @Column(name = "password", nullable = false)

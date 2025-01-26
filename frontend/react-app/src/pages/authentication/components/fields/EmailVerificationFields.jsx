@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import {useEffect, useRef, useState} from "react";
+import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
 
 
 const MainContainer = styled.div`
@@ -23,7 +23,7 @@ const Field = styled.input`
     text-align: center;
 `
 
-export default function EmailVerificationFields({submitEmail}) {
+const EmailVerificationFields = forwardRef(({ submitEmail }, ref) => {
     const [firstValue, setFirstValue] = useState("")
     const [secondValue, setSecondValue] = useState("")
     const [thirdValue, setThirdValue] = useState("")
@@ -38,15 +38,17 @@ export default function EmailVerificationFields({submitEmail}) {
         firstRef.current.focus()
     }, [])
 
+    useImperativeHandle(ref, () => ({submit}));
+
     function setValue(value, set, e, nextRef) {
-        const newValue = e.target.value;
+        const newValue = e.target.value.toUpperCase();
         if (value.length === 0) {
             if (newValue.length === 1) {
-                set(newValue.toUpperCase())
+                set(newValue)
                 if (nextRef && !nextRef.current.value) {
                     nextRef.current.focus();
                 } else {
-                    submit(e.target.value);
+                    submit(newValue);
                 }
             } else if (newValue.length === 4) {
                 setFirstValue(newValue.substring(0, 1))
@@ -74,14 +76,12 @@ export default function EmailVerificationFields({submitEmail}) {
             );
         } else if (e.code === 'Backspace' || e.code === 'Delete') {
             set("")
-        } else if (e.code === 'Enter') {
-            submit();
         }
     }
 
     function submit(value) {
         if (firstValue && secondValue && thirdValue && (fourthValue || value)) {
-            submitEmail(firstValue + secondValue + thirdValue + (fourthValue || value))
+            submitEmail(firstValue + secondValue + thirdValue + (fourthValue || value));
         }
     }
 
@@ -111,4 +111,6 @@ export default function EmailVerificationFields({submitEmail}) {
             </Fields>
         </MainContainer>
     )
-}
+})
+
+export default EmailVerificationFields

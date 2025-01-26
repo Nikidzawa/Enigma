@@ -11,6 +11,17 @@ const slideInFromRight = keyframes`
     }
 `;
 
+const slideInFromLeft = keyframes`
+    from {
+        transform: translateX(-25%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+`
+
 const slideOutToLeft = keyframes`
     from {
         transform: translateX(0);
@@ -40,18 +51,18 @@ const AnimationComponent = styled.div`
     ${(props) =>
     props.isActive &&
     css`
-                animation: ${slideInFromRight} 0.35s forwards;
+                animation: ${props.directionActive === "left" ? slideInFromLeft : slideInFromRight} 0.35s forwards;
             `}
     ${(props) =>
     props.isExiting &&
     css`
-                animation: ${props.direction === "left" ? slideOutToLeft : slideOutToRight} 0.35s forwards;
+                animation: ${slideOutToLeft} 0.35s forwards;
             `}
 `;
 
-export default function Animation({isActive, isExiting, direction, children}) {
+export default function Animation({isActive, isExiting, directionActive, children}) {
     return (
-        <AnimationComponent isActive={isActive} isExiting={isExiting} direction={direction}>
+        <AnimationComponent isActive={isActive} isExiting={isExiting} directionActive={directionActive}>
             {children}
         </AnimationComponent>
     )

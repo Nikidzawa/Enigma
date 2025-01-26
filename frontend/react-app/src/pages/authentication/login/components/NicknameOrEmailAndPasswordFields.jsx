@@ -6,9 +6,9 @@ import NicknameOrEmailField from "./NicknameOrEmailField";
 const FirstLineContainer = styled.div`
     position: absolute;
     left: calc(50% - 150px);
-    bottom: calc(50% - 48px);
+    bottom: calc(50% - 55px);
     display: flex;
-    gap: 40px;
+    gap: 50px;
     flex-direction: column;
 `
 
@@ -36,7 +36,7 @@ export default function NicknameOrEmailAndPasswordFields({onInputEmailOrNickname
             <PasswordField onInput={onInputPassword}
                            onKeyDown={onKeyDown}
                            ref={passwordFieldRef}
-                           placeholder={"Choose password"}/>
+                           placeholder={"Password"}/>
             <ForgotPasswordLink>Forgot password?</ForgotPasswordLink>
         </FirstLineContainer>
     )

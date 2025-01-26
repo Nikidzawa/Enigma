@@ -1,9 +1,11 @@
 package ru.nikidzawa.db.services;
 
+import io.netty.util.internal.StringUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import ru.nikidzawa.db.exceptions.NotFoundException;
 import ru.nikidzawa.db.exceptions.UnauthorizedException;
 import ru.nikidzawa.db.store.entity.IndividualEntity;
@@ -24,5 +26,11 @@ public class UserEntityService {
     public IndividualEntity authenticate(String username, String password) {
         return repository.findFirstByNicknameAndPassword(username, password)
                 .orElseThrow(() -> new UnauthorizedException("Не верное имя пользователя или пароль"));
+    }
+
+    public IndividualEntity saveUser(IndividualEntity user) {
+        IndividualEntity savedUser = repository.saveAndFlush(user);
+        savedUser.setNickname(String.format("id%d", user.getId()));
+        return repository.saveAndFlush(savedUser);
     }
 }

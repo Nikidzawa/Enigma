@@ -23,6 +23,7 @@ const NicknameOrEmailFieldInput = styled.input`
 export default function NicknameOrEmailField({onKeyDown, onInput}) {
     return (
         <NicknameOrEmailFieldInput
+            autoFocus={true}
             onKeyDown={onKeyDown}
             onInput={onInput}
             placeholder={"Nickname or email"}

@@ -1,12 +1,13 @@
 import styled from "styled-components";
-import Logo from "../../../img/img.png"
 import {useNavigate} from "react-router-dom";
 import {useState} from "react";
-import EmailAndPasswordSection from "./components/EmailAndPasswordSection";
-import EmailVerificationSection from "./components/EmailVerificationSection";
+import EmailAndPasswordSection from "./sections/EmailAndPasswordSection";
 import Animation from "./components/Animation";
-import ConvertVideo from "../../../img/convert.lottie"
-import {DotLottieReact} from '@lottiefiles/dotlottie-react';
+import EmailVerificationSection from "./sections/EmailVerificationSection";
+import BioSection from "./sections/BioSection";
+import UserDto from "../../../api/dto/UserDto";
+import UserApi from "../../../api/UserApi";
+import CurrentUserController from "../../../store/CurrentUserController";
 
 const MainComponent = styled.main`
     min-height: 100vh;
@@ -24,63 +25,19 @@ const Window = styled.div`
     justify-content: center;
     width: calc(300px + 18vh);
     height: calc(470px + 18vh);
-    max-width: 500px;
-    max-height: 670px;
+    max-width: 520px;
+    max-height: 700px;
     border: 1px solid white;
     box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
     border-radius: 20px;
     background-color: #121212;
 `
 
-const Title = styled.div`
-    font-size: 35px;
-    padding-bottom: 10px;
-    font-weight: bold;
-    font-family: Rubik;
-    margin-bottom: 40px;
-`
-
-const Image = styled.img`
-    width: calc(53px + 2vh);
-    height: calc(53px + 2vh);
-`
-
-const NextButton = styled.button`
-    background-color: transparent;
-    border: 1px solid white;
-    color: white;
-    padding: 8px;
-    margin-top: 20px;
-    min-width: 150px;
-    min-height: 40px;
-    font-size: 18px;
-    border-radius: 15px;
-    cursor: pointer;
-    font-family: Rubik;
-`
-
-const LoginAndRegister = styled.div`
-    position: absolute;
-    bottom: 40px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-`
-
-const LoginPageLink = styled.a`
-    cursor: pointer;
-    border-top: 1px white solid;
-    padding: 10px;
-`
-
 const StageContainer = styled.div`
-    width: 100%;
-    height: 7px;
+    position: absolute;
+    bottom: 170px;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
+    gap: 12px;
 `
 
 const StageEclipse = styled.div`
@@ -90,60 +47,34 @@ const StageEclipse = styled.div`
     background-color: ${props => props.isActive ? "#d8d8d8" : "#393939"};
 `
 
-const SecondTitle = styled.div`
-    font-size: 35px;
-    font-weight: bold;
-    font-family: Rubik;
-    width: 80%;
-    text-align: center;
-`
-
-const TitleContainer = styled.div`
-    width: 90%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    margin-top: 40px;
-`
-
-const Container = styled.div`
-    width: 90%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin-top: 30px;
-`
-
-const Fields = styled.div`
-    display: flex;
-    justify-content: center;
-`
-
 export default function Registration() {
-    const navigate = useNavigate();
-    const [password, setPassword] = useState("");
-    const [email, setEmail] = useState("");
     const [currentSection, setCurrentSection] = useState(1);
     const [visibleSections, setVisibleSections] = useState([1]);
 
+    const [hasPrev, setHasPrev] = useState(false);
+
     function submitEmail(result) {
-        nextSection();
+        console.log(result);
+        goNextSection()
     }
 
-    function nextSection() {
-        if (currentSection !== 3) {
-            const exitingSection = currentSection;
-            const next = currentSection + 1;
+    function goBackSection() {
+        setHasPrev(true);
+        changeSection(1)
+    }
 
-            setVisibleSections((prev) => [...prev, next]);
-            setCurrentSection(next);
+    function goNextSection() {
+        changeSection(currentSection + 1);
+    }
 
-            setTimeout(() => {
-                setVisibleSections((prev) => prev.filter((s) => s !== exitingSection));
-            }, 350);
-        }
+    function changeSection (section) {
+        setVisibleSections((prev) => [...prev, section]);
+        setCurrentSection(section);
+
+        setTimeout(() => {
+            setVisibleSections((prev) => prev.filter((s) => s !== currentSection));
+            }, 350
+        );
     }
 
     return (
@@ -151,48 +82,39 @@ export default function Registration() {
             <Window>
                 {visibleSections.includes(1) && (
                     <Animation
+                        isActive={hasPrev && currentSection === 1}
                         isExiting={currentSection !== 1}
-                        direction={"left"}>
-                        <Fields>
-                            <TitleContainer>
-                                <Image src={Logo}/>
-                                <Title>Registration</Title>
-                            </TitleContainer>
-                            <EmailAndPasswordSection
-                                onInputEmail={e => setEmail(e.target.value)}
-                                onInputPassword={e => setPassword(e.target.value)}
-                                onKeyDown={e => e.code === 'Enter' && nextSection()}
-                            />
-                        </Fields>
+                        directionActive={"left"}
+                    >
+                        <EmailAndPasswordSection
+                            nextSection={goNextSection}
+                        />
                     </Animation>
                 )}
                 {visibleSections.includes(2) && (
                     <Animation
                         isActive={currentSection === 2}
                         isExiting={currentSection !== 2}
-                        direction={"left"}>
-                        <Fields>
-                            <Container>
-                                <DotLottieReact
-                                    style={{width: '180px'}}
-                                    src={ConvertVideo}
-                                    autoplay
-                                />
-                                <SecondTitle>Enter code from letter</SecondTitle>
-                            </Container>
-                            <EmailVerificationSection submitEmail={submitEmail}/>
-                        </Fields>
+                    >
+                        <EmailVerificationSection
+                            submitEmail={submitEmail}
+                            goBack={goBackSection}
+                        />
                     </Animation>
                 )}
-                <LoginAndRegister>
-                    <StageContainer>
+                {visibleSections.includes(3) && (
+                    <Animation
+                        isActive={currentSection === 3}
+                        isExiting={currentSection !== 3}
+                    >
+                        <BioSection goBack={goBackSection}/>
+                    </Animation>
+                )}
+                   <StageContainer>
                         <StageEclipse isActive={currentSection === 1}/>
                         <StageEclipse isActive={currentSection === 2}/>
                         <StageEclipse isActive={currentSection === 3}/>
-                    </StageContainer>
-                    <NextButton onClick={nextSection}>Next</NextButton>
-                    <LoginPageLink onClick={() => navigate("/login")}>Login</LoginPageLink>
-                </LoginAndRegister>
+                   </StageContainer>
             </Window>
         </MainComponent>
     )

@@ -14,14 +14,14 @@ const PasswordInput = styled.input`
     border: none;
     border-bottom: 1px solid white;
     color: white;
-    min-width: 215px;
+    min-width: calc(225px + 1vh);
     height: 25px;
     outline: none;
     font-family: Rubik;
     background-image: url(${props => props.image});
     background-size: 25px;
     background-repeat: no-repeat;
-    background-position: left;
+    background-position: left center;
     padding-left: 35px;
     padding-right: 37px;
     background-position-y: 0;
@@ -37,7 +37,7 @@ const Eye = styled.img`
     cursor: pointer;
 `
 
-const PasswordField = forwardRef(({onInput, placeholder, onKeyDown}, ref) => {
+const PasswordField = forwardRef(({onInput, placeholder, onKeyDown, value}, ref) => {
     const [passwordIsVisible, setPasswordIsVisible] = useState(false);
 
     return (
@@ -49,6 +49,7 @@ const PasswordField = forwardRef(({onInput, placeholder, onKeyDown}, ref) => {
                 type={passwordIsVisible ? "text" : "password"}
                 placeholder={placeholder}
                 image={Lock}
+                value={value}
             />
             <Eye
                 onClick={() => setPasswordIsVisible(!passwordIsVisible)}

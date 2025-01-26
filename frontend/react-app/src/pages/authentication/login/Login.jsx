@@ -22,8 +22,8 @@ const Window = styled.div`
     justify-content: center;
     width: calc(300px + 18vh);
     height: calc(470px + 18vh);
-    max-width: 500px;
-    max-height: 670px;
+    max-width: 520px;
+    max-height: 700px;
     border: 1px solid white;
     box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
     border-radius: 20px;
@@ -49,9 +49,9 @@ const LoginButton = styled.button`
     color: white;
     padding: 8px;
     margin-top: 20px;
-    min-width: 150px;
-    min-height: 40px;
-    font-size: 18px;
+    min-width: calc(140px + 1vh);
+    min-height: calc(28px + 1vh);
+    font-size: 20px;
     border-radius: 15px;
     cursor: pointer;
     font-family: Rubik;
@@ -63,7 +63,7 @@ const LogoAndTitle = styled.div`
     flex-direction: column;
     align-items: center;
     gap: 20px;
-    margin-top: 40px;
+    margin-top: 45px;
 `
 
 const LoginAndRegister = styled.div`
