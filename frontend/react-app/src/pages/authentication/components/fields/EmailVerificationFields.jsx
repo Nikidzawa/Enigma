@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
+import StringUtils from "../../../../helpers/StringUtils";
 
 
 const MainContainer = styled.div`
@@ -23,7 +24,7 @@ const Field = styled.input`
     text-align: center;
 `
 
-const EmailVerificationFields = forwardRef(({ submitEmail }, ref) => {
+export default function EmailVerificationFields ({setUserCode}) {
     const [firstValue, setFirstValue] = useState("")
     const [secondValue, setSecondValue] = useState("")
     const [thirdValue, setThirdValue] = useState("")
@@ -35,10 +36,11 @@ const EmailVerificationFields = forwardRef(({ submitEmail }, ref) => {
     const fourthRef = useRef(null)
 
     useEffect(() => {
-        firstRef.current.focus()
-    }, [])
-
-    useImperativeHandle(ref, () => ({submit}));
+        const result = StringUtils.replaceSpaces(firstValue + secondValue + thirdValue + fourthValue)
+        if (result.length === 4) {
+            setUserCode(result)
+        }
+    }, [firstValue, secondValue, thirdValue, fourthValue])
 
     function setValue(value, set, e, nextRef) {
         const newValue = e.target.value.toUpperCase();
@@ -47,8 +49,6 @@ const EmailVerificationFields = forwardRef(({ submitEmail }, ref) => {
                 set(newValue)
                 if (nextRef && !nextRef.current.value) {
                     nextRef.current.focus();
-                } else {
-                    submit(newValue);
                 }
             } else if (newValue.length === 4) {
                 setFirstValue(newValue.substring(0, 1))
@@ -79,12 +79,6 @@ const EmailVerificationFields = forwardRef(({ submitEmail }, ref) => {
         }
     }
 
-    function submit(value) {
-        if (firstValue && secondValue && thirdValue && (fourthValue || value)) {
-            submitEmail(firstValue + secondValue + thirdValue + (fourthValue || value));
-        }
-    }
-
     return (
         <MainContainer>
             <Fields>
@@ -92,6 +86,7 @@ const EmailVerificationFields = forwardRef(({ submitEmail }, ref) => {
                        value={firstValue}
                        onInput={e => setValue(firstValue, setFirstValue, e, secondRef)}
                        onKeyDown={e => keyListener(null, secondRef, setFirstValue, e)}
+                       autoFocus={true}
                 />
                 <Field ref={secondRef}
                        value={secondValue}
@@ -111,6 +106,4 @@ const EmailVerificationFields = forwardRef(({ submitEmail }, ref) => {
             </Fields>
         </MainContainer>
     )
-})
-
-export default EmailVerificationFields
+}

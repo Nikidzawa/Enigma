@@ -97,7 +97,7 @@ export default function Registration() {
                         isExiting={currentSection !== 2}
                     >
                         <EmailVerificationSection
-                            submitEmail={submitEmail}
+                            goNextSection={goNextSection}
                             goBack={goBackSection}
                         />
                     </Animation>

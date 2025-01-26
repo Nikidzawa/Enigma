@@ -3,7 +3,7 @@ import CameraImg from "../../../../img/camera.png"
 import CurrentUserController from "../../../../store/CurrentUserController";
 import UserApi from "../../../../api/UserApi";
 import UserDto from "../../../../api/dto/UserDto";
-import {useState} from "react";
+import {useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
 
@@ -85,12 +85,17 @@ const BackPageLink = styled.a`
     padding: 10px;
 `
 
+const ExceptionContainer = styled.div`
+    position: absolute;
+    top: ${props => props.position ? props.position : '0px'};
+`
 
 
 export default function BioSection ({goBack}) {
     const navigate = useNavigate();
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
+    const surnameRef = useRef();
 
     const [nameEx, setNameEx] = useState(false);
 
@@ -131,14 +136,18 @@ export default function BioSection ({goBack}) {
             <FieldsContainer>
                 <Input value={name}
                        onInput={e => setName(e.target.value)}
+                       onKeyDown={e => e.code === 'Enter' && surnameRef.current.focus()}
                        autoFocus={true}
                        placeholder={"Name"}/>
-                {
-                    nameEx && (<FailFieldValidation position={"38px"}>Укажите имя</FailFieldValidation>)
-                }
+                <ExceptionContainer position={"38px"}>
+                    {nameEx && (<FailFieldValidation>Укажите имя</FailFieldValidation>)}
+                </ExceptionContainer>
                 <Input value={surname}
                        onInput={e => setSurname(e.target.value)}
-                       placeholder={"Surname (optional)"}/>
+                       onKeyDown={e => e.code === 'Enter' && validate()}
+                       placeholder={"Surname (optional)"}
+                       ref={surnameRef}
+                />
             </FieldsContainer>
             <Button onClick={validate}>Register</Button>
             <BackPageLink onClick={goBack}>Go Back</BackPageLink>

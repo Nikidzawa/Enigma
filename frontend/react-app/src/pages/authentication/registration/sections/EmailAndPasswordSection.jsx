@@ -9,6 +9,8 @@ import FailFieldValidation from "../../components/fields/FailFieldValidation";
 import UserDto from "../../../../api/dto/UserDto";
 import CurrentUserController from "../../../../store/CurrentUserController";
 import StringUtils from "../../../../helpers/StringUtils";
+import EmailCodeController from "../store/EmailCodeController";
+import Loader from "../components/Loader";
 
 const MainContainer = styled.div`
     display: flex;
@@ -59,6 +61,9 @@ const Button = styled.button`
     border-radius: 15px;
     cursor: pointer;
     font-family: Rubik;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `
 
 const LoginPageLink = styled.a`
@@ -67,6 +72,11 @@ const LoginPageLink = styled.a`
     cursor: pointer;
     border-top: 1px white solid;
     padding: 10px;
+`
+
+const ExceptionContainer = styled.div`
+    position: absolute;
+    top: ${props => props.position ? props.position : '0px'};
 `
 
 export default function EmailAndPasswordSection({nextSection}) {
@@ -78,7 +88,8 @@ export default function EmailAndPasswordSection({nextSection}) {
 
     const [emailEx, setEmailEx] = useState(false);
     const [passwordLengthEx, setPasswordLengthEx] = useState(false);
-
+    const [emailServicesEx, setEmailServicesEx] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const user = CurrentUserController.getCurrentUser();
@@ -89,10 +100,10 @@ export default function EmailAndPasswordSection({nextSection}) {
     }, [])
 
     function onInputEmail(e) {
-        const value = StringUtils.replaceSpaces(e.target.value);
-        setEmail(value);
+        const fixedValue = StringUtils.replaceSpaces(e.target.value).toLowerCase();
+        setEmail(fixedValue);
 
-        if (emailEx && !StringUtils.isEmail(value)) {
+        if (emailEx && !StringUtils.isEmail(fixedValue)) {
             setEmailEx(true);
         } else {
             setEmailEx(false);
@@ -110,7 +121,8 @@ export default function EmailAndPasswordSection({nextSection}) {
         }
     }
 
-    function validatedFirstSection() {
+    async function validatedFirstSection() {
+        setLoading(true);
         setPasswordLengthEx(false)
         setEmailEx(false);
 
@@ -131,20 +143,28 @@ export default function EmailAndPasswordSection({nextSection}) {
         }
 
         if (!(emailIsEx || passwordIsEx)) {
-            submit();
+            await submit();
         }
+
+        setLoading(false);
 
         setPasswordLengthEx(passwordIsEx)
         setEmailEx(emailIsEx)
     }
 
-    function submit () {
+    async function submit () {
         const user = new UserDto();
-        user.email = StringUtils.replaceSpaces(email);
+        user.email = StringUtils.replaceSpaces(email).toLowerCase();
         user.password = StringUtils.replaceSpaces(password);
         CurrentUserController.setUser(user);
 
-        nextSection();
+        setEmailServicesEx(false)
+
+        const code = await EmailCodeController.sendAuthCode(user.email);
+         if (code) {
+             EmailCodeController.setEmailCode(code);
+             nextSection()
+         } else setEmailServicesEx(true);
     }
 
     return (
@@ -159,9 +179,11 @@ export default function EmailAndPasswordSection({nextSection}) {
                     onInput={onInputEmail}
                     value={email}
                 />
-                {
-                    emailEx && <FailFieldValidation position={"37px"}>Не корректно заполнена почта</FailFieldValidation>
-                }
+                <ExceptionContainer position={"37px"}>
+                    {
+                        emailEx && <FailFieldValidation>Не корректно заполнена почта</FailFieldValidation>
+                    }
+                </ExceptionContainer>
                 <PasswordField
                     onKeyDown={e => e.code === "Enter" && validatedFirstSection()}
                     onInput={onInputPassword}
@@ -169,11 +191,16 @@ export default function EmailAndPasswordSection({nextSection}) {
                     placeholder={"Choose password"}
                     value={password}
                     />
-                {
-                    passwordLengthEx && (<FailFieldValidation position={"115px"}>Минимум 6 символов</FailFieldValidation>)
-                }
+                <ExceptionContainer position={"115px"}>
+                    {passwordLengthEx && (<FailFieldValidation>Минимум 6 символов</FailFieldValidation>)}
+                </ExceptionContainer>
+                <ExceptionContainer position={"135px"}>
+                    {emailServicesEx && (<FailFieldValidation>Произошла ошибка почтового сервиса</FailFieldValidation>)}
+                </ExceptionContainer>
             </FieldsContainer>
-            <Button onClick={validatedFirstSection}>Next</Button>
+            <Button disabled={loading} onClick={validatedFirstSection}>
+                {loading ? <Loader/> : "Next"}
+            </Button>
             <LoginPageLink onClick={() => navigate("/login")}>Login</LoginPageLink>
         </MainContainer>
     )
