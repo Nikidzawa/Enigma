@@ -3,8 +3,6 @@ import DefaultAvatar from "../../../img/i.png"
 import DateParser from "../../../helpers/DateParser";
 import CurrentUserController from "../../../store/CurrentUserController";
 import ActiveChatController from "../../../store/ActiveChatController";
-import {useEffect, useState} from "react";
-import MessageDto from "../../../api/dto/MessageDto";
 
 const MainContainer = styled.div`
     :hover {
@@ -57,7 +55,7 @@ const Date = styled.div`
     color: #7f7f7f;
 `
 
-export default function ChatRoom({ chatRoom }) {
+export default function ChatRoom({chatRoom}) {
     function isMyMessage() {
         return CurrentUserController.getCurrentUser().id === chatRoom.lastMessage.senderId ? "Вы: " : "";
     }

@@ -1,5 +1,5 @@
 export default class DateParser {
-    static parseToWeerDay (date) {
+    static parseToWeerDay(date) {
         const days = [
             'ВC',
             'ПН',
@@ -13,11 +13,11 @@ export default class DateParser {
         return days[n];
     }
 
-    static parseToHourAndMinute (date) {
+    static parseToHourAndMinute(date) {
         return `${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}`;
     }
 
-    static parseDate (createdAt) {
+    static parseDate(createdAt) {
         const now = new Date();
         if (`${now.getFullYear()} ${now.getMonth()} ${now.getDate()}` === `${createdAt.getFullYear()} ${createdAt.getMonth()} ${createdAt.getDate()}`) {
             return this.parseToHourAndMinute(createdAt);

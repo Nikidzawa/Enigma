@@ -16,7 +16,7 @@ export default class MessagesApi extends BaseApiPath {
         const url = `${this.path}/new/${ActiveChatController.getCurrentUser().chatId}`;
         const requestOptions = {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(message)
         };
         return fetch(url, requestOptions)

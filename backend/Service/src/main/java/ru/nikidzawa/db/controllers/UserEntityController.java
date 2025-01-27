@@ -14,19 +14,25 @@ import ru.nikidzawa.db.store.entity.IndividualEntity;
 @CrossOrigin
 public class UserEntityController {
 
+    private static final String SAVE = "save";
     private static final String GET_USER_BY_ID = "{userId}";
     private static final String USER_AUTHENTICATION = "login";
 
-    UserEntityService userEntityService;
+    UserEntityService service;
 
     @GetMapping(GET_USER_BY_ID)
     public IndividualEntity getUserById(@PathVariable Long userId) {
-        return userEntityService.getUserById(userId);
+        return service.getUserById(userId);
     }
 
     @GetMapping(USER_AUTHENTICATION)
     public IndividualEntity userAuthenticate(@RequestParam String username,
                                              @RequestParam String password) {
-        return userEntityService.authenticate(username, password);
+        return service.authenticate(username, password);
+    }
+
+    @PostMapping(SAVE)
+    public IndividualEntity save(@RequestBody IndividualEntity individualEntity) {
+        return service.saveUser(individualEntity);
     }
 }

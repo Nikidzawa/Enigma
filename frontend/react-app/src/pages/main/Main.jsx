@@ -5,7 +5,7 @@ import ChatApi from "../../api/ChatApi";
 import CurrentUserController from "../../store/CurrentUserController";
 import ActiveChatController from "../../store/ActiveChatController";
 import ChatRoom from "./components/ChatRoom";
-import {observer, Observer} from "mobx-react-lite";
+import {observer} from "mobx-react-lite";
 import MenuImg from "../../img/menu.png";
 import SearchImg from "../../img/search.png";
 
@@ -14,6 +14,7 @@ const MainContainer = styled.main`
     width: 100vw;
     display: flex;
     justify-content: space-between;
+    background-color: #121212;
 `;
 
 const LeftMenuContainer = styled.div`
@@ -90,6 +91,7 @@ export default observer(function Main() {
         async function addHotkeys() {
             window.addEventListener("keydown", handleKeyDown);
         }
+
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         }
@@ -126,7 +128,7 @@ export default observer(function Main() {
         setChatRooms((prevChatRooms) =>
             prevChatRooms.map((chatRoom) =>
                 chatRoom.chatId === chatRoomId
-                    ? { ...chatRoom, lastMessage: newMessage }
+                    ? {...chatRoom, lastMessage: newMessage}
                     : chatRoom
             )
         );
