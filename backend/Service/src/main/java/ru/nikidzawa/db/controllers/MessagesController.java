@@ -10,12 +10,13 @@ import ru.nikidzawa.db.store.entity.MessageEntity;
 
 import java.util.List;
 
+@CrossOrigin
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("messages/")
-@CrossOrigin
 public class MessagesController {
+
     private static final String GET_MESSAGES_BY_CHAT_ID = "getByChatId/{chatId}";
     private static final String SAVE_MESSAGE = "new/{chatId}";
 
@@ -23,7 +24,7 @@ public class MessagesController {
 
     @GetMapping(GET_MESSAGES_BY_CHAT_ID)
     public List<MessageDto> getByChatIdAndLastMessageId (@PathVariable Long chatId,
-                                         @RequestParam Long lastMessageId
+                                                         @RequestParam Long lastMessageId
     ) {
         return service.getByChatIdAndLastMessageId(chatId, lastMessageId);
     }
