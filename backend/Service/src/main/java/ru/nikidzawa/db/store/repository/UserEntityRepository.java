@@ -1,6 +1,8 @@
 package ru.nikidzawa.db.store.repository;
 
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import ru.nikidzawa.db.store.entity.IndividualEntity;
 
@@ -8,6 +10,9 @@ import java.util.Optional;
 
 @Repository
 public interface UserEntityRepository extends JpaRepository<IndividualEntity, Long> {
-    Optional<IndividualEntity> findFirstByNicknameAndPassword(String username, String password);
-    Optional<IndividualEntity> findFirstById(Long id);
+    @Query("SELECT u FROM individual u WHERE (u.email = :nicknameOrEmail OR u.nickname = :nicknameOrEmail) and u.password = :password")
+    Optional<IndividualEntity> findFirstByEmailOrNicknameAndPassword(@Param("nicknameOrEmail") String nicknameOrEmail,
+                                                                     @Param("password") String password);
+    Optional<IndividualEntity> findFirstByNickname(String nickname);
+    boolean existsByEmail(String email);
 }
