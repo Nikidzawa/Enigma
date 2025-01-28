@@ -2,9 +2,11 @@ import styled from "styled-components";
 import Logo from "../../../img/img.png"
 import {useNavigate} from "react-router-dom";
 import {useState} from "react";
-import UserApi from "../../../api/UserApi";
+import UserApi from "../../../api/controllers/UserApi";
 import CurrentUserController from "../../../store/CurrentUserController";
 import NicknameOrEmailAndPasswordFields from "./components/NicknameOrEmailAndPasswordFields";
+import JwtTokenAndUser from "../../../api/dto/JwtTokenAndUser";
+import FailFieldValidation from "../components/fields/FailFieldValidation";
 
 
 const MainComponent = styled.main`
@@ -88,21 +90,42 @@ const Fields = styled.div`
     justify-content: center;
 `
 
+const ExceptionContainer = styled.div`
+    display: flex;
+    top: ${props => props.position ? props.position : '0px'};
+`
+
 export default function Login() {
     const navigate = useNavigate();
-    const [passwordOrEmail, setPassword] = useState("");
+    const [password, setPassword] = useState("");
     const [nicknameOrEmail, setNicknameOrEmail] = useState("");
 
+    const [failLoginEx, setFailLoginEx] = useState(false);
+    const [fieldEmptyEx, setFieldEmptyEx] = useState(false);
+
     async function authResponse() {
-        const response = await UserApi.authenticate(nicknameOrEmail, passwordOrEmail);
-        if (response.ok) {
-            CurrentUserController.setUser(await response.json())
-            localStorage.setItem("nickname", nicknameOrEmail);
-            localStorage.setItem("password", passwordOrEmail);
-            navigate("/main");
-        } else {
-            console.log("Not authenticated");
+        setFieldEmptyEx(false);
+        setFailLoginEx(false);
+
+        if (!nicknameOrEmail || !password) {
+            setFieldEmptyEx(true);
+            return;
         }
+
+        UserApi.authenticate(nicknameOrEmail, password).then(
+            result => {
+                CurrentUserController.setUser(result.user);
+                localStorage.setItem("TOKEN", result.token);
+
+                localStorage.removeItem("email");
+                localStorage.removeItem("password");
+                navigate("/main");
+            }
+        ).catch(error => {
+            if (error.status === 401) {
+                setFailLoginEx(true);
+            }
+        });
     }
 
     return (
@@ -120,6 +143,10 @@ export default function Login() {
                     />
                 </Fields>
                 <LoginAndRegister>
+                    <ExceptionContainer>
+                        {failLoginEx && (<FailFieldValidation>Не верное имя пользователя или пароль</FailFieldValidation>)}
+                        {fieldEmptyEx && (<FailFieldValidation>Для продолжения, необходимо заполнить поля</FailFieldValidation>)}
+                    </ExceptionContainer>
                     <LoginButton onClick={authResponse}>Log in</LoginButton>
                     <RegistrationPageLink onClick={() => navigate("/registration")}>Registration</RegistrationPageLink>
                 </LoginAndRegister>

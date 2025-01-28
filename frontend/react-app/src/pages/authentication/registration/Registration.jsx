@@ -6,7 +6,7 @@ import Animation from "./components/Animation";
 import EmailVerificationSection from "./sections/EmailVerificationSection";
 import BioSection from "./sections/BioSection";
 import UserDto from "../../../api/dto/UserDto";
-import UserApi from "../../../api/UserApi";
+import UserApi from "../../../api/controllers/UserApi";
 import CurrentUserController from "../../../store/CurrentUserController";
 
 const MainComponent = styled.main`
@@ -52,11 +52,6 @@ export default function Registration() {
     const [visibleSections, setVisibleSections] = useState([1]);
 
     const [hasPrev, setHasPrev] = useState(false);
-
-    function submitEmail(result) {
-        console.log(result);
-        goNextSection()
-    }
 
     function goBackSection() {
         setHasPrev(true);

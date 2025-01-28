@@ -11,6 +11,7 @@ import CurrentUserController from "../../../../store/CurrentUserController";
 import StringUtils from "../../../../helpers/StringUtils";
 import EmailCodeController from "../store/EmailCodeController";
 import Loader from "../components/Loader";
+import UserApi from "../../../../api/controllers/UserApi";
 
 const MainContainer = styled.div`
     display: flex;
@@ -56,7 +57,7 @@ const Button = styled.button`
     color: white;
     padding: 8px;
     min-width: calc(140px + 1vh);
-    min-height: calc(28px + 1vh);
+    min-height: 45px;
     font-size: 20px;
     border-radius: 15px;
     cursor: pointer;
@@ -77,6 +78,10 @@ const LoginPageLink = styled.a`
 const ExceptionContainer = styled.div`
     position: absolute;
     top: ${props => props.position ? props.position : '0px'};
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
 `
 
 export default function EmailAndPasswordSection({nextSection}) {
@@ -89,14 +94,13 @@ export default function EmailAndPasswordSection({nextSection}) {
     const [emailEx, setEmailEx] = useState(false);
     const [passwordLengthEx, setPasswordLengthEx] = useState(false);
     const [emailServicesEx, setEmailServicesEx] = useState(false);
+    const [emailIsAlreadyUse, setEmailIsAlreadyUse] = useState(false);
+    const [unexpectedEx, setUnexpectedEx] = useState(false);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const user = CurrentUserController.getCurrentUser();
-        if (user) {
-            setEmail(user.email || "");
-            setPassword(user.password || "");
-        }
+        setEmail(localStorage.getItem("email") || "");
+        setPassword(localStorage.getItem("password") || "");
     }, [])
 
     function onInputEmail(e) {
@@ -123,48 +127,73 @@ export default function EmailAndPasswordSection({nextSection}) {
 
     async function validatedFirstSection() {
         setLoading(true);
-        setPasswordLengthEx(false)
-        setEmailEx(false);
+        setUnexpectedEx(false);
+        try {
+            setEmailServicesEx(false);
+            setPasswordLengthEx(false)
+            setEmailEx(false);
+            setEmailIsAlreadyUse(false)
 
-        const fixedEmail = StringUtils.replaceSpaces(email);
-        const fixedPassword = StringUtils.replaceSpaces(password);
+            const fixedEmail = StringUtils.replaceSpaces(email);
+            const fixedPassword = StringUtils.replaceSpaces(password);
 
-        let emailIsEx = false;
-        let passwordIsEx = false;
+            let emailIsEx = false;
+            let passwordIsEx = false;
 
-        // Проврека email
-        if (!fixedEmail || !StringUtils.isEmail(fixedEmail)) {
-            emailIsEx = true;
+            // Проврека email
+            if (!fixedEmail || !StringUtils.isEmail(fixedEmail)) {
+                emailIsEx = true;
+            }
+
+            // Проврека пароля
+            if (!fixedPassword || fixedPassword.length < 6) {
+                passwordIsEx = true;
+            }
+
+            if (!(emailIsEx || passwordIsEx)) {
+                await UserApi.emailIsUsed(fixedEmail).then(async result => {
+                    if (result.data === true) {
+                        setEmailIsAlreadyUse(true)
+                    } else {
+                        setEmailIsAlreadyUse(false)
+                        await submit();
+                    }
+                })
+            }
+
+            setPasswordLengthEx(passwordIsEx)
+            setEmailEx(emailIsEx)
+        } catch (ex) {
+            console.error(ex)
+            setUnexpectedEx(true);
+        } finally {
+            setLoading(false);
         }
-
-        // Проврека пароля
-        if (!fixedPassword || fixedPassword.length < 6) {
-            passwordIsEx = true;
-        }
-
-        if (!(emailIsEx || passwordIsEx)) {
-            await submit();
-        }
-
-        setLoading(false);
-
-        setPasswordLengthEx(passwordIsEx)
-        setEmailEx(emailIsEx)
     }
 
     async function submit () {
-        const user = new UserDto();
-        user.email = StringUtils.replaceSpaces(email).toLowerCase();
-        user.password = StringUtils.replaceSpaces(password);
-        CurrentUserController.setUser(user);
+        try {
+            const user = new UserDto();
+            user.email = StringUtils.replaceSpaces(email).toLowerCase();
+            user.password = StringUtils.replaceSpaces(password);
+            CurrentUserController.setUser(user);
 
-        setEmailServicesEx(false)
+            setEmailServicesEx(false)
 
-        const code = await EmailCodeController.sendAuthCode(user.email);
-         if (code) {
-             EmailCodeController.setEmailCode(code);
-             nextSection()
-         } else setEmailServicesEx(true);
+            localStorage.setItem("email", user.email);
+            localStorage.setItem("password", user.password);
+
+            const code = await EmailCodeController.sendAuthCode(user.email);
+            if (code) {
+                EmailCodeController.setEmailCode(code);
+                nextSection();
+            } else {
+                setEmailServicesEx(true);
+            }
+        } catch (ex) {
+            console.log(ex)
+            setEmailServicesEx(true);
+        }
     }
 
     return (
@@ -180,9 +209,8 @@ export default function EmailAndPasswordSection({nextSection}) {
                     value={email}
                 />
                 <ExceptionContainer position={"37px"}>
-                    {
-                        emailEx && <FailFieldValidation>Не корректно заполнена почта</FailFieldValidation>
-                    }
+                    {emailEx && <FailFieldValidation>Не корректно заполнена почта</FailFieldValidation>}
+                    {emailIsAlreadyUse && <FailFieldValidation>Указаная почта занята</FailFieldValidation>}
                 </ExceptionContainer>
                 <PasswordField
                     onKeyDown={e => e.code === "Enter" && validatedFirstSection()}
@@ -195,7 +223,8 @@ export default function EmailAndPasswordSection({nextSection}) {
                     {passwordLengthEx && (<FailFieldValidation>Минимум 6 символов</FailFieldValidation>)}
                 </ExceptionContainer>
                 <ExceptionContainer position={"135px"}>
-                    {emailServicesEx && (<FailFieldValidation>Произошла ошибка почтового сервиса</FailFieldValidation>)}
+                    {unexpectedEx && (<FailFieldValidation>Произошла неизвестная ошибка, попробуйте позже</FailFieldValidation>)}
+                    {emailServicesEx && (<FailFieldValidation>Ошибка почтового сервиса, проверьте адрес или попробуйте позже</FailFieldValidation>)}
                 </ExceptionContainer>
             </FieldsContainer>
             <Button disabled={loading} onClick={validatedFirstSection}>

@@ -9,7 +9,7 @@ const Animation= keyframes`
 `
 
 const LoaderComponent = styled.div`
-    width: 50px;
+    width: 40px;
     aspect-ratio: 4;
     --_g: no-repeat radial-gradient(circle closest-side, #fdfdfd 90%, #0000);
     background: var(--_g) 0% 50%,
