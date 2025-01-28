@@ -3,7 +3,7 @@ import Send from "../../../img/send.png"
 import ActiveChatController from "../../../store/ActiveChatController";
 import CurrentUserController from "../../../store/CurrentUserController";
 import {useEffect, useRef, useState} from "react";
-import MessagesApi from "../../../api/MessagesApi";
+import MessagesApi from "../../../api/controllers/MessagesApi";
 import DateParser from "../../../helpers/DateParser";
 import MessageDto from "../../../api/dto/MessageDto";
 

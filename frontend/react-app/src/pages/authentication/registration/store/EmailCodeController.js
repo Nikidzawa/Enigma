@@ -1,6 +1,6 @@
 import {makeAutoObservable} from "mobx";
 import CurrentUserController from "../../../../store/CurrentUserController";
-import MailApi from "../../../../api/MailApi";
+import MailApi from "../../../../api/controllers/MailApi";
 
 
 class EmailCodeController {
@@ -23,13 +23,12 @@ class EmailCodeController {
         if (!email) {
             email = CurrentUserController.getCurrentUser().email;
         }
-        const response = await MailApi.sendAuthCode(email);
-        console.log("send");
-        if (response.ok) {
-            const res = await response.text();
-            console.log(res);
-            return res;
-        } else return null;
+        try {
+            const response = await MailApi.sendAuthCode(email);
+            return response.data;
+        } catch (error) {
+            return null;
+        }
     }
 }
 

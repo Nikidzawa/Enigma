@@ -5,7 +5,7 @@ import EmailVerificationFields from "../../components/fields/EmailVerificationFi
 import {useEffect, useState} from "react";
 import CurrentUserController from "../../../../store/CurrentUserController";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
-import MailApi from "../../../../api/MailApi";
+import MailApi from "../../../../api/controllers/MailApi";
 import EmailCodeController from "../store/EmailCodeController";
 
 const MainContainer = styled.div`
@@ -154,8 +154,6 @@ export default function EmailVerificationSection ({goNextSection, goBack}) {
     function submitEmail () {
         setFieldEmptyEx(false);
         setFieldNotCorrectEx(false);
-        // TODO: TEST
-        console.log(userCode);
         if (userCode) {
             if (mailCode === userCode) {
                 goNextSection();

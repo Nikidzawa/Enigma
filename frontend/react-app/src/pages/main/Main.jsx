@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import styled from "styled-components";
 import ActiveChat from "./components/ActiveChat";
-import ChatApi from "../../api/ChatApi";
+import ChatApi from "../../api/controllers/ChatApi";
 import CurrentUserController from "../../store/CurrentUserController";
 import ActiveChatController from "../../store/ActiveChatController";
 import ChatRoom from "./components/ChatRoom";

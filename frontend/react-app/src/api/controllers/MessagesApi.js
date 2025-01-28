@@ -1,9 +1,9 @@
-import BaseApiPath from "./BaseApiPath";
-import MessageDto from "./dto/MessageDto";
-import ActiveChatController from "../store/ActiveChatController";
+import BaseApiPath from "../ProtectedApi";
+import MessageDto from "../dto/MessageDto";
+import ActiveChatController from "../../store/ActiveChatController";
 
 export default class MessagesApi extends BaseApiPath {
-    static path = `${this.basePath}/messages`
+    static path = `${this.protectedApi}/messages`
 
     static async getMessagesByChatId(chatId, lastMessageId) {
         const url = `${this.path}/getByChatId/${chatId}?lastMessageId=${lastMessageId}`;

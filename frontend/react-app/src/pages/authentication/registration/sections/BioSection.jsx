@@ -1,11 +1,12 @@
 import styled from "styled-components";
 import CameraImg from "../../../../img/camera.png"
 import CurrentUserController from "../../../../store/CurrentUserController";
-import UserApi from "../../../../api/UserApi";
+import UserApi from "../../../../api/controllers/UserApi";
 import UserDto from "../../../../api/dto/UserDto";
 import {useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
+import JwtTokenAndUser from "../../../../api/dto/JwtTokenAndUser";
 
 const MainContainer = styled.div`
     display: flex;
@@ -100,22 +101,25 @@ export default function BioSection ({goBack}) {
     const [nameEx, setNameEx] = useState(false);
 
     async function register() {
-        let userDto = CurrentUserController.getCurrentUser();
+        const userDto = CurrentUserController.getCurrentUser();
         userDto.name = name;
         userDto.surname = surname;
 
         if (userDto && userDto.email && userDto.password && userDto.name) {
-            const response = await UserApi.save(userDto)
-            if (response.ok) {
-                userDto = await response.json().then(json => UserDto.fromJSON(json));
-                localStorage.setItem("nickname", userDto.nickname);
-                localStorage.setItem("password", userDto.password);
-                CurrentUserController.setUser(userDto);
-                navigate("/main");
-            }
-        } else {
-            console.error("Ошибка, попробуйте зарегистрироваться снова")
-            navigate("/login");
+            UserApi.save(userDto).then(
+                result => {
+                    CurrentUserController.setUser(result.user);
+                    localStorage.setItem("TOKEN", result.token)
+
+                    localStorage.removeItem("email");
+                    localStorage.removeItem("password");
+
+                    navigate("/main");
+                }
+            ).catch(error => {
+                navigate("/login");
+                console.error("Ошибка, попробуйте зарегистрироваться снова " + error)
+            })
         }
     }
 
