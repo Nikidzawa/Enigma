@@ -114,8 +114,8 @@ export default function Login() {
 
         UserApi.authenticate(nicknameOrEmail, password).then(
             result => {
-                CurrentUserController.setUser(result.user);
-                localStorage.setItem("TOKEN", result.token);
+                CurrentUserController.setUser(result.data.user);
+                localStorage.setItem("TOKEN", result.data.token);
 
                 localStorage.removeItem("email");
                 localStorage.removeItem("password");

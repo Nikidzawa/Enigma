@@ -108,8 +108,8 @@ export default function BioSection ({goBack}) {
         if (userDto && userDto.email && userDto.password && userDto.name) {
             UserApi.save(userDto).then(
                 result => {
-                    CurrentUserController.setUser(result.user);
-                    localStorage.setItem("TOKEN", result.token)
+                    CurrentUserController.setUser(result.data.user);
+                    localStorage.setItem("TOKEN", result.data.token)
 
                     localStorage.removeItem("email");
                     localStorage.removeItem("password");

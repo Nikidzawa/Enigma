@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import ru.nikidzawa.db.controllers.responses.JwtTokenResponse;
+import ru.nikidzawa.db.exceptions.NotFoundException;
 import ru.nikidzawa.db.exceptions.UnauthorizedException;
 import ru.nikidzawa.db.store.entity.IndividualEntity;
 import ru.nikidzawa.db.store.repository.UserEntityRepository;
@@ -41,6 +42,12 @@ public class UserEntityService {
                 .user(savedUser)
                 .token(jwtService.generateToken(savedUser.getNickname()))
                 .build();
+    }
+
+    public IndividualEntity findByToken(String token) {
+        String nickname = jwtService.extractUserName(token);
+        return repository.findFirstByNickname(nickname)
+                .orElseThrow(() -> new UnauthorizedException("Пользователь не найден"));
     }
 
     public Boolean emailIsUsed(String email) {

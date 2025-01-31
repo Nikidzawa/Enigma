@@ -1,4 +1,6 @@
 import {makeAutoObservable} from "mobx";
+import UserApi from "../api/controllers/UserApi";
+import UserDto from "../api/dto/UserDto";
 
 
 class CurrentUserController {
@@ -14,7 +16,14 @@ class CurrentUserController {
     }
 
     getCurrentUser() {
-        return this.currentUser;
+        return this.currentUser ||
+            UserApi.getUserByToken(localStorage.getItem("TOKEN"))
+                .then(user => {
+                    const userDto = UserDto.fromJSON(user.data);
+                    this.setUser(userDto);
+                    return userDto;
+                })
+                .catch(() => window.location.href = '/login');
     }
 }
 
