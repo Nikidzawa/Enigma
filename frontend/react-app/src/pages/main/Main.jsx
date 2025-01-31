@@ -8,6 +8,8 @@ import ChatRoom from "./components/ChatRoom";
 import {observer} from "mobx-react-lite";
 import MenuImg from "../../img/menu.png";
 import SearchImg from "../../img/search.png";
+import UserApi from "../../api/controllers/UserApi";
+import UserDto from "../../api/dto/UserDto";
 
 const MainContainer = styled.main`
     height: 100vh;
@@ -73,6 +75,8 @@ export default observer(function Main() {
     const [chatRooms, setChatRooms] = useState([]);
     const [searchValue, setSearchValue] = useState("");
 
+    const [initialChatRooms, setInitialChatRooms] = useState([]);
+
     useEffect(() => {
         if (searchValue) {
             const filteredChatRooms = chatRooms.filter(chatRoom =>
@@ -80,47 +84,27 @@ export default observer(function Main() {
             );
             setChatRooms(filteredChatRooms);
         } else {
-            fetchChatRooms();
+            setChatRooms(initialChatRooms);
         }
-    }, [searchValue, chatRooms]);
+    }, [searchValue]);
 
     useEffect(() => {
         fetchChatRooms();
-        addHotkeys();
 
-        async function addHotkeys() {
-            window.addEventListener("keydown", handleKeyDown);
-        }
-
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
+        async function fetchChatRooms() {
+            let user = await CurrentUserController.getCurrentUser();
+            ChatApi.getAllUserChatsByUserId(user.id).then(response => {
+                const rooms = response.data;
+                setInitialChatRooms(rooms)
+                setChatRooms(rooms)
+            })
         }
     }, [])
-
-    async function fetchChatRooms() {
-        const rooms = await ChatApi.getAllUserChatsByUserId(CurrentUserController.getCurrentUser().id);
-        setChatRooms(rooms);
-    }
-
-    const handleMouseDown = () => {
-        setIsResizing(true);
-    };
 
     const handleMouseMove = (e) => {
         if (isResizing) {
             const newWidth = e.clientX;
             setChatListWidth(newWidth > 150 ? newWidth : 150);
-        }
-    };
-
-    const handleMouseUp = () => {
-        setIsResizing(false);
-    };
-
-
-    const handleKeyDown = (e) => {
-        if (e.key === "Escape") {
-            ActiveChatController.setChat(null);
         }
     };
 
@@ -136,8 +120,9 @@ export default observer(function Main() {
 
     return (
         <MainContainer
+            onKeyDown={e => e.code === "Escape" && ActiveChatController.setChat(null)}
             onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
+            onMouseUp={() => setIsResizing(false)}
         >
             <LeftMenuContainer width={chatListWidth}>
                 <TopMenuContainer>
@@ -153,7 +138,7 @@ export default observer(function Main() {
                                   key={chatRoom.chatId}
                         />
                     ))}
-                    <Resizer onMouseDown={handleMouseDown}/>
+                    <Resizer onMouseDown={() => setIsResizing(true)}/>
                 </ChatList>
             </LeftMenuContainer>
             {ActiveChatController.getCurrentUser() != null && (
