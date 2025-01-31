@@ -10,6 +10,10 @@ export default class UserApi {
         return api.get(`/users/existsBy?email=${email}`)
     }
 
+    static getUserByToken(token) {
+        return api.get(`users/findBy?token=${token}`);
+    }
+
     static save(userDto) {
         return api.post('/users/save', userDto)
     }
