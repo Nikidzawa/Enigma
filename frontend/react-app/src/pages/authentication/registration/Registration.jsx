@@ -1,13 +1,9 @@
 import styled from "styled-components";
-import {useNavigate} from "react-router-dom";
 import {useState} from "react";
 import EmailAndPasswordSection from "./sections/EmailAndPasswordSection";
 import Animation from "./components/Animation";
 import EmailVerificationSection from "./sections/EmailVerificationSection";
 import BioSection from "./sections/BioSection";
-import UserDto from "../../../api/dto/UserDto";
-import UserApi from "../../../api/controllers/UserApi";
-import CurrentUserController from "../../../store/CurrentUserController";
 
 const MainComponent = styled.main`
     min-height: 100vh;

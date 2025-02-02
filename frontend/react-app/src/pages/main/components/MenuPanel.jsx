@@ -1,0 +1,136 @@
+import styled, {keyframes} from "styled-components";
+import DefImage from "../../../img/i.png"
+import UserController from "../../../store/UserController";
+import MyProfileImage from "../../../img/account.png";
+import SettingsImage from "../../../img/setting.png";
+
+const fadeIn = keyframes`
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+`
+
+const fadeOut = keyframes`
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+`
+
+const ShadowMainContainer = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(39, 39, 39, 0.5);
+    z-index: 1000;
+    opacity: ${props => props.visible ? "1" : "0"};
+    pointer-events: ${props => props.visible ? "auto" : "none"};;
+    animation: ${props => props.visible ? fadeIn : fadeOut} 0.2s ease;
+`
+
+const LeftPanel = styled.div`
+    position: fixed;
+    width: 350px;
+    left: 0;
+    top: 0;
+    min-height: 100vh;
+    background-color: #1a1a1a;
+    display: flex;
+    transform: translateX(${(props) => (props.visible ? "0" : "-100%")});
+    transition: transform 0.3s ease;
+    flex-direction: column;
+`
+
+const ProfileInfo = styled.div`
+    display: flex;
+    align-items: center;
+    padding: 10px 10px 13px;
+    border-bottom: 1px solid #292929;
+`
+
+const ProfileImage = styled.img`
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+`
+
+const InfoSection = styled.div`
+    display: flex;
+    flex-direction: column;
+    margin-left: 15px;
+    gap: 7px;
+    width: 225px;
+    max-width: 225px;
+`
+
+const Name = styled.div`
+    font-size: 17px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+`
+
+const Info = styled.div`
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+`
+
+const Panel = styled.div`
+    height: 60px;
+    display: flex;
+    align-items: center;
+    background-image: ${props => props.image ? `url(${props.image})` : ''};
+    background-size: 28px;
+    background-repeat: no-repeat;
+    background-position: 10px;
+    padding-left: 52px;
+    cursor: pointer;
+    font-size: 15px;
+
+    &:hover {
+        background-color: #292929;
+    }
+`
+
+const MessengerInfo = styled.div`
+    display: flex;
+    margin-top: auto;
+    padding: 20px;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 13px;
+    border-top: 1px solid #292929;
+`
+
+
+export default function MenuPanel ({setMenuIsVisible, menuIsVisible}) {
+
+    return (
+        <ShadowMainContainer visible={menuIsVisible} onClick={() => setMenuIsVisible(false)}>
+            <LeftPanel visible={menuIsVisible} onClick={e => e.stopPropagation()}>
+                <ProfileInfo>
+                    <ProfileImage src={DefImage}/>
+                    <InfoSection>
+                        <Name>{UserController.getCurrentUser().name}</Name>
+                        <Info>Статус не задан</Info>
+                    </InfoSection>
+                </ProfileInfo>
+                <Panel image={MyProfileImage}>Мой профиль</Panel>
+                <Panel image={SettingsImage}>Настройки</Panel>
+                <MessengerInfo>
+                    <div>Enigma Messenger</div>
+                    <div>Версия 0.1 Beta</div>
+                </MessengerInfo>
+            </LeftPanel>
+        </ShadowMainContainer>
+    )
+}

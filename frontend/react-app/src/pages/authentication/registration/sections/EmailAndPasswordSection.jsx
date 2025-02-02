@@ -4,10 +4,9 @@ import {useEffect, useRef, useState} from "react";
 import styled from "styled-components";
 import Logo from "../../../../img/img.png";
 import {useNavigate} from "react-router-dom";
-import Animation from "../components/Animation";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
 import UserDto from "../../../../api/dto/UserDto";
-import CurrentUserController from "../../../../store/CurrentUserController";
+import UserController from "../../../../store/UserController";
 import StringUtils from "../../../../helpers/StringUtils";
 import EmailCodeController from "../store/EmailCodeController";
 import Loader from "../components/Loader";
@@ -176,7 +175,7 @@ export default function EmailAndPasswordSection({nextSection}) {
             const user = new UserDto();
             user.email = StringUtils.replaceSpaces(email).toLowerCase();
             user.password = StringUtils.replaceSpaces(password);
-            CurrentUserController.setUser(user);
+            UserController.setUser(user);
 
             setEmailServicesEx(false)
 
