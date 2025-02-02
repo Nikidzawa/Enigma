@@ -3,9 +3,8 @@ import Logo from "../../../img/img.png"
 import {useNavigate} from "react-router-dom";
 import {useState} from "react";
 import UserApi from "../../../api/controllers/UserApi";
-import CurrentUserController from "../../../store/CurrentUserController";
+import UserController from "../../../store/UserController";
 import NicknameOrEmailAndPasswordFields from "./components/NicknameOrEmailAndPasswordFields";
-import JwtTokenAndUser from "../../../api/dto/JwtTokenAndUser";
 import FailFieldValidation from "../components/fields/FailFieldValidation";
 
 
@@ -114,7 +113,7 @@ export default function Login() {
 
         UserApi.authenticate(nicknameOrEmail, password).then(
             result => {
-                CurrentUserController.setUser(result.data.user);
+                UserController.setUser(result.data.user);
                 localStorage.setItem("TOKEN", result.data.token);
 
                 localStorage.removeItem("email");

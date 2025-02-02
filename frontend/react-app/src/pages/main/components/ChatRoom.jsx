@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import DefaultAvatar from "../../../img/i.png"
 import DateParser from "../../../helpers/DateParser";
-import CurrentUserController from "../../../store/CurrentUserController";
+import UserController from "../../../store/UserController";
 import ActiveChatController from "../../../store/ActiveChatController";
 
 const MainContainer = styled.div`
@@ -57,7 +57,7 @@ const Date = styled.div`
 
 export default function ChatRoom({chatRoom}) {
     function isMyMessage() {
-        return CurrentUserController.getCurrentUser().id === chatRoom.lastMessage.senderId ? "Вы: " : "";
+        return UserController.getCurrentUser().id === chatRoom.lastMessage.senderId ? "Вы: " : "";
     }
 
     return (

@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import Send from "../../../img/send.png"
 import ActiveChatController from "../../../store/ActiveChatController";
-import CurrentUserController from "../../../store/CurrentUserController";
+import UserController from "../../../store/UserController";
 import {useEffect, useRef, useState} from "react";
 import MessagesApi from "../../../api/controllers/MessagesApi";
 import DateParser from "../../../helpers/DateParser";
@@ -217,7 +217,7 @@ export default function ActiveChat({onMessageSend}) {
 
     async function sendMessage() {
         if (text) {
-            let newMessage = new MessageDto(null, new Date(), text, CurrentUserController.getCurrentUser().id);
+            let newMessage = new MessageDto(null, new Date(), text, UserController.getCurrentUser().id);
             await setMessages([...messages, newMessage]);
             setText("");
             scrollToBottom();
@@ -243,7 +243,7 @@ export default function ActiveChat({onMessageSend}) {
             </UpperSection>
             <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
                 {messages.map((message) => (
-                    message.senderId === CurrentUserController.getCurrentUser().id ? (
+                    message.senderId === UserController.getCurrentUser().id ? (
                         <MyMessage key={message.id}>
                             <MyMessageText>{message.text}</MyMessageText>
                             <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>

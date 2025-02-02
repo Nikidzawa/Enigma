@@ -2,13 +2,13 @@ import {useEffect, useState} from "react";
 import styled from "styled-components";
 import ActiveChat from "./components/ActiveChat";
 import ChatApi from "../../api/controllers/ChatApi";
-import CurrentUserController from "../../store/CurrentUserController";
+import UserController from "../../store/UserController";
 import ActiveChatController from "../../store/ActiveChatController";
 import ChatRoom from "./components/ChatRoom";
 import {observer} from "mobx-react-lite";
 import MenuImg from "../../img/menu.png";
 import SearchImg from "../../img/search.png";
-import UserApi from "../../api/controllers/UserApi";
+import MenuPanel from "./components/MenuPanel";
 import UserDto from "../../api/dto/UserDto";
 
 const MainContainer = styled.main`
@@ -37,7 +37,7 @@ const TopMenuContainer = styled.div`
     gap: 12px;
 `
 
-const MenuPanel = styled.img`
+const MenuButton = styled.img`
     height: 22px;
     width: 26px;
     cursor: pointer;
@@ -76,6 +76,7 @@ export default observer(function Main() {
     const [searchValue, setSearchValue] = useState("");
 
     const [initialChatRooms, setInitialChatRooms] = useState([]);
+    const [menuIsVisible, setMenuIsVisible] = useState(false);
 
     useEffect(() => {
         if (searchValue) {
@@ -92,7 +93,7 @@ export default observer(function Main() {
         fetchChatRooms();
 
         async function fetchChatRooms() {
-            let user = await CurrentUserController.getCurrentUser();
+            let user = await UserController.getCurrentUser();
             ChatApi.getAllUserChatsByUserId(user.id).then(response => {
                 const rooms = response.data;
                 setInitialChatRooms(rooms)
@@ -126,7 +127,8 @@ export default observer(function Main() {
         >
             <LeftMenuContainer width={chatListWidth}>
                 <TopMenuContainer>
-                    <MenuPanel src={MenuImg}/>
+                    <MenuButton src={MenuImg} onClick={() => setMenuIsVisible(true)}/>
+                    <MenuPanel setMenuIsVisible={setMenuIsVisible} menuIsVisible={menuIsVisible}/>
                     <SearchInput
                         img={SearchImg}
                         onInput={e => setSearchValue(e.target.value)}

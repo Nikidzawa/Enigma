@@ -3,9 +3,8 @@ import ConvertVideo from "../../../../img/convert.lottie";
 import styled from "styled-components";
 import EmailVerificationFields from "../../components/fields/EmailVerificationFields";
 import {useEffect, useState} from "react";
-import CurrentUserController from "../../../../store/CurrentUserController";
+import UserController from "../../../../store/UserController";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
-import MailApi from "../../../../api/controllers/MailApi";
 import EmailCodeController from "../store/EmailCodeController";
 
 const MainContainer = styled.div`
@@ -169,7 +168,7 @@ export default function EmailVerificationSection ({goNextSection, goBack}) {
         <MainContainer onKeyDown={e => e.code === 'Enter' && submitEmail()}>
             <TitleContainer>
                 <ImageSendVideo src={ConvertVideo} autoplay/>
-                <YourMailContainer>{CurrentUserController.getCurrentUser().email}</YourMailContainer>
+                <YourMailContainer>{UserController.getCurrentUser().email}</YourMailContainer>
                 <Title>Enter code from letter</Title>
             </TitleContainer>
             <FieldsContainer>

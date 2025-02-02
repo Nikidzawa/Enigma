@@ -1,26 +1,14 @@
 import styled from "styled-components";
 import CameraImg from "../../../../img/camera.png"
-import CurrentUserController from "../../../../store/CurrentUserController";
+import UserController from "../../../../store/UserController";
 import UserApi from "../../../../api/controllers/UserApi";
-import UserDto from "../../../../api/dto/UserDto";
 import {useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
-import JwtTokenAndUser from "../../../../api/dto/JwtTokenAndUser";
 
 const MainContainer = styled.div`
     display: flex;
     justify-content: center;
-`
-
-const Title = styled.div`
-    position: absolute;
-    top: 35%;
-    font-size: 35px;
-    font-weight: bold;
-    font-family: Rubik;
-    width: 80%;
-    text-align: center;
 `
 
 
@@ -101,14 +89,14 @@ export default function BioSection ({goBack}) {
     const [nameEx, setNameEx] = useState(false);
 
     async function register() {
-        const userDto = CurrentUserController.getCurrentUser();
+        const userDto = UserController.getCurrentUser();
         userDto.name = name;
         userDto.surname = surname;
 
         if (userDto && userDto.email && userDto.password && userDto.name) {
             UserApi.save(userDto).then(
                 result => {
-                    CurrentUserController.setUser(result.data.user);
+                    UserController.setUser(result.data.user);
                     localStorage.setItem("TOKEN", result.data.token)
 
                     localStorage.removeItem("email");
