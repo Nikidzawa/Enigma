@@ -3,6 +3,9 @@ import DefImage from "../../../img/i.png"
 import UserController from "../../../store/UserController";
 import MyProfileImage from "../../../img/account.png";
 import SettingsImage from "../../../img/setting.png";
+import LogoutImage from "../../../img/log-out.png";
+import LogoImage from "../../../img/img.png"
+import {useNavigate} from "react-router-dom";
 
 const fadeIn = keyframes`
     from {
@@ -84,8 +87,17 @@ const Info = styled.div`
     text-overflow: ellipsis;
 `
 
+const Panels = styled.div`
+    overflow-y: auto;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+`
+
 const Panel = styled.div`
-    height: 60px;
+    height: 50px;
     display: flex;
     align-items: center;
     background-image: ${props => props.image ? `url(${props.image})` : ''};
@@ -104,31 +116,48 @@ const Panel = styled.div`
 const MessengerInfo = styled.div`
     display: flex;
     margin-top: auto;
-    padding: 20px;
-    flex-direction: column;
-    gap: 5px;
+    padding: 15px;
+    gap: 7px;
     font-size: 13px;
     border-top: 1px solid #292929;
+    align-items: center;
 `
 
-
 export default function MenuPanel ({setMenuIsVisible, menuIsVisible}) {
+    const navigate = useNavigate();
+
+    function logout () {
+        localStorage.removeItem("TOKEN")
+        navigate("/login")
+    }
 
     return (
         <ShadowMainContainer visible={menuIsVisible} onClick={() => setMenuIsVisible(false)}>
             <LeftPanel visible={menuIsVisible} onClick={e => e.stopPropagation()}>
                 <ProfileInfo>
-                    <ProfileImage src={DefImage}/>
+                    <ProfileImage src={UserController.getCurrentUser().avatarHref}/>
                     <InfoSection>
                         <Name>{UserController.getCurrentUser().name}</Name>
                         <Info>Статус не задан</Info>
                     </InfoSection>
                 </ProfileInfo>
-                <Panel image={MyProfileImage}>Мой профиль</Panel>
-                <Panel image={SettingsImage}>Настройки</Panel>
+                <Panels>
+                    <div>
+                        <Panel image={MyProfileImage}>Мой профиль</Panel>
+                        <Panel image={SettingsImage}>Настройки</Panel>
+                    </div>
+                    <div>
+                        <Panel image={LogoutImage} onClick={logout}>Выход</Panel>
+                    </div>
+                </Panels>
                 <MessengerInfo>
-                    <div>Enigma Messenger</div>
-                    <div>Версия 0.1 Beta</div>
+                    <div>
+                        <img src={LogoImage} width={"25px"}/>
+                    </div>
+                    <div>
+                        <div>Enigma Messenger</div>
+                        <div>Версия 0.1 Beta</div>
+                    </div>
                 </MessengerInfo>
             </LeftPanel>
         </ShadowMainContainer>

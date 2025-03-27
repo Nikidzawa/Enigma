@@ -1,15 +1,68 @@
 import {useEffect, useState} from "react";
-import styled from "styled-components";
+import styled, {keyframes} from "styled-components";
 import ActiveChat from "./components/ActiveChat";
-import ChatApi from "../../api/controllers/ChatApi";
+import ChatApi from "../../api/internal/controllers/ChatApi";
 import UserController from "../../store/UserController";
 import ActiveChatController from "../../store/ActiveChatController";
 import ChatRoom from "./components/ChatRoom";
 import {observer} from "mobx-react-lite";
 import MenuImg from "../../img/menu.png";
 import SearchImg from "../../img/search.png";
+import CloseImg from "../../img/close.png"
 import MenuPanel from "./components/MenuPanel";
-import UserDto from "../../api/dto/UserDto";
+import UserApi from "../../api/internal/controllers/UserApi";
+import UserDtoShort from "../../api/internal/dto/UserDtoShort";
+import UserProfile from "./components/UserProfile";
+import ChatRoomDto from "../../api/internal/dto/ChatRoomDto";
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
+import ClientController from "../../store/ClientController";
+import ChatsController from "../../store/ChatsController";
+
+const slideOutToBottom = keyframes`
+    from {
+        transform: translateY(-35%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+`;
+
+const slideOutToBottom2 = keyframes`
+    from {
+        transform: translateY(-35%);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 0;
+    }
+`;
+
+const slideOutToUp = keyframes`
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-35%);
+        opacity: 0;
+        position: absolute;
+    }
+`;
+
+const slideOutToUp2 = keyframes`
+    from {
+        transform: translateY(20%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0%);
+        opacity: 1;
+    }
+`;
 
 const MainContainer = styled.main`
     height: 100vh;
@@ -21,14 +74,13 @@ const MainContainer = styled.main`
 
 const LeftMenuContainer = styled.div`
     height: 100vh;
+    display: flex;
+    flex-direction: column;
     width: ${({width}) => width}px;
     position: relative;
     max-width: 70%;
     min-width: 10%;
 `
-
-const ChatList = styled.div`
-`;
 
 const TopMenuContainer = styled.div`
     display: flex;
@@ -50,7 +102,7 @@ const SearchInput = styled.input`
     background-color: transparent;
     color: white;
     font-size: 15px;
-    padding: 7px 15px 7px 35px;
+    padding: 6px 15px 6px 35px;
     outline: none; 
     background-image: url("${props => props.img}");
     background-size: 20px;
@@ -69,38 +121,123 @@ const Resizer = styled.div`
     background: rgba(255, 255, 255, 0.5);
 `;
 
+const SearchCategories = styled.div`
+    width: 100%;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    animation: ${props => props.isActive ? slideOutToBottom : slideOutToUp} 0.25s forwards;
+`
+
+const SearchCategory = styled.div`
+    cursor: pointer;
+    padding: 5px 10px;
+    text-align: center;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-size: 15px;
+
+    &.active {
+        background-color: #292929;
+        transition: background-color 0.2s;
+    }
+`
+
+const StopSearch = styled.img`
+    position: absolute;
+    width: 19px;
+    height: 19px;
+    right: 20px;
+    cursor: pointer;
+`
+
+const SearchLabel = styled.div`
+    background-color: #292929;
+    padding: 5px;
+    margin-top: 5px;
+    font-size: 15px;
+`
+
+const EmptySearchResult = styled.div`
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    padding: 0 10px;
+    margin-top: auto;
+`
+
+const SearchPanel = styled.div`
+    display: flex;
+    flex-direction: column;
+    height: 40%;
+`
+
+const ChatRoomsContainer = styled.div`
+    animation: ${props => props.isActive ? slideOutToBottom2 : slideOutToUp2} 0.25s forwards;
+`
+
 export default observer(function Main() {
     const [chatListWidth, setChatListWidth] = useState(500);
     const [isResizing, setIsResizing] = useState(false);
-    const [chatRooms, setChatRooms] = useState([]);
-    const [searchValue, setSearchValue] = useState("");
 
-    const [initialChatRooms, setInitialChatRooms] = useState([]);
+    const [isSearchMode, setSearching] = useState(false);
+    const [searchValue, setSearchValue] = useState("");
+    const [searchCategory, setSearchCategory] = useState('MESSAGES')
+    const [searchResults, setSearchResults] = useState([]);
+
     const [menuIsVisible, setMenuIsVisible] = useState(false);
 
     useEffect(() => {
-        if (searchValue) {
-            const filteredChatRooms = chatRooms.filter(chatRoom =>
-                chatRoom.userName.toLowerCase().includes(searchValue.toLowerCase())
-            );
-            setChatRooms(filteredChatRooms);
-        } else {
-            setChatRooms(initialChatRooms);
+
+        updateUser().then(user => {
+            ClientController.connect(user.id).then(() => {
+                ChatApi.getAllUserChatsByUserId(user.id).then(response =>
+                    ChatsController.setChats(response.data.map(room => ChatRoomDto.fromJSON(room)))
+                )
+            })
+        });
+
+
+        async function updateUser() {
+            let user = UserController.getCurrentUser();
+            if (!user.id) {
+                user = await UserController.fetchUserByToken()
+                UserController.setUser(user)
+            }
+            return user;
         }
-    }, [searchValue]);
+
+        const handleKeyDown = (e) => {
+            if (e.code === 'Escape') {
+                ActiveChatController.setChat(null);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {window.removeEventListener('keydown', handleKeyDown);};
+    }, [])
 
     useEffect(() => {
-        fetchChatRooms();
+        const timer = setTimeout(() => {
+            if (searchCategory === 'PEOPLES' && searchValue.trim()) {
+                searchUsers().then(users => setSearchResults(users));
+            } else {
+                setSearchResults([]);
+            }
+        }, 300);
 
-        async function fetchChatRooms() {
-            let user = await UserController.getCurrentUser();
-            ChatApi.getAllUserChatsByUserId(user.id).then(response => {
-                const rooms = response.data;
-                setInitialChatRooms(rooms)
-                setChatRooms(rooms)
-            })
-        }
-    }, [])
+        return () => clearTimeout(timer);
+    }, [searchCategory, searchValue]);
+
+    async function searchUsers() {
+        const response = await UserApi.search(searchValue.trim(), UserController.getCurrentUser().id);
+        return response.data.map(userInfo => UserDtoShort.fromJSON(userInfo));
+    }
+
+    function stopSearch () {
+        setSearching(false);
+        setSearchValue('');
+    }
 
     const handleMouseMove = (e) => {
         if (isResizing) {
@@ -110,46 +247,70 @@ export default observer(function Main() {
     };
 
     const updateLastMessage = (chatRoomId, newMessage) => {
-        setChatRooms((prevChatRooms) =>
-            prevChatRooms.map((chatRoom) =>
-                chatRoom.chatId === chatRoomId
-                    ? {...chatRoom, lastMessage: newMessage}
-                    : chatRoom
+        ChatsController.setChats(ChatsController.getChats()?.map((chatRoom) =>
+                chatRoom.chat.id === chatRoomId ? {...chatRoom, lastMessage: newMessage} : chatRoom
             )
         );
     };
 
     return (
-        <MainContainer
-            onKeyDown={e => e.code === "Escape" && ActiveChatController.setChat(null)}
-            onMouseMove={handleMouseMove}
-            onMouseUp={() => setIsResizing(false)}
-        >
+        <MainContainer onMouseMove={handleMouseMove} onMouseUp={() => setIsResizing(false)}>
             <LeftMenuContainer width={chatListWidth}>
                 <TopMenuContainer>
                     <MenuButton src={MenuImg} onClick={() => setMenuIsVisible(true)}/>
                     <MenuPanel setMenuIsVisible={setMenuIsVisible} menuIsVisible={menuIsVisible}/>
                     <SearchInput
-                        img={SearchImg}
-                        onInput={e => setSearchValue(e.target.value)}
-                        placeholder={"Поиск"}/>
-                </TopMenuContainer>
-                <ChatList>
-                    {chatRooms.map((chatRoom) => (
-                        <ChatRoom chatRoom={chatRoom}
-                                  key={chatRoom.chatId}
-                        />
-                    ))}
-                    <Resizer onMouseDown={() => setIsResizing(true)}/>
-                </ChatList>
-            </LeftMenuContainer>
-            {ActiveChatController.getCurrentUser() != null && (
-                <ActiveChat
-                    onMessageSend={(newMessage) =>
-                        updateLastMessage(ActiveChatController.getCurrentUser().chatId, newMessage)
+                            img={SearchImg}
+                            onClick={() => {setSearching(true)}}
+                            value={searchValue}
+                            onInput={e => setSearchValue(e.target.value)}
+                            placeholder={"Поиск"}
+                    />
+                    {
+                        isSearchMode && <StopSearch src={CloseImg} onClick={stopSearch}/>
                     }
-                />
-            )}
+                </TopMenuContainer>
+                <SearchCategories isActive={isSearchMode}>
+                    <SearchCategory className={searchCategory === 'MESSAGES' ? 'active' : ''}
+                                    onClick={() => setSearchCategory('MESSAGES')}>Сообщения</SearchCategory>
+                    <SearchCategory className={searchCategory === 'PEOPLES' ? 'active' : ''}
+                                    onClick={() => setSearchCategory('PEOPLES')}>Люди</SearchCategory>
+                    <SearchCategory className={searchCategory === 'GROUPS' ? 'active' : ''}
+                                    onClick={() => setSearchCategory('GROUPS')}>Сообщества</SearchCategory>
+                </SearchCategories>
+                {
+                    isSearchMode ?
+                        <SearchPanel>
+                            <SearchLabel>Глобальный поиск</SearchLabel>
+                            {
+                                searchCategory === 'PEOPLES' && searchResults.map(userInfo =>
+                                    (<UserProfile key={userInfo.id} userInfo={userInfo}/>)
+                                )
+                            }
+                            {
+                                searchResults.length === 0 && <EmptySearchResult>Ничего не найдено</EmptySearchResult>
+                            }
+                        </SearchPanel>
+                    : (
+                            <ChatRoomsContainer isActive={isSearchMode}>
+                                {
+                                    ChatsController.getChats()?.map(chatRoom =>
+                                        (<ChatRoom key={chatRoom.chat.id} chatRoom={chatRoom}/>)
+                                    )
+                                }
+                            </ChatRoomsContainer>
+                    )
+
+                }
+                <Resizer onMouseDown={e => {e.preventDefault(); setIsResizing(true)}}/>
+            </LeftMenuContainer>
+            {
+                ActiveChatController.getCurrentChat() && (
+                    <ActiveChat
+                        onMessageSend={newMessage => updateLastMessage(ActiveChatController.getCurrentChat().chat.id, newMessage)}
+                    />
+                )
+            }
         </MainContainer>
     );
 })

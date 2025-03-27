@@ -13,7 +13,7 @@ class ActiveChatController {
         this.activeChat = chat;
     }
 
-    getCurrentUser() {
+    getCurrentChat() {
         return this.activeChat;
     }
 }

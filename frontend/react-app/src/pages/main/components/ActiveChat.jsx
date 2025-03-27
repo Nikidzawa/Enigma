@@ -1,16 +1,20 @@
 import styled from "styled-components";
-import Send from "../../../img/send.png"
+import SendImage from "../../../img/send.png"
 import ActiveChatController from "../../../store/ActiveChatController";
 import UserController from "../../../store/UserController";
 import {useEffect, useRef, useState} from "react";
-import MessagesApi from "../../../api/controllers/MessagesApi";
+import MessagesApi from "../../../api/internal/controllers/MessagesApi";
 import DateParser from "../../../helpers/DateParser";
-import MessageDto from "../../../api/dto/MessageDto";
+import MessageDto from "../../../api/internal/dto/MessageDto";
+import MessageRequest from "../../../network/request/MessageRequest";
+import ClientController from "../../../store/ClientController";
 
 const MainContainer = styled.div`
     flex: 1;
     justify-content: space-between;
     padding: 5px 10px;
+    z-index: 100;
+    background-color: #121212;
 `
 
 const UpperSection = styled.div`
@@ -19,6 +23,7 @@ const UpperSection = styled.div`
     flex-direction: column;
     gap: 3px;
     border-bottom: 1px solid #707070;
+    justify-content: center;
 `
 
 const ChatSection = styled.div`
@@ -61,7 +66,7 @@ const BottomSection = styled.div`
 `
 
 const Name = styled.div`
-    font-size: 25px;
+    font-size: 20px;
 `
 const OnlineStatusContainer = styled.div`
     display: flex;
@@ -139,15 +144,24 @@ export default function ActiveChat({onMessageSend}) {
     const scrollTimeout = useRef(null);
     const ChatSectionRef = useRef(null);
     const [isLoadMessages, setLoadMessages] = useState(false);
+    const [blockLoadMessages, setBlockLoadMessages] = useState(false);
 
-    function defaultSort(array) {
-        return array.sort((a, b) => a.id - b.id);
-    }
+    const [user, setUser] = useState({});
+    const [chat, setChat] = useState({});
 
     useEffect(() => {
+        const chatRoom = ActiveChatController.getCurrentChat();
+        setUser(chatRoom.companion);
+        setChat(chatRoom.chat);
+
         const loadMessages = async () => {
-            const messagesResponse = await MessagesApi.getMessagesByChatId(ActiveChatController.getCurrentUser().chatId, 0);
-            setMessages(defaultSort(messagesResponse));
+            try {
+                await MessagesApi.getMessagesByChatId(chatRoom.chat.id, 0).then(response =>
+                    setMessages(defaultSort(response.data.map(message => MessageDto.fromJSON(message))))
+                );
+            } catch (error) {
+                console.error("Ошибка при загрузке сообщений:", error);
+            }
         };
 
         loadMessages().then(() => {
@@ -156,6 +170,10 @@ export default function ActiveChat({onMessageSend}) {
             }, 0);
         });
     }, []);
+
+    function defaultSort(array) {
+        return array.sort((a, b) => a.id - b.id);
+    }
 
     const scrollToBottom = () => {
         if (ChatSectionRef.current) {
@@ -178,20 +196,24 @@ export default function ActiveChat({onMessageSend}) {
                 setLoadMessages(true);
 
                 try {
-                    const newMessages = await MessagesApi.getMessagesByChatId(
-                        ActiveChatController.getCurrentUser().chatId,
-                        messages[0]?.id
-                    );
+                    if (!blockLoadMessages) {
+                        await MessagesApi.getMessagesByChatId(chat.id, messages[0]?.id).then(response => {
+                            let newMessages = response.data;
+                            if (newMessages.length > 0) {
+                                newMessages = newMessages.map(message => MessageDto.fromJSON(message));
 
-                    if (newMessages.length > 0) {
-                        setMessages((prevMessages) => {
-                            return [...defaultSort(newMessages), ...prevMessages];
+                                setMessages((prevMessages) => {
+                                    return [...defaultSort(newMessages), ...prevMessages];
+                                });
+
+                                setTimeout(() => {
+                                    ChatSectionRef.current.scrollTop =
+                                        ChatSectionRef.current.scrollHeight - prevScrollHeight + threshold;
+                                }, 100);
+                            } else {
+                                setBlockLoadMessages(true);
+                            }
                         });
-
-                        setTimeout(() => {
-                            ChatSectionRef.current.scrollTop =
-                                ChatSectionRef.current.scrollHeight - prevScrollHeight + threshold;
-                        }, 0);
                     }
                 } catch (error) {
                     console.error("Ошибка при подгрузке сообщений: ", error);
@@ -217,54 +239,52 @@ export default function ActiveChat({onMessageSend}) {
 
     async function sendMessage() {
         if (text) {
-            let newMessage = new MessageDto(null, new Date(), text, UserController.getCurrentUser().id);
-            await setMessages([...messages, newMessage]);
-            setText("");
-            scrollToBottom();
-            onMessageSend(newMessage);
-            MessagesApi.save(newMessage, ActiveChatController.getCurrentUser().chatId);
-        }
-    }
-
-    function handleSendMessage(e) {
-        if (e.key === "Enter") {
-            sendMessage();
+            const newMessage = new MessageDto(null, new Date(), text, UserController.getCurrentUser().id);
+            MessagesApi.send(UserController.getCurrentUser().id, user.id, newMessage).then(async response => {
+                const message = await MessageDto.fromJSON(response.data);
+                setMessages([...messages, message]);
+                onMessageSend(message);
+                setText("");
+                scrollToBottom();
+                await ClientController.sendMessage(new MessageRequest(message.id, message.createdAt, message.senderId, user.id, message.text));
+            });
         }
     }
 
     return (
         <MainContainer>
             <UpperSection>
-                <Name>{ActiveChatController.getCurrentUser().userName}</Name>
+                <Name>{user.name}</Name>
                 <OnlineStatusContainer>
                     <OnlineStatusCircle/>
                     <OnlineStatusText>В сети</OnlineStatusText>
                 </OnlineStatusContainer>
             </UpperSection>
             <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
-                {messages.map((message) => (
-                    message.senderId === UserController.getCurrentUser().id ? (
-                        <MyMessage key={message.id}>
-                            <MyMessageText>{message.text}</MyMessageText>
-                            <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
-                        </MyMessage>
-                    ) : (
-                        <OtherMessage key={message.id}>
-                            <OtherMessageText>{message.text}</OtherMessageText>
-                            <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
-                        </OtherMessage>
-                    )
-                ))
+                {
+                    messages.map((message) => (
+                        message.senderId === UserController.getCurrentUser().id ? (
+                            <MyMessage key={message.id}>
+                                <MyMessageText>{message.text}</MyMessageText>
+                                <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
+                            </MyMessage>
+                        ) : (
+                            <OtherMessage key={message.id}>
+                                <OtherMessageText>{message.text}</OtherMessageText>
+                                <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
+                            </OtherMessage>
+                        )
+                    ))
                 }
             </ChatSection>
             <BottomSection>
                 <Input
                     value={text}
                     onInput={(e) => setText(e.target.value)}
-                    onKeyDown={(e) => handleSendMessage(e)}
+                    onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                     placeholder={"Введите сообщение"}
                 />
-                <SendButton onClick={sendMessage} src={Send}/>
+                <SendButton onClick={sendMessage} src={SendImage}/>
             </BottomSection>
         </MainContainer>
     );

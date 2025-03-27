@@ -1,11 +1,12 @@
 export default class UserDto {
-    constructor(id, nickname, name, surname, email, password) {
+    constructor(id, nickname, name, surname, email, password, avatarHref) {
         this.id = id;
         this.nickname = nickname;
         this.name = name;
-        this.surname = surname || null;
+        this.surname = surname || '';
         this.email = email;
         this.password = password;
+        this.avatarHref = avatarHref;
     }
 
     static fromJSON(data) {
@@ -13,9 +14,10 @@ export default class UserDto {
             data.id,
             data.nickname,
             data.name,
-            data.surname || null,
+            data.surname || '',
             data.email,
             data.password,
+            data.avatarHref
         );
     }
 }

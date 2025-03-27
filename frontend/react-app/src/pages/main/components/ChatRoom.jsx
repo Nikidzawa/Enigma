@@ -3,16 +3,19 @@ import DefaultAvatar from "../../../img/i.png"
 import DateParser from "../../../helpers/DateParser";
 import UserController from "../../../store/UserController";
 import ActiveChatController from "../../../store/ActiveChatController";
+import {useEffect, useState} from "react";
 
 const MainContainer = styled.div`
+    overflow: hidden;
+    text-overflow: ellipsis;
     :hover {
         background: #32373e;
     }
 `
 
 const ChatRoomContainer = styled.div`
-    height: 60px;
-    padding: 10px;
+    height: 50px;
+    padding: 5px;
     display: flex;
     gap: 10px;
     cursor: pointer;
@@ -20,24 +23,27 @@ const ChatRoomContainer = styled.div`
 
 const UserAvatar = styled.img`
     border-radius: 50%;
+    width: 50px;
+    height: 50px;
 `
 
 const UserData = styled.div`
-    width: calc(100% - 70px);
+    width: 100%;
     display: flex;
+    gap: 5px;
     flex-direction: column;
-    gap: 10px;
+    justify-content: center;
 `
 
 const Name = styled.div`
-    font-size: 19px;
+    font-size: 16px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
 `
 
 const LastMessage = styled.div`
-    font-size: 14px;
+    font-size: 13px;
     color: #7f7f7f;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -51,30 +57,37 @@ const UpperLine = styled.div`
 `
 
 const Date = styled.div`
-    font-size: 14px;
+    font-size: 13px;
+    padding: 0 5px;
     color: #7f7f7f;
 `
 
 export default function ChatRoom({chatRoom}) {
+    const [user, setUser] = useState({})
+    const [message, setMessage] = useState(null)
+
     function isMyMessage() {
-        return UserController.getCurrentUser().id === chatRoom.lastMessage.senderId ? "Вы: " : "";
+        return UserController.getCurrentUser().id === message.senderId ? "Вы: " : "";
     }
 
+    useEffect(() => {
+        setUser(chatRoom.companion);
+        setMessage(chatRoom.lastMessage);
+    }, [chatRoom]);
+
     return (
-        <>
             <MainContainer onClick={() => ActiveChatController.setChat(chatRoom)}>
                 <ChatRoomContainer>
-                    <UserAvatar src={DefaultAvatar}/>
+                    <UserAvatar src={user.avatarHref}/>
                     <UserData>
                         <UpperLine>
-                            <Name>{`${chatRoom.userName} ${chatRoom.userSurname}`}</Name>
-                            <Date>{chatRoom.lastMessage ? DateParser.parseDate(chatRoom.lastMessage.createdAt) : " "}</Date>
+                            <Name>{`${user.name} ${user.surname}`}</Name>
+                            <Date>{message ? DateParser.parseDate(message.createdAt) : ""}</Date>
                         </UpperLine>
-                        <LastMessage>{chatRoom.lastMessage ? chatRoom.lastMessage && (isMyMessage() + chatRoom.lastMessage.text) : "Сообщений нет"}</LastMessage>
+                        <LastMessage>{message ? message && (isMyMessage() + message.text) : "Сообщений нет"}</LastMessage>
                     </UserData>
                 </ChatRoomContainer>
             </MainContainer>
-        </>
     );
 }
 

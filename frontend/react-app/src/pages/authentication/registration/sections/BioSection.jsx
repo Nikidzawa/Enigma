@@ -1,10 +1,13 @@
 import styled from "styled-components";
 import CameraImg from "../../../../img/camera.png"
 import UserController from "../../../../store/UserController";
-import UserApi from "../../../../api/controllers/UserApi";
+import UserApi from "../../../../api/internal/controllers/UserApi";
 import {useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
+import EmailCodeController from "../store/EmailCodeController";
+import UserDto from "../../../../api/internal/dto/UserDto";
+import FireBase from "../../../../api/external/FireBase";
 
 const MainContainer = styled.div`
     display: flex;
@@ -13,17 +16,24 @@ const MainContainer = styled.div`
 
 
 const Image = styled.img`
-    width: calc(50px + 2vh);
-    height: calc(50px + 2vh);
-`
-
-const ImageContainer = styled.div`
     position: absolute;
     top: 12%;
-    border: 2px solid white;
     border-radius: 50%;
-    padding: 35px;
+    width: 150px;
+    height: 150px;
     cursor: pointer;
+    border: 2px solid white;
+`
+
+const ChooseImage = styled.input`
+    position: absolute;
+    top: 12%;
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    cursor: pointer;
+    opacity: 0;
+    z-index: 100;
 `
 
 const FieldsContainer = styled.div`
@@ -84,32 +94,50 @@ export default function BioSection ({goBack}) {
     const navigate = useNavigate();
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
+    const [avatar, setAvatar] = useState(null);
     const surnameRef = useRef();
 
     const [nameEx, setNameEx] = useState(false);
 
     async function register() {
-        const userDto = UserController.getCurrentUser();
+        const userDto = new UserDto();
         userDto.name = name;
         userDto.surname = surname;
+        userDto.email = localStorage.getItem("email") || EmailCodeController.getEmail();
+        userDto.password = localStorage.getItem("password");
 
-        if (userDto && userDto.email && userDto.password && userDto.name) {
+        if (userDto.name && userDto.email && userDto.password) {
             UserApi.save(userDto).then(
-                result => {
-                    UserController.setUser(result.data.user);
-                    localStorage.setItem("TOKEN", result.data.token)
+                async result => {
+                    const user = result.data.user;
+                    user.avatarHref = await FireBase.uploadAvatar(FireBase.base64ToFile(avatar, `${user.id}`), user.id);
+                    await UserApi.save(user).then(result => {
+                        UserController.setUser(result.data.user);
+                        localStorage.setItem("TOKEN", result.data.token)
 
-                    localStorage.removeItem("email");
-                    localStorage.removeItem("password");
+                        localStorage.removeItem("email");
+                        localStorage.removeItem("password");
 
-                    navigate("/main");
+                        navigate("/main");
+                    });
                 }
             ).catch(error => {
                 navigate("/login");
-                console.error("Ошибка, попробуйте зарегистрироваться снова " + error)
+                console.error("Произошла ошибка, попробуйте зарегистрироваться снова. " + error)
             })
         }
     }
+
+    const handleSetAvatar = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setAvatar(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     function validate () {
         if (!name) {
@@ -122,9 +150,8 @@ export default function BioSection ({goBack}) {
 
     return (
         <MainContainer>
-            <ImageContainer>
-                <Image src={CameraImg}/>
-            </ImageContainer>
+            <Image src={avatar || CameraImg} />
+            <ChooseImage type={"file"} onChange={handleSetAvatar} accept="image/*"/>
             <FieldsContainer>
                 <Input value={name}
                        onInput={e => setName(e.target.value)}

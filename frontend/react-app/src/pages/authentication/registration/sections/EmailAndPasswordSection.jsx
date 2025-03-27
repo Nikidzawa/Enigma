@@ -5,12 +5,13 @@ import styled from "styled-components";
 import Logo from "../../../../img/img.png";
 import {useNavigate} from "react-router-dom";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
-import UserDto from "../../../../api/dto/UserDto";
+import UserDto from "../../../../api/internal/dto/UserDto";
 import UserController from "../../../../store/UserController";
 import StringUtils from "../../../../helpers/StringUtils";
 import EmailCodeController from "../store/EmailCodeController";
 import Loader from "../components/Loader";
-import UserApi from "../../../../api/controllers/UserApi";
+import UserApi from "../../../../api/internal/controllers/UserApi";
+import EmailCodeDto from "../../../../api/internal/dto/EmailCodeDto";
 
 const MainContainer = styled.div`
     display: flex;
@@ -182,13 +183,20 @@ export default function EmailAndPasswordSection({nextSection}) {
             localStorage.setItem("email", user.email);
             localStorage.setItem("password", user.password);
 
-            const code = await EmailCodeController.sendAuthCode(user.email);
-            if (code) {
-                EmailCodeController.setEmailCode(code);
-                nextSection();
-            } else {
-                setEmailServicesEx(true);
-            }
+            await EmailCodeController.sendAuthCode(user.email).then(
+                response => {
+                    const dto = EmailCodeDto.fromJSON(response.data);
+                    if (dto.code) {
+                        setEmailServicesEx(false);
+                        EmailCodeController.setEmailCode(dto.code);
+                        EmailCodeController.setEmail(dto.email);
+                        localStorage.setItem("email", dto.email);
+                        nextSection();
+                    } else {
+                        setEmailServicesEx(true);
+                    }
+                }
+            )
         } catch (ex) {
             console.log(ex)
             setEmailServicesEx(true);

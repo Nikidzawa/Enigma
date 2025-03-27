@@ -1,6 +1,6 @@
 import {makeAutoObservable} from "mobx";
-import UserApi from "../api/controllers/UserApi";
-import UserDto from "../api/dto/UserDto";
+import UserApi from "../api/internal/controllers/UserApi";
+import UserDto from "../api/internal/dto/UserDto";
 
 
 class UserController {
@@ -16,15 +16,19 @@ class UserController {
     }
 
     getCurrentUser() {
-        return this.currentUser.id ? this.currentUser :
-            UserApi.getUserByToken(localStorage.getItem("TOKEN"))
-                .then(user => {
-                    const userDto = UserDto.fromJSON(user.data);
-                    this.setUser(userDto);
-                    return userDto;
-                })
-                .catch(() => window.location.href = '/login');
+        return this.currentUser;
     }
+
+    async fetchUserByToken() {
+        try {
+            const response = await UserApi.getUserByToken(localStorage.getItem("TOKEN"));
+            return UserDto.fromJSON(response.data);
+        } catch {
+            console.error("Ошибка получения пользователя, обновите токен");
+            window.location.href = '/login';
+        }
+    }
+
 }
 
 export default new UserController();

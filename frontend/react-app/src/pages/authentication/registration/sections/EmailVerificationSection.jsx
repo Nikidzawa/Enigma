@@ -3,9 +3,9 @@ import ConvertVideo from "../../../../img/convert.lottie";
 import styled from "styled-components";
 import EmailVerificationFields from "../../components/fields/EmailVerificationFields";
 import {useEffect, useState} from "react";
-import UserController from "../../../../store/UserController";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
 import EmailCodeController from "../store/EmailCodeController";
+import EmailCodeDto from "../../../../api/internal/dto/EmailCodeDto";
 
 const MainContainer = styled.div`
     display: flex;
@@ -34,12 +34,6 @@ const FieldsContainer = styled.div`
     width: 100%;
     left: calc(50% - 120px);
     bottom: 49%;
-`
-
-const NotReceive = styled.div`
-    position: absolute;
-    bottom: calc(4% - 3px);
-    cursor: pointer;
 `
 
 const Button = styled.button`
@@ -101,12 +95,14 @@ export default function EmailVerificationSection ({goNextSection, goBack}) {
 
     const [userCode, setUserCode] = useState("");
     const [mailCode, setMailCode] = useState("");
+    const [email, setEmail] = useState("");
 
     const [canSendAgain, setCanSendAgain] = useState(true);
     const [timer, setTimer] = useState(0);
 
     useEffect(() => {
         setMailCode(EmailCodeController.getEmailCode())
+        setEmail(EmailCodeController.getEmail())
         startTimer();
     }, [])
 
@@ -135,14 +131,21 @@ export default function EmailVerificationSection ({goNextSection, goBack}) {
     async function sendEmailCodeAgain() {
         if (!canSendAgain) return;
 
-        const code = await EmailCodeController.sendAuthCode();
-        if (code) {
-            setEmailEx(false);
-            setMailCode(code);
-            startTimer();
-        } else {
-            setEmailEx(true);
-        }
+        await EmailCodeController.sendAuthCode(email).then(
+            response => {
+                const dto = EmailCodeDto.fromJSON(response.data);
+                if (dto.code) {
+                    setEmailEx(false);
+                    setMailCode(dto.code);
+                    setEmail(dto.email);
+                    EmailCodeController.setEmailCode(dto.code);
+                    EmailCodeController.setEmail(dto.email);
+                    startTimer();
+                } else {
+                    setEmailEx(true);
+                }
+            }
+        )
     }
 
     function startTimer() {
@@ -168,10 +171,10 @@ export default function EmailVerificationSection ({goNextSection, goBack}) {
         <MainContainer onKeyDown={e => e.code === 'Enter' && submitEmail()}>
             <TitleContainer>
                 <ImageSendVideo src={ConvertVideo} autoplay/>
-                <YourMailContainer>{UserController.getCurrentUser().email}</YourMailContainer>
+                <YourMailContainer>{email}</YourMailContainer>
                 <Title>Enter code from letter</Title>
             </TitleContainer>
-            <FieldsContainer>
+            <FieldsContainer onKeyDown={() => setFieldNotCorrectEx(false)}>
                 <EmailVerificationFields setUserCode={setUserCode}/>
                 <ErrorsContainer>
                     {fieldEmptyEx && <FailFieldValidation>Необходимо заполнить код</FailFieldValidation>}

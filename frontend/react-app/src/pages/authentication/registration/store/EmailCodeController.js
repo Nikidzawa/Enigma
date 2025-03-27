@@ -1,11 +1,12 @@
 import {makeAutoObservable} from "mobx";
 import UserController from "../../../../store/UserController";
-import MailApi from "../../../../api/controllers/MailApi";
+import MailApi from "../../../../api/internal/controllers/MailApi";
 
 
 class EmailCodeController {
 
     emailCode = null;
+    email = null;
 
     constructor() {
         makeAutoObservable(this);
@@ -19,13 +20,17 @@ class EmailCodeController {
         return this.emailCode;
     }
 
-    async sendAuthCode (email) {
-        if (!email) {
-            email = UserController.getCurrentUser().email;
-        }
+    setEmail(email) {
+        this.email = email;
+    }
+
+    getEmail() {
+        return this.email;
+    }
+
+    sendAuthCode (email) {
         try {
-            const response = await MailApi.sendAuthCode(email);
-            return response.data;
+            return MailApi.sendAuthCode(email);
         } catch (error) {
             return null;
         }

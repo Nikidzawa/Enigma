@@ -77,9 +77,7 @@ export default function Registration() {
                         isExiting={currentSection !== 1}
                         directionActive={"left"}
                     >
-                        <EmailAndPasswordSection
-                            nextSection={goNextSection}
-                        />
+                        <EmailAndPasswordSection nextSection={goNextSection}/>
                     </Animation>
                 )}
                 {visibleSections.includes(2) && (
@@ -87,10 +85,7 @@ export default function Registration() {
                         isActive={currentSection === 2}
                         isExiting={currentSection !== 2}
                     >
-                        <EmailVerificationSection
-                            goNextSection={goNextSection}
-                            goBack={goBackSection}
-                        />
+                        <EmailVerificationSection goNextSection={goNextSection} goBack={goBackSection}/>
                     </Animation>
                 )}
                 {visibleSections.includes(3) && (
@@ -101,11 +96,11 @@ export default function Registration() {
                         <BioSection goBack={goBackSection}/>
                     </Animation>
                 )}
-                   <StageContainer>
-                        <StageEclipse isActive={currentSection === 1}/>
-                        <StageEclipse isActive={currentSection === 2}/>
-                        <StageEclipse isActive={currentSection === 3}/>
-                   </StageContainer>
+                <StageContainer>
+                    <StageEclipse isActive={currentSection === 1}/>
+                    <StageEclipse isActive={currentSection === 2}/>
+                    <StageEclipse isActive={currentSection === 3}/>
+                </StageContainer>
             </Window>
         </MainComponent>
     )

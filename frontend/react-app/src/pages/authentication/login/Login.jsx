@@ -2,7 +2,7 @@ import styled from "styled-components";
 import Logo from "../../../img/img.png"
 import {useNavigate} from "react-router-dom";
 import {useState} from "react";
-import UserApi from "../../../api/controllers/UserApi";
+import UserApi from "../../../api/internal/controllers/UserApi";
 import UserController from "../../../store/UserController";
 import NicknameOrEmailAndPasswordFields from "./components/NicknameOrEmailAndPasswordFields";
 import FailFieldValidation from "../components/fields/FailFieldValidation";

@@ -14,7 +14,11 @@ export default class UserApi {
         return api.get(`users/findBy?token=${token}`);
     }
 
+    static search(value, userId) {
+        return api.get(`/users/search?value=${value}&userId=${userId}`);
+    }
+
     static save(userDto) {
-        return api.post('/users/save', userDto)
+        return api.post('/users/save', userDto);
     }
 }
