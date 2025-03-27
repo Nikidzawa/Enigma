@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import ru.nikidzawa.db.services.MailService;
+import ru.nikidzawa.db.store.client.dto.EmailCodeDto;
 
 @CrossOrigin
 @RestController
@@ -18,7 +19,11 @@ public class MailController {
     private static final String SEND_AUTH_CODE = "sendAuthCode/{mail}";
 
     @PostMapping(SEND_AUTH_CODE)
-    public String sendAuthCode(@PathVariable String mail) {
-        return service.sendMessage(mail);
+    public EmailCodeDto sendAuthCode(@PathVariable String mail) {
+        String code = service.sendMessage(mail);
+        return EmailCodeDto.builder()
+                .code(code)
+                .email(mail)
+                .build();
     }
 }

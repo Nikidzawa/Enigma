@@ -9,7 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ru.nikidzawa.db.exceptions.UnauthorizedException;
 import ru.nikidzawa.db.store.entity.IndividualEntity;
-import ru.nikidzawa.db.store.repository.UserEntityRepository;
+import ru.nikidzawa.db.store.repository.IndividualEntityRepository;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -18,7 +18,7 @@ import java.util.Optional;
 public class MyUserDetailService implements UserDetailsService {
 
     @Autowired
-    private UserEntityRepository repository;
+    private IndividualEntityRepository repository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

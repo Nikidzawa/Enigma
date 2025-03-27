@@ -7,23 +7,18 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="TCPServer" />
+        <module name="WebsocketServer" />
         <module name="DatabaseService" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="Client" target="21" />
       <module name="Enigma Project" target="21" />
-      <module name="Service" target="21" />
-      <module name="WebsocketProxy" target="21" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="DatabaseService" options="-parameters" />
-      <module name="Service" options="-parameters" />
-      <module name="TCPServer" options="" />
-      <module name="WebsocketProxy" options="-parameters" />
+      <module name="WebsocketServer" options="-parameters" />
     </option>
   </component>
 </project>

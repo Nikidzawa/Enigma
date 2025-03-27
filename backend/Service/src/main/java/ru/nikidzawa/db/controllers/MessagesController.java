@@ -18,7 +18,7 @@ import java.util.List;
 public class MessagesController {
 
     private static final String GET_MESSAGES_BY_CHAT_ID = "getByChatId/{chatId}";
-    private static final String SAVE_MESSAGE = "new/{chatId}";
+    private static final String SEND_MESSAGE = "send";
 
     MessagesService service;
 
@@ -29,10 +29,12 @@ public class MessagesController {
         return service.getByChatIdAndLastMessageId(chatId, lastMessageId);
     }
 
-    @PostMapping(SAVE_MESSAGE)
-    public MessageDto save(@RequestBody MessageEntity messageEntity,
-                           @PathVariable Long chatId
+    @PostMapping(SEND_MESSAGE)
+    public MessageDto send(
+            @RequestParam Long senderId,
+            @RequestParam Long receiverId,
+            @RequestBody MessageEntity messageEntity
     ) {
-        return service.save(messageEntity, chatId);
+        return service.send(senderId, receiverId, messageEntity);
     }
 }

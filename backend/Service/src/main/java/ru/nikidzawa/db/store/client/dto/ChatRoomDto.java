@@ -2,6 +2,8 @@ package ru.nikidzawa.db.store.client.dto;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.nikidzawa.db.store.entity.IndividualChatEntity;
+import ru.nikidzawa.db.store.entity.IndividualEntity;
 
 /**
  * В DTO входит id чата + информация о пользователе + сущность последнего сообщения
@@ -12,11 +14,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChatRoomDto {
-    Long userId;
-    String userName;
-    String userSurname;
-
+    IndividualDtoShort companion;
     MessageDto lastMessage;
-
-    Long chatId;
+    IndividualChatEntity chat;
 }

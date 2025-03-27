@@ -19,13 +19,18 @@ public class ChatRoomRepository {
         String sql = """
                 SELECT 
                     i.id as user_id,
+                    i.nickname as user_nickname,
                     i.name as user_name,
                     i.surname as user_surname,
+                    i.avatar_href as avatar_href,
                     last_message.id as last_message_id,
                     last_message.text as last_message_text,
                     last_message.created_at AS last_message_send_time,
                     last_message.sender_id AS last_message_sender_id,
-                    chat.id as chat_id
+                    chat.id as chat_id,
+                    chat.owner_id as chat_owner_id,
+                    chat.companion_id as chat_companion_id,
+                    chat.created_at as chat_created_at
                 FROM indiv_chat chat
                     JOIN individual i on i.id = chat.companion_id
                     LEFT JOIN LATERAL (

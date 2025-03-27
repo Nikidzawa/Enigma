@@ -31,4 +31,7 @@ public class IndividualEntity {
 
     @Column(name = "surname", nullable = true)
     String surname;
+
+    @Column(name = "avatar_href", nullable = true)
+    String avatarHref;
 }

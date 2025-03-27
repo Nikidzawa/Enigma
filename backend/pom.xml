@@ -11,7 +11,7 @@
 
     <modules>
         <module>Service</module>
-        <module>TCPServer</module>
+        <module>WebsocketServer</module>
     </modules>
 
     <properties>
