@@ -62,29 +62,29 @@ const Date = styled.div`
     color: #7f7f7f;
 `
 
-export default function ChatRoom({chatRoom}) {
+export default function ChatRoom({chatRoom, setActiveChat}) {
     const [user, setUser] = useState({})
-    const [message, setMessage] = useState(null)
+    const [lastMessage, setLastMessage] = useState(null)
 
     function isMyMessage() {
-        return UserController.getCurrentUser().id === message.senderId ? "Вы: " : "";
+        return UserController.getCurrentUser().id === lastMessage.senderId ? "Вы: " : "";
     }
 
     useEffect(() => {
         setUser(chatRoom.companion);
-        setMessage(chatRoom.lastMessage);
+        setLastMessage(chatRoom.messages ? chatRoom.messages[chatRoom.messages.length - 1] : null);
     }, [chatRoom]);
 
     return (
-            <MainContainer onClick={() => ActiveChatController.setChat(chatRoom)}>
+            <MainContainer onClick={() => setActiveChat(chatRoom)}>
                 <ChatRoomContainer>
                     <UserAvatar src={user.avatarHref}/>
                     <UserData>
                         <UpperLine>
                             <Name>{`${user.name} ${user.surname}`}</Name>
-                            <Date>{message ? DateParser.parseDate(message.createdAt) : ""}</Date>
+                            <Date>{lastMessage ? DateParser.parseDate(lastMessage.createdAt) : ""}</Date>
                         </UpperLine>
-                        <LastMessage>{message ? message && (isMyMessage() + message.text) : "Сообщений нет"}</LastMessage>
+                        <LastMessage>{lastMessage ? (isMyMessage() + lastMessage.text) : "Сообщений нет"}</LastMessage>
                     </UserData>
                 </ChatRoomContainer>
             </MainContainer>

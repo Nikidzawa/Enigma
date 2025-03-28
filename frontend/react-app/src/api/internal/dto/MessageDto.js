@@ -14,4 +14,13 @@ export default class MessageDto {
             data.senderId
         );
     }
+
+    static fromRequest(data) {
+        return new MessageDto(
+            Number.parseInt(data.id),
+            new Date(`${data.createdAt}`),
+            data.message,
+            Number.parseInt(data.senderId)
+        )
+    }
 }

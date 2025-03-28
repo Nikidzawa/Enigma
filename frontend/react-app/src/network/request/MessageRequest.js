@@ -1,15 +1,14 @@
 export default class MessageRequest {
     constructor(id, createdAt, senderId, receiverId, message) {
-        this.id = id;
+        this.id = Number.parseInt(id);
         this.createdAt = createdAt;
-        this.senderId = senderId;
-        this.receiverId = receiverId;
+        this.senderId = Number.parseInt(senderId);
+        this.receiverId = Number.parseInt(receiverId);
         this.message = message;
     }
 
     static fromJSON(data) {
         return new MessageRequest(
-            data.type,
             data.id,
             data.createdAt,
             data.senderId,

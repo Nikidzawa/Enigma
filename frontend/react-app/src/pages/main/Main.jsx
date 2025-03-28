@@ -1,9 +1,8 @@
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import styled, {keyframes} from "styled-components";
 import ActiveChat from "./components/ActiveChat";
 import ChatApi from "../../api/internal/controllers/ChatApi";
 import UserController from "../../store/UserController";
-import ActiveChatController from "../../store/ActiveChatController";
 import ChatRoom from "./components/ChatRoom";
 import {observer} from "mobx-react-lite";
 import MenuImg from "../../img/menu.png";
@@ -14,10 +13,9 @@ import UserApi from "../../api/internal/controllers/UserApi";
 import UserDtoShort from "../../api/internal/dto/UserDtoShort";
 import UserProfile from "./components/UserProfile";
 import ChatRoomDto from "../../api/internal/dto/ChatRoomDto";
-import SockJS from 'sockjs-client';
-import { Client } from '@stomp/stompjs';
 import ClientController from "../../store/ClientController";
-import ChatsController from "../../store/ChatsController";
+import MessageRequest from "../../network/request/MessageRequest";
+import MessageDto from "../../api/internal/dto/MessageDto";
 
 const slideOutToBottom = keyframes`
     from {
@@ -177,9 +175,12 @@ const ChatRoomsContainer = styled.div`
     animation: ${props => props.isActive ? slideOutToBottom2 : slideOutToUp2} 0.25s forwards;
 `
 
-export default observer(function Main() {
+export default function Main() {
     const [chatListWidth, setChatListWidth] = useState(500);
     const [isResizing, setIsResizing] = useState(false);
+    const [chats, setChats] = useState([]);
+    const [activeChat, setActiveChat] = useState(null);
+    const activeChatRef = useRef();
 
     const [isSearchMode, setSearching] = useState(false);
     const [searchValue, setSearchValue] = useState("");
@@ -188,16 +189,29 @@ export default observer(function Main() {
 
     const [menuIsVisible, setMenuIsVisible] = useState(false);
 
+
+
+    const onMessageReceive = useCallback(async (message) => {
+        const messageDto = MessageDto.fromRequest(JSON.parse(message.body));
+        updateChats(messageDto);
+        activeChatRef.current?.updateActiveChat(messageDto);
+    }, []);
+
+    async function updateChats (message) {
+        setChats(prevChats => prevChats?.map((chatRoom) =>
+                chatRoom.companion.id === message.senderId ? {...chatRoom, messages: [...chatRoom.messages, message]} : chatRoom
+            )
+        );
+    }
+
     useEffect(() => {
-
         updateUser().then(user => {
-            ClientController.connect(user.id).then(() => {
-                ChatApi.getAllUserChatsByUserId(user.id).then(response =>
-                    ChatsController.setChats(response.data.map(room => ChatRoomDto.fromJSON(room)))
-                )
-            })
+            ClientController.connect(user.id, onMessageReceive).then(() => {
+                ChatApi.getAllUserChatsByUserId(user.id).then(response => setChats(
+                    response.data.map(room => ChatRoomDto.fromJSON(room)))
+                );
+            });
         });
-
 
         async function updateUser() {
             let user = UserController.getCurrentUser();
@@ -210,12 +224,12 @@ export default observer(function Main() {
 
         const handleKeyDown = (e) => {
             if (e.code === 'Escape') {
-                ActiveChatController.setChat(null);
+                setActiveChat(null);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => {window.removeEventListener('keydown', handleKeyDown);};
-    }, [])
+    }, [onMessageReceive])
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -247,10 +261,9 @@ export default observer(function Main() {
     };
 
     const updateLastMessage = (chatRoomId, newMessage) => {
-        ChatsController.setChats(ChatsController.getChats()?.map((chatRoom) =>
-                chatRoom.chat.id === chatRoomId ? {...chatRoom, lastMessage: newMessage} : chatRoom
-            )
-        );
+        setChats(chats?.map((chatRoom) =>
+            chatRoom.chat.id === chatRoomId ? {...chatRoom, messages: [...chatRoom.messages, newMessage]} : chatRoom
+        ));
     };
 
     return (
@@ -283,8 +296,9 @@ export default observer(function Main() {
                         <SearchPanel>
                             <SearchLabel>Глобальный поиск</SearchLabel>
                             {
-                                searchCategory === 'PEOPLES' && searchResults.map(userInfo =>
-                                    (<UserProfile key={userInfo.id} userInfo={userInfo}/>)
+                                searchCategory === 'PEOPLES' && searchResults.map(userInfo => (
+                                    <UserProfile key={userInfo.id} userInfo={userInfo} setChats={setChats} chats={chats} setActiveChat={setActiveChat}/>
+                                    )
                                 )
                             }
                             {
@@ -292,25 +306,28 @@ export default observer(function Main() {
                             }
                         </SearchPanel>
                     : (
-                            <ChatRoomsContainer isActive={isSearchMode}>
-                                {
-                                    ChatsController.getChats()?.map(chatRoom =>
-                                        (<ChatRoom key={chatRoom.chat.id} chatRoom={chatRoom}/>)
+                        <ChatRoomsContainer isActive={isSearchMode}>
+                            {
+                                chats?.map(chatRoom => (
+                                    <ChatRoom key={chatRoom.chat.id} chatRoom={chatRoom} setActiveChat={setActiveChat}/>
                                     )
-                                }
-                            </ChatRoomsContainer>
+                                )
+                            }
+                        </ChatRoomsContainer>
                     )
 
                 }
                 <Resizer onMouseDown={e => {e.preventDefault(); setIsResizing(true)}}/>
             </LeftMenuContainer>
             {
-                ActiveChatController.getCurrentChat() && (
+                activeChat && (
                     <ActiveChat
-                        onMessageSend={newMessage => updateLastMessage(ActiveChatController.getCurrentChat().chat.id, newMessage)}
+                        ref={activeChatRef}
+                        activeChat={activeChat}
+                        onMessageSend={newMessage => updateLastMessage(activeChat.chat.id, newMessage)}
                     />
                 )
             }
         </MainContainer>
     );
-})
+}

@@ -2,12 +2,13 @@ import styled from "styled-components";
 import SendImage from "../../../img/send.png"
 import ActiveChatController from "../../../store/ActiveChatController";
 import UserController from "../../../store/UserController";
-import {useEffect, useRef, useState} from "react";
+import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
 import MessagesApi from "../../../api/internal/controllers/MessagesApi";
 import DateParser from "../../../helpers/DateParser";
 import MessageDto from "../../../api/internal/dto/MessageDto";
 import MessageRequest from "../../../network/request/MessageRequest";
 import ClientController from "../../../store/ClientController";
+import ChatsController from "../../../store/ChatsController";
 
 const MainContainer = styled.div`
     flex: 1;
@@ -137,7 +138,7 @@ const OtherMessageText = styled.div`
     align-self: flex-start;
 `
 
-export default function ActiveChat({onMessageSend}) {
+const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
     const [text, setText] = useState("");
     const [messages, setMessages] = useState([]);
     const [scrollIsVisible, setScrollIsVisible] = useState(true);
@@ -149,14 +150,22 @@ export default function ActiveChat({onMessageSend}) {
     const [user, setUser] = useState({});
     const [chat, setChat] = useState({});
 
+    useImperativeHandle(ref, () => ({
+        updateActiveChat: async (message) => {
+            if (activeChat?.companion.id === message.senderId) {
+                setMessages(prev => [...prev, message]);
+                scrollToBottom();
+            }
+        }
+    }));
+
     useEffect(() => {
-        const chatRoom = ActiveChatController.getCurrentChat();
-        setUser(chatRoom.companion);
-        setChat(chatRoom.chat);
+        setUser(activeChat.companion);
+        setChat(activeChat.chat);
 
         const loadMessages = async () => {
             try {
-                await MessagesApi.getMessagesByChatId(chatRoom.chat.id, 0).then(response =>
+                await MessagesApi.getMessagesByChatId(activeChat.chat.id, 0).then(response =>
                     setMessages(defaultSort(response.data.map(message => MessageDto.fromJSON(message))))
                 );
             } catch (error) {
@@ -236,13 +245,12 @@ export default function ActiveChat({onMessageSend}) {
         }
     }
 
-
     async function sendMessage() {
         if (text) {
             const newMessage = new MessageDto(null, new Date(), text, UserController.getCurrentUser().id);
             MessagesApi.send(UserController.getCurrentUser().id, user.id, newMessage).then(async response => {
                 const message = await MessageDto.fromJSON(response.data);
-                setMessages([...messages, message]);
+                setMessages(prev => [...prev, message]);
                 onMessageSend(message);
                 setText("");
                 scrollToBottom();
@@ -288,4 +296,6 @@ export default function ActiveChat({onMessageSend}) {
             </BottomSection>
         </MainContainer>
     );
-}
+});
+
+export default ActiveChat;

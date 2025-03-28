@@ -50,15 +50,15 @@ const Nickname = styled.div`
     overflow: hidden;
 `
 
-export default function UserProfile({userInfo}) {
+export default function UserProfile({userInfo, setChats, chats, setActiveChat}) {
     async function startNewChat () {
         await ChatApi.getOrCreateNewIndividualChat(UserController.getCurrentUser().id, userInfo.id)
             .then(response => {
                 const chat = ChatRoomDto.fromJSON(response.data);
-                if (ChatsController.getChats().filter(chatRoom => chatRoom.chat.id === chat.chat.id).length === 0) {
-                    ChatsController.setChats([chat, ...ChatsController.getChats()]);
+                if (chats.filter(chatRoom => chatRoom.chat.id === chat.chat.id).length === 0) {
+                    setChats(prev => [chat, ...prev]);
                 }
-                ActiveChatController.setChat(chat);
+                setActiveChat(chat);
             });
     }
 
