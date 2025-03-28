@@ -18,6 +18,7 @@ import ru.nikidzawa.db.store.repository.IndividualChatEntityRepository;
 import ru.nikidzawa.db.store.repository.IndividualEntityRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -53,7 +54,7 @@ public class IndividualChatEntityService {
         return ChatRoomDto.builder()
                 .chat(individualChat)
                 .companion(IndividualDtoShortFactory.convert(companion))
-                .lastMessage(null)
+                .messages(new ArrayList<>())
                 .build();
     }
 }

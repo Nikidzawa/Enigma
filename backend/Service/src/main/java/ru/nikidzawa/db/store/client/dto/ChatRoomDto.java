@@ -5,9 +5,8 @@ import lombok.experimental.FieldDefaults;
 import ru.nikidzawa.db.store.entity.IndividualChatEntity;
 import ru.nikidzawa.db.store.entity.IndividualEntity;
 
-/**
- * В DTO входит id чата + информация о пользователе + сущность последнего сообщения
- */
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -15,6 +14,6 @@ import ru.nikidzawa.db.store.entity.IndividualEntity;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChatRoomDto {
     IndividualDtoShort companion;
-    MessageDto lastMessage;
+    List<MessageDto> messages;
     IndividualChatEntity chat;
 }

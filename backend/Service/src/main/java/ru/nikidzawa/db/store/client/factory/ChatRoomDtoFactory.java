@@ -6,7 +6,9 @@ import ru.nikidzawa.db.store.client.dto.ChatRoomDto;
 import ru.nikidzawa.db.store.client.dto.IndividualDtoShort;
 import ru.nikidzawa.db.store.client.dto.MessageDto;
 import ru.nikidzawa.db.store.entity.IndividualChatEntity;
-import ru.nikidzawa.db.store.entity.IndividualEntity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class ChatRoomDtoFactory {
@@ -19,13 +21,14 @@ public class ChatRoomDtoFactory {
                         .surname(chatRoomDataModel.getUserSurname())
                         .avatarHref(chatRoomDataModel.getAvatarHref())
                         .build()
-                ).lastMessage(chatRoomDataModel.getLastMessageId() == 0 ? null :
+                ).messages(chatRoomDataModel.getLastMessageId() == 0 ? new ArrayList<>() : List.of(
                         MessageDto.builder()
                                 .id(chatRoomDataModel.getLastMessageId())
                                 .createdAt(chatRoomDataModel.getLastMessageSendTime())
                                 .text(chatRoomDataModel.getLastMessageText())
                                 .senderId(chatRoomDataModel.getLastMessageSenderId())
                                 .build()
+                        )
                 ).chat(IndividualChatEntity.builder()
                         .id(chatRoomDataModel.getChatId())
                         .ownerId(chatRoomDataModel.getOwnerId())
