@@ -11,7 +11,7 @@ export default class MessageDto {
             data.id,
             new Date(`${data.createdAt}Z`),
             data.text,
-            data.senderId
+            data.senderId,
         );
     }
 

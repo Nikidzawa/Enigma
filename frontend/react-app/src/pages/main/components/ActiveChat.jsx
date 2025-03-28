@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import SendImage from "../../../img/send.png"
-import ActiveChatController from "../../../store/ActiveChatController";
 import UserController from "../../../store/UserController";
 import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
 import MessagesApi from "../../../api/internal/controllers/MessagesApi";
@@ -8,7 +7,6 @@ import DateParser from "../../../helpers/DateParser";
 import MessageDto from "../../../api/internal/dto/MessageDto";
 import MessageRequest from "../../../network/request/MessageRequest";
 import ClientController from "../../../store/ClientController";
-import ChatsController from "../../../store/ChatsController";
 
 const MainContainer = styled.div`
     flex: 1;
@@ -153,7 +151,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
     useImperativeHandle(ref, () => ({
         updateActiveChat: async (message) => {
             if (activeChat?.companion.id === message.senderId) {
-                setMessages(prev => [...prev, message]);
+                await setMessages(prev => [...prev, message]);
                 scrollToBottom();
             }
         }
@@ -164,12 +162,14 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
         setChat(activeChat.chat);
 
         const loadMessages = async () => {
-            try {
+            if (activeChat.chat) {
                 await MessagesApi.getMessagesByChatId(activeChat.chat.id, 0).then(response =>
                     setMessages(defaultSort(response.data.map(message => MessageDto.fromJSON(message))))
                 );
-            } catch (error) {
-                console.error("Ошибка при загрузке сообщений:", error);
+            } else {
+                await MessagesApi.getMessagesBySenderIdAndReceiverId(UserController.getCurrentUser().id, activeChat.companion.id).then(response =>
+                    setMessages(defaultSort(response.data.map(message => MessageDto.fromJSON(message))))
+                )
             }
         };
 
@@ -206,23 +206,29 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
 
                 try {
                     if (!blockLoadMessages) {
-                        await MessagesApi.getMessagesByChatId(chat.id, messages[0]?.id).then(response => {
-                            let newMessages = response.data;
-                            if (newMessages.length > 0) {
-                                newMessages = newMessages.map(message => MessageDto.fromJSON(message));
+                        let latestMessages;
+                        if (chat) {
+                            await MessagesApi.getMessagesByChatId(chat.id, messages[0]?.id).then(response => {
+                                latestMessages = response.data.map(message => MessageDto.fromJSON(message))
 
-                                setMessages((prevMessages) => {
-                                    return [...defaultSort(newMessages), ...prevMessages];
-                                });
+                            });
+                        } else {
+                            await MessagesApi.getMessagesBySenderIdAndReceiverId(UserController.getCurrentUser().id, user.id).then(response => {
+                                latestMessages = response.data.map(message => MessageDto.fromJSON(message))
+                            })
+                        }
 
-                                setTimeout(() => {
-                                    ChatSectionRef.current.scrollTop =
-                                        ChatSectionRef.current.scrollHeight - prevScrollHeight + threshold;
-                                }, 100);
-                            } else {
-                                setBlockLoadMessages(true);
-                            }
-                        });
+                        if (latestMessages.length > 0) {
+                            setMessages((prevMessages) => {
+                                return [...defaultSort(latestMessages), ...prevMessages];
+                            });
+
+                            setTimeout(() => {
+                                ChatSectionRef.current.scrollTop =
+                                    ChatSectionRef.current.scrollHeight - prevScrollHeight + threshold;}, 100);
+                        } else {
+                            setBlockLoadMessages(true);
+                        }
                     }
                 } catch (error) {
                     console.error("Ошибка при подгрузке сообщений: ", error);
@@ -251,7 +257,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
             MessagesApi.send(UserController.getCurrentUser().id, user.id, newMessage).then(async response => {
                 const message = await MessageDto.fromJSON(response.data);
                 setMessages(prev => [...prev, message]);
-                onMessageSend(message);
+                onMessageSend({message: message, companion: user});
                 setText("");
                 scrollToBottom();
                 await ClientController.sendMessage(new MessageRequest(message.id, message.createdAt, message.senderId, user.id, message.text));

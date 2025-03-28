@@ -1,13 +1,8 @@
 import styled from "styled-components";
-import DefaultAvatar from "../../../img/i.png"
-import DateParser from "../../../helpers/DateParser";
 import UserController from "../../../store/UserController";
-import ActiveChatController from "../../../store/ActiveChatController";
 import ChatApi from "../../../api/internal/controllers/ChatApi";
-import {useState} from "react";
 import ChatRoomDto from "../../../api/internal/dto/ChatRoomDto";
-import {observer} from "mobx-react-lite";
-import ChatsController from "../../../store/ChatsController";
+import UserDto from "../../../api/internal/dto/UserDto";
 
 const MainContainer = styled.div`
     :hover {
@@ -50,30 +45,28 @@ const Nickname = styled.div`
     overflow: hidden;
 `
 
-export default function UserProfile({userInfo, setChats, chats, setActiveChat}) {
-    async function startNewChat () {
-        await ChatApi.getOrCreateNewIndividualChat(UserController.getCurrentUser().id, userInfo.id)
-            .then(response => {
-                const chat = ChatRoomDto.fromJSON(response.data);
-                if (chats.filter(chatRoom => chatRoom.chat.id === chat.chat.id).length === 0) {
-                    setChats(prev => [chat, ...prev]);
-                }
-                setActiveChat(chat);
-            });
+export default function UserProfile({userInfo, chats, setActiveChat}) {
+
+    async function openChat () {
+        let existingChat = chats.find(chat => chat.companion.id === userInfo.id);
+        if (!existingChat) {
+            existingChat = new ChatRoomDto(
+                new UserDto(userInfo.id, userInfo.nickname, userInfo.name, userInfo.surname, null, null, userInfo.avatarHref), [], null
+            )
+        }
+        setActiveChat(existingChat);
     }
 
     return (
-        <>
-            <MainContainer onClick={startNewChat}>
-                <ChatRoomContainer>
-                    <UserAvatar src={userInfo.avatarHref}/>
-                    <UserData>
-                        <Name>{`${userInfo.name} ${userInfo.surname ? userInfo.surname : ''}`}</Name>
-                        <Nickname>{`@${userInfo.nickname}`}</Nickname>
-                    </UserData>
-                </ChatRoomContainer>
-            </MainContainer>
-        </>
+        <MainContainer onClick={openChat}>
+            <ChatRoomContainer>
+                <UserAvatar src={userInfo.avatarHref}/>
+                <UserData>
+                    <Name>{`${userInfo.name} ${userInfo.surname ? userInfo.surname : ''}`}</Name>
+                    <Nickname>{`@${userInfo.nickname}`}</Nickname>
+                </UserData>
+            </ChatRoomContainer>
+        </MainContainer>
     );
 }
 

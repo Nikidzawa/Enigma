@@ -4,7 +4,6 @@ import ActiveChat from "./components/ActiveChat";
 import ChatApi from "../../api/internal/controllers/ChatApi";
 import UserController from "../../store/UserController";
 import ChatRoom from "./components/ChatRoom";
-import {observer} from "mobx-react-lite";
 import MenuImg from "../../img/menu.png";
 import SearchImg from "../../img/search.png";
 import CloseImg from "../../img/close.png"
@@ -14,8 +13,8 @@ import UserDtoShort from "../../api/internal/dto/UserDtoShort";
 import UserProfile from "./components/UserProfile";
 import ChatRoomDto from "../../api/internal/dto/ChatRoomDto";
 import ClientController from "../../store/ClientController";
-import MessageRequest from "../../network/request/MessageRequest";
 import MessageDto from "../../api/internal/dto/MessageDto";
+import UserDto from "../../api/internal/dto/UserDto";
 
 const slideOutToBottom = keyframes`
     from {
@@ -189,20 +188,13 @@ export default function Main() {
 
     const [menuIsVisible, setMenuIsVisible] = useState(false);
 
-
-
     const onMessageReceive = useCallback(async (message) => {
         const messageDto = MessageDto.fromRequest(JSON.parse(message.body));
-        updateChats(messageDto);
-        activeChatRef.current?.updateActiveChat(messageDto);
+        UserApi.getUserById(messageDto.senderId).then(response => {
+            updateLastMessageOrAddChat({message: messageDto, companion: UserDto.fromJSON(response.data)});
+            activeChatRef.current?.updateActiveChat(messageDto)
+        })
     }, []);
-
-    async function updateChats (message) {
-        setChats(prevChats => prevChats?.map((chatRoom) =>
-                chatRoom.companion.id === message.senderId ? {...chatRoom, messages: [...chatRoom.messages, message]} : chatRoom
-            )
-        );
-    }
 
     useEffect(() => {
         updateUser().then(user => {
@@ -234,7 +226,9 @@ export default function Main() {
     useEffect(() => {
         const timer = setTimeout(() => {
             if (searchCategory === 'PEOPLES' && searchValue.trim()) {
-                searchUsers().then(users => setSearchResults(users));
+                UserApi.search(searchValue.trim(), UserController.getCurrentUser().id).then(response => {
+                    setSearchResults(response.data.map(userInfo => UserDtoShort.fromJSON(userInfo)))
+                });
             } else {
                 setSearchResults([]);
             }
@@ -242,11 +236,6 @@ export default function Main() {
 
         return () => clearTimeout(timer);
     }, [searchCategory, searchValue]);
-
-    async function searchUsers() {
-        const response = await UserApi.search(searchValue.trim(), UserController.getCurrentUser().id);
-        return response.data.map(userInfo => UserDtoShort.fromJSON(userInfo));
-    }
 
     function stopSearch () {
         setSearching(false);
@@ -260,11 +249,18 @@ export default function Main() {
         }
     };
 
-    const updateLastMessage = (chatRoomId, newMessage) => {
-        setChats(chats?.map((chatRoom) =>
-            chatRoom.chat.id === chatRoomId ? {...chatRoom, messages: [...chatRoom.messages, newMessage]} : chatRoom
-        ));
-    };
+    async function updateLastMessageOrAddChat ({message, companion}) {
+        setChats(prevChats => {
+            const existingChatIndex = prevChats.findIndex(chatRoom => chatRoom.companion.id === companion.id);
+            if (existingChatIndex !== -1) {
+                return prevChats.map(chatRoom =>
+                    chatRoom.companion.id === companion.id ? {...chatRoom, messages: [...chatRoom.messages, message]} : chatRoom
+                );
+            } else {
+                return [...prevChats, new ChatRoomDto(companion, [message], null)];
+            }
+        });
+    }
 
     return (
         <MainContainer onMouseMove={handleMouseMove} onMouseUp={() => setIsResizing(false)}>
@@ -297,7 +293,7 @@ export default function Main() {
                             <SearchLabel>Глобальный поиск</SearchLabel>
                             {
                                 searchCategory === 'PEOPLES' && searchResults.map(userInfo => (
-                                    <UserProfile key={userInfo.id} userInfo={userInfo} setChats={setChats} chats={chats} setActiveChat={setActiveChat}/>
+                                    <UserProfile key={userInfo.id} userInfo={userInfo} chats={chats} setActiveChat={setActiveChat}/>
                                     )
                                 )
                             }
@@ -309,7 +305,7 @@ export default function Main() {
                         <ChatRoomsContainer isActive={isSearchMode}>
                             {
                                 chats?.map(chatRoom => (
-                                    <ChatRoom key={chatRoom.chat.id} chatRoom={chatRoom} setActiveChat={setActiveChat}/>
+                                    <ChatRoom key={chatRoom.companion.id} chatRoom={chatRoom} setActiveChat={setActiveChat}/>
                                     )
                                 )
                             }
@@ -324,7 +320,7 @@ export default function Main() {
                     <ActiveChat
                         ref={activeChatRef}
                         activeChat={activeChat}
-                        onMessageSend={newMessage => updateLastMessage(activeChat.chat.id, newMessage)}
+                        onMessageSend={updateLastMessageOrAddChat}
                     />
                 )
             }

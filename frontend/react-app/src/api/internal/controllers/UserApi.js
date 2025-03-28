@@ -14,6 +14,10 @@ export default class UserApi {
         return api.get(`users/findBy?token=${token}`);
     }
 
+    static getUserById(userId) {
+        return api.get(`users/${userId}`)
+    }
+
     static search(value, userId) {
         return api.get(`/users/search?value=${value}&userId=${userId}`);
     }
