@@ -15,7 +15,7 @@ import ru.nikidzawa.db.store.repository.IndividualChatEntityRepository;
 import ru.nikidzawa.db.store.repository.MessageEntityRepository;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -44,6 +44,16 @@ public class MessagesService {
         return messageDataModels.stream()
                 .map(factory::convert)
                 .collect(Collectors.toList());
+    }
+
+    public List<MessageDto> getMessagesBySenderIdAndReceiverId(Long senderId, Long receiverId) {
+        Optional<IndividualChatEntity> senderIndividualChat = individualChatEntityRepository
+                .findByOwnerIdAndCompanionId(senderId, receiverId);
+        return senderIndividualChat.map(individualChatEntity ->
+                        chatMessagesRepository.getByChatId(individualChatEntity.getId()).stream()
+                                .map(factory::convert)
+                                .collect(Collectors.toList()))
+                .orElseGet(ArrayList::new);
     }
 
     public MessageDto send(Long senderId, Long receiverId, MessageEntity messageEntity) {

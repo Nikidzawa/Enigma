@@ -18,6 +18,7 @@ import java.util.List;
 public class MessagesController {
 
     private static final String GET_MESSAGES_BY_CHAT_ID = "getByChatId/{chatId}";
+    private static final String GET_MESSAGES_BY_SENDER_ID_AND_RECEIVER_ID = "get";
     private static final String SEND_MESSAGE = "send";
 
     MessagesService service;
@@ -36,5 +37,11 @@ public class MessagesController {
             @RequestBody MessageEntity messageEntity
     ) {
         return service.send(senderId, receiverId, messageEntity);
+    }
+
+    @GetMapping(GET_MESSAGES_BY_SENDER_ID_AND_RECEIVER_ID)
+    public List<MessageDto> getMessagesBySenderIdAndReceiverId (@RequestParam Long senderId,
+                                                                @RequestParam Long receiverId) {
+        return service.getMessagesBySenderIdAndReceiverId(senderId, receiverId);
     }
 }

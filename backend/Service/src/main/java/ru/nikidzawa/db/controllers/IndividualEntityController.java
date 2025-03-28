@@ -24,6 +24,8 @@ public class IndividualEntityController {
     private static final String SEARCH = "search";
     private static final String EXISTS_BY_EMAIL = "existsBy";
     private static final String FIND_BY_TOKEN = "findBy";
+    private static final String GET_BY_ID = "{userId}";
+
 
     IndividualEntityService service;
 
@@ -54,5 +56,10 @@ public class IndividualEntityController {
     @PostMapping(SAVE)
     public JwtTokenResponse save(@RequestBody IndividualEntity individualEntity) {
         return service.save(individualEntity);
+    }
+
+    @GetMapping(GET_BY_ID)
+    public IndividualEntity getUserById (@PathVariable Long userId) {
+        return service.getUserById(userId);
     }
 }

@@ -57,4 +57,8 @@ public class IndividualEntityService {
     public List<IndividualEntity> search (String value, Long userId) {
         return repository.search(value, userId);
     }
+
+    public IndividualEntity getUserById (Long userId) {
+        return repository.findById(userId).get();
+    }
 }
