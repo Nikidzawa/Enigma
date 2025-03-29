@@ -1,7 +1,7 @@
 import styled, {keyframes} from "styled-components";
 import {useEffect, useState} from "react";
 import UserController from "../../../../store/UserController";
-import CameraImg from "../../../../img/camera.png"
+import CameraImg from "../../../../img/camera2.png"
 import Field from "./Field";
 import CloseImage from "../../../../img/close2.png";
 import FireBase from "../../../../api/external/FireBase";
@@ -60,7 +60,6 @@ const ChooseAvatarContainer = styled.div`
     background-color: #1a1a1a;
     padding: 5px;
     border-radius: 50%;
-    border: 1px solid white;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -85,7 +84,6 @@ const ProfileImage = styled.img`
     width: 110px;
     height: 110px;
     border-radius: 50%;
-    border: 2px solid white;
 `
 
 const Bio = styled.div`
@@ -99,7 +97,7 @@ const Button = styled.button`
     border: 2px solid white;
     color: white;
     padding: 12px 23px;
-    min-width: 125px;
+    min-width: 140px;
     min-height: 40px;
     font-size: 19px;
     border-radius: 15px;
