@@ -20,9 +20,11 @@ import java.util.List;
 public class IndividualEntityController {
 
     private static final String SAVE = "save";
+    private static final String EDIT = "edit";
     private static final String LOGIN = "login";
     private static final String SEARCH = "search";
     private static final String EXISTS_BY_EMAIL = "existsBy";
+    private static final String EXISTS_BY_NICKNAME = "existsByNickname";
     private static final String FIND_BY_TOKEN = "findBy";
     private static final String GET_BY_ID = "{userId}";
 
@@ -40,6 +42,11 @@ public class IndividualEntityController {
         return service.emailIsUsed(email);
     }
 
+    @GetMapping(EXISTS_BY_NICKNAME)
+    public Boolean nicknameIsUsed(@RequestParam String nickname, @RequestParam Long userId) {
+        return service.nicknameIsUsed(nickname, userId);
+    }
+
     @GetMapping(FIND_BY_TOKEN)
     public IndividualEntity findByToken(@RequestParam String token) {
         return service.findByToken(token);
@@ -47,10 +54,12 @@ public class IndividualEntityController {
 
     @GetMapping(SEARCH)
     public List<IndividualDtoShort> search (@RequestParam String value, @RequestParam Long userId) {
-        return service.search(value, userId)
-                .stream()
-                .map(IndividualDtoShortFactory::convert)
-                .toList();
+        return service.search(value, userId);
+    }
+
+    @PutMapping(EDIT)
+    public void edit(@RequestBody IndividualDtoShort individualDtoShort) {
+        service.edit(individualDtoShort);
     }
 
     @PostMapping(SAVE)

@@ -3,6 +3,9 @@ package ru.nikidzawa.db.store.client.dto;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,5 +16,7 @@ public class IndividualDtoShort {
     String nickname;
     String name;
     String surname;
+    LocalDate birthdate;
+    String aboutMe;
     String avatarHref;
 }

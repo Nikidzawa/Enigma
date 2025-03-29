@@ -13,6 +13,8 @@ public class IndividualDtoShortFactory {
                 .name(individualEntity.getName())
                 .surname(individualEntity.getSurname())
                 .nickname(individualEntity.getNickname())
+                .birthdate(individualEntity.getBirthdate())
+                .aboutMe(individualEntity.getAboutMe())
                 .avatarHref(individualEntity.getAvatarHref())
                 .build();
     }

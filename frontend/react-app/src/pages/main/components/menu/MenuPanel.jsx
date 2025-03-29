@@ -1,11 +1,12 @@
 import styled, {keyframes} from "styled-components";
-import DefImage from "../../../img/i.png"
-import UserController from "../../../store/UserController";
-import MyProfileImage from "../../../img/account.png";
-import SettingsImage from "../../../img/setting.png";
-import LogoutImage from "../../../img/log-out.png";
-import LogoImage from "../../../img/img.png"
+import UserController from "../../../../store/UserController";
+import MyProfileImage from "../../../../img/account.png";
+import SettingsImage from "../../../../img/setting.png";
+import LogoutImage from "../../../../img/log-out.png";
+import LogoImage from "../../../../img/img.png"
 import {useNavigate} from "react-router-dom";
+import {useState} from "react";
+import Profile from "./Profile";
 
 const fadeIn = keyframes`
     from {
@@ -125,41 +126,51 @@ const MessengerInfo = styled.div`
 
 export default function MenuPanel ({setMenuIsVisible, menuIsVisible}) {
     const navigate = useNavigate();
+    const [profileVisible, setProfileVisible] = useState(false);
 
     function logout () {
         localStorage.removeItem("TOKEN")
         navigate("/login")
     }
 
+    function openProfileModal () {
+        setMenuIsVisible(false);
+        setProfileVisible(true);
+    }
+
     return (
-        <ShadowMainContainer visible={menuIsVisible} onClick={() => setMenuIsVisible(false)}>
-            <LeftPanel visible={menuIsVisible} onClick={e => e.stopPropagation()}>
-                <ProfileInfo>
-                    <ProfileImage src={UserController.getCurrentUser().avatarHref}/>
-                    <InfoSection>
-                        <Name>{UserController.getCurrentUser().name}</Name>
-                        <Info>Статус не задан</Info>
-                    </InfoSection>
-                </ProfileInfo>
-                <Panels>
-                    <div>
-                        <Panel image={MyProfileImage}>Мой профиль</Panel>
-                        <Panel image={SettingsImage}>Настройки</Panel>
-                    </div>
-                    <div>
-                        <Panel image={LogoutImage} onClick={logout}>Выход</Panel>
-                    </div>
-                </Panels>
-                <MessengerInfo>
-                    <div>
-                        <img src={LogoImage} width={"25px"}/>
-                    </div>
-                    <div>
-                        <div>Enigma Messenger</div>
-                        <div>Версия 0.1 Beta</div>
-                    </div>
-                </MessengerInfo>
-            </LeftPanel>
-        </ShadowMainContainer>
-    )
+        <>
+            <ShadowMainContainer visible={menuIsVisible} onClick={() => setMenuIsVisible(false)}>
+                <LeftPanel visible={menuIsVisible} onClick={e => e.stopPropagation()}>
+                    <ProfileInfo>
+                        <ProfileImage src={UserController.getCurrentUser().avatarHref}/>
+                        <InfoSection>
+
+                            <Name>{UserController.getCurrentUser().name} {UserController.getCurrentUser().surname}</Name>
+                            <Info>{UserController.getCurrentUser().aboutMe || UserController.getCurrentUser().nickname}</Info>
+                        </InfoSection>
+                    </ProfileInfo>
+                    <Panels>
+                        <div>
+                            <Panel onClick={openProfileModal} image={MyProfileImage}>Мой профиль</Panel>
+                            <Panel image={SettingsImage}>Настройки</Panel>
+                        </div>
+                        <div>
+                            <Panel image={LogoutImage} onClick={logout}>Выход</Panel>
+                        </div>
+                    </Panels>
+                    <MessengerInfo>
+                        <div>
+                            <img src={LogoImage} width={"25px"}/>
+                        </div>
+                        <div>
+                            <div>Enigma Messenger</div>
+                            <div>Версия 0.1 Beta</div>
+                        </div>
+                    </MessengerInfo>
+                </LeftPanel>
+            </ShadowMainContainer>
+            <Profile visible={profileVisible} setVisible={setProfileVisible}/>
+        </>
+)
 }

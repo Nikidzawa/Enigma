@@ -1,11 +1,13 @@
 export default class UserDto {
-    constructor(id, nickname, name, surname, email, password, avatarHref) {
+    constructor(id, nickname, name, surname, email, password, birthdate, aboutMe, avatarHref) {
         this.id = id;
         this.nickname = nickname;
         this.name = name;
         this.surname = surname || '';
         this.email = email;
         this.password = password;
+        this.birthdate = birthdate;
+        this.aboutMe = aboutMe;
         this.avatarHref = avatarHref;
     }
 
@@ -17,6 +19,8 @@ export default class UserDto {
             data.surname || '',
             data.email,
             data.password,
+            data.birthdate,
+            data.aboutMe,
             data.avatarHref
         );
     }

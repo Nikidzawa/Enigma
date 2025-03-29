@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @Builder
@@ -20,17 +22,23 @@ public class IndividualEntity {
     @Column(name = "email", nullable = false, unique = true)
     String email;
 
-    @Column(name = "nickname", nullable = true, unique = true)
+    @Column(name = "nickname", nullable = true, unique = true, length = 30)
     String nickname;
 
     @Column(name = "password", nullable = false)
     String password;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, length = 25)
     String name;
 
-    @Column(name = "surname", nullable = true)
+    @Column(name = "surname", nullable = true, length = 25)
     String surname;
+
+    @Column(name = "birthdate", nullable = true)
+    LocalDate birthdate;
+
+    @Column(name = "about_me", nullable = true, length = 120)
+    String aboutMe;
 
     @Column(name = "avatar_href", nullable = true)
     String avatarHref;

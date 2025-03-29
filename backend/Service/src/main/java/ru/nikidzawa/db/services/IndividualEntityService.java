@@ -5,7 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import ru.nikidzawa.db.controllers.responses.JwtTokenResponse;
+import ru.nikidzawa.db.exceptions.NotFoundException;
 import ru.nikidzawa.db.exceptions.UnauthorizedException;
+import ru.nikidzawa.db.store.client.dto.IndividualDtoShort;
+import ru.nikidzawa.db.store.client.factory.IndividualDtoShortFactory;
 import ru.nikidzawa.db.store.entity.IndividualEntity;
 import ru.nikidzawa.db.store.repository.IndividualEntityRepository;
 
@@ -44,6 +47,18 @@ public class IndividualEntityService {
                 .build();
     }
 
+    public void edit(IndividualDtoShort individualDtoShort) {
+        IndividualEntity individualEntity = repository.findById(individualDtoShort.getId())
+                .orElseThrow(() -> new NotFoundException("Пользователя не существует"));
+        individualEntity.setName(individualDtoShort.getName().trim());
+        individualEntity.setSurname(individualDtoShort.getSurname().trim());
+        individualEntity.setNickname(individualDtoShort.getNickname().toLowerCase().replace(" ", ""));
+        individualEntity.setBirthdate(individualDtoShort.getBirthdate());
+        individualEntity.setAboutMe(individualDtoShort.getAboutMe().trim());
+        individualEntity.setAvatarHref(individualDtoShort.getAvatarHref());
+        repository.saveAndFlush(individualEntity);
+    }
+
     public IndividualEntity findByToken(String token) {
         String nickname = jwtService.extractUserName(token);
         return repository.findFirstByNickname(nickname)
@@ -54,8 +69,14 @@ public class IndividualEntityService {
         return repository.existsByEmail(email);
     }
 
-    public List<IndividualEntity> search (String value, Long userId) {
-        return repository.search(value, userId);
+    public Boolean nicknameIsUsed(String nickname, Long userId) {
+        return repository.findFirstByNicknameAndIdNot(nickname, userId).isPresent();
+    }
+
+    public List<IndividualDtoShort> search (String value, Long userId) {
+        return repository.search(value, userId).stream()
+                .map(IndividualDtoShortFactory::convert)
+                .toList();
     }
 
     public IndividualEntity getUserById (Long userId) {

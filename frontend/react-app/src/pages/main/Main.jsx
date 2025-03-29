@@ -7,7 +7,7 @@ import ChatRoom from "./components/ChatRoom";
 import MenuImg from "../../img/menu.png";
 import SearchImg from "../../img/search.png";
 import CloseImg from "../../img/close.png"
-import MenuPanel from "./components/MenuPanel";
+import MenuPanel from "./components/menu/MenuPanel";
 import UserApi from "../../api/internal/controllers/UserApi";
 import UserDtoShort from "../../api/internal/dto/UserDtoShort";
 import UserProfile from "./components/UserProfile";

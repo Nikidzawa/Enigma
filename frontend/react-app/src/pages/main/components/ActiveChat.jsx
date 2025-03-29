@@ -210,7 +210,6 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                         if (chat) {
                             await MessagesApi.getMessagesByChatId(chat.id, messages[0]?.id).then(response => {
                                 latestMessages = response.data.map(message => MessageDto.fromJSON(message))
-
                             });
                         } else {
                             await MessagesApi.getMessagesBySenderIdAndReceiverId(UserController.getCurrentUser().id, user.id).then(response => {

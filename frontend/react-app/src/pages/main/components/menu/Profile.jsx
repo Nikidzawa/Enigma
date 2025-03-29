@@ -1,0 +1,284 @@
+import styled, {keyframes} from "styled-components";
+import {useEffect, useState} from "react";
+import UserController from "../../../../store/UserController";
+import CameraImg from "../../../../img/camera.png"
+import Field from "./Field";
+import CloseImage from "../../../../img/close2.png";
+import FireBase from "../../../../api/external/FireBase";
+import UserApi from "../../../../api/internal/controllers/UserApi";
+import {observer} from "mobx-react-lite";
+import UserDtoShort from "../../../../api/internal/dto/UserDtoShort";
+import DateField from "./DateField";
+import NicknameField from "./NicknameField";
+
+const fadeIn = keyframes`
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+`
+
+const fadeOut = keyframes`
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+`
+
+const ShadowMainContainer = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(39, 39, 39, 0.5);
+    z-index: 1000;
+    opacity: ${props => props.visible ? "1" : "0"};
+    pointer-events: ${props => props.visible ? "auto" : "none"};;
+    animation: ${props => props.visible ? fadeIn : fadeOut} 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`
+
+const ModalContainer = styled.div`
+    border-radius: 20px;
+    background-color: #1a1a1a;
+    padding: 30px;
+    position: relative;
+    box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
+`
+
+const ChooseAvatarContainer = styled.div`
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: #1a1a1a;
+    padding: 5px;
+    border-radius: 50%;
+    border: 1px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`
+
+const ChooseAvatar = styled.img`
+    width: 23px;
+    cursor: pointer;
+`
+
+const ChooseAvatarTrigger = styled.input`
+    position: absolute;
+    top: -20px;
+    left: -5px;
+    width: calc(100% + 10px);
+    height: calc(100% + 20px);
+    opacity: 0;
+    cursor: pointer;
+`;
+
+const ProfileImage = styled.img`
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 2px solid white;
+`
+
+const Bio = styled.div`
+    display: flex;
+    gap: 10px;
+    flex: 1;
+`
+
+const Button = styled.button`
+    background-color: transparent;
+    border: 2px solid white;
+    color: white;
+    padding: 12px 23px;
+    min-width: 125px;
+    min-height: 40px;
+    font-size: 19px;
+    border-radius: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+`
+
+const ButtonContainer = styled.div`
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    margin: 40px 0 10px 0;
+`
+
+const AvatarContainer = styled.div`
+    position: relative;
+`
+
+const AvatarSection  = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    gap: 10px;
+    padding-top: 30px;
+    padding-bottom: 10px;
+`
+
+const UserInfo = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+`
+
+const Fio = styled.div`
+    display: flex;
+    font-size: 25px;
+    cursor: default;
+    max-width: 400px;
+`
+
+const Nickname = styled.div`
+    cursor: default;
+`
+
+const AboutMe = styled.div`
+    width: 350px;
+`
+
+const Fields = styled.div`
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+`
+
+const UpperContainer = styled.div`
+    display: flex;
+    justify-content: space-between;
+`
+
+const Name = styled.div`
+    font-size: 22px;
+    cursor: default;
+`
+
+const Close = styled.img`
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+`
+
+const Exception = styled.div`
+    color: red;
+`
+
+const Profile = observer(({ setVisible, visible }) => {
+    const user = UserController.getCurrentUser();
+
+    const [name, setName] = useState("");
+    const [surname, setSurname] = useState("");
+    const [nickname, setNickname] = useState("");
+    const [birthdate, setBirthdate] = useState("");
+    const [aboutMe, setAboutMe] = useState("");
+    const [avatar, setAvatar] = useState("");
+
+    const [nicknameAlreadyUsed, setNicknameAlreadyUsed] = useState(false);
+
+    useEffect(() => {
+        setName(user.name);
+        setSurname(user.surname);
+        setNickname(user.nickname);
+        setAboutMe(user.aboutMe)
+        setBirthdate(user.birthdate)
+        setAvatar(user.avatarHref)
+    }, [user])
+
+    async function validate() {
+        setNicknameAlreadyUsed(false);
+        await UserApi.nicknameIsUsed(nickname, user.id).then(response => {
+            if (response.data === false) {
+                saveUser();
+            } else {
+                setNicknameAlreadyUsed(true);
+            }
+            }
+        )
+    }
+
+    async function saveUser() {
+        const newUserData = new UserDtoShort(user.id, nickname, name, surname, new Date(birthdate), aboutMe, avatar);
+        UserApi.edit(newUserData).then(() => {
+            UserController.setUser(newUserData);
+            setVisible(false);
+        });
+    }
+
+    const handleSetAvatar = async (e) => {
+        const file = e.target.files[0];
+        if (!file || !user) return;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+
+        reader.onloadend = async () => {
+            const result = reader.result;
+            if (!result) return;
+            try {
+                const newAvatarUrl = await FireBase.uploadAvatar(FireBase.base64ToFile(result, user.id), user.id);
+                setAvatar(newAvatarUrl);
+            } catch (error) {
+                console.error("Ошибка загрузки аватара:", error);
+            }
+        };
+    };
+
+    return (
+        user && (
+            <ShadowMainContainer visible={visible} onClick={() => setVisible(false)}>
+                <ModalContainer onClick={e => e.stopPropagation()}>
+                    <UpperContainer>
+                        <Name>My Profile</Name>
+                        <Close src={CloseImage} onClick={() => setVisible(false)}/>
+                    </UpperContainer>
+                    <AvatarSection>
+                        <AvatarContainer>
+                            <ProfileImage src={avatar}/>
+                            <ChooseAvatarContainer>
+                                <ChooseAvatar src={CameraImg}/>
+                                <ChooseAvatarTrigger type={"file"} onChange={handleSetAvatar} accept="image/*"/>
+                            </ChooseAvatarContainer>
+                        </AvatarContainer>
+                        <UserInfo>
+                            <Fio>{name} {surname}</Fio>
+                        </UserInfo>
+                        <AboutMe>{aboutMe}</AboutMe>
+                        <Nickname>@{nickname}</Nickname>
+                    </AvatarSection>
+                    <Fields>
+                        <Bio>
+                            <Field placeholder={'Your name'} label={'First name'} value={name} setValue={setName} maxLength={25}/>
+                            <Field placeholder={"Your surname"} label={'Last name'} value={surname} setValue={setSurname} maxLength={25}/>
+                        </Bio>
+                        <NicknameField placeholder={"Your nickname"} label={'Nickname'} value={nickname} setValue={setNickname} maxLength={30}/>
+                        {nicknameAlreadyUsed && <Exception>Никнейм уже используется</Exception>}
+                        <DateField placeholder={"Your birthdate"} label={'Birthdate'} value={birthdate} setValue={setBirthdate}/>
+                        <Field placeholder={"Tell about you"} label={'About me'} value={aboutMe} setValue={setAboutMe} maxLength={120}/>
+                    </Fields>
+                    <ButtonContainer>
+                        <Button onClick={validate}>Edit</Button>
+                    </ButtonContainer>
+                </ModalContainer>
+            </ShadowMainContainer>
+        )
+    )
+});
+
+export default Profile;

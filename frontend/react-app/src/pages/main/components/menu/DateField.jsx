@@ -1,0 +1,64 @@
+import React, { useState } from "react";
+import styled from "styled-components";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import CalendarImg from "../../../../img/calendar.png";
+
+const Container = styled.div`
+    position: relative;
+    display: flex;
+    flex: 1;
+`;
+
+const Label = styled.div`
+    color: #8e8e8e;
+    position: absolute;
+    left: 10px;
+    top: 5px;
+    z-index: 1;
+    font-size: 15px;
+`;
+
+const StyledDatePicker = styled(DatePicker)`
+    border: none;
+    background-color: #434343;
+    border-radius: 5px;
+    color: white;
+    height: 35px;
+    outline: none;
+    font-size: 17px;
+    padding-top: 20px;
+    padding-left: 37px;
+    width: calc(200% - 78px);
+
+    background-image: url(${CalendarImg});
+    background-size: 17px;
+    background-repeat: no-repeat;
+    background-position: 12px 28px;
+`;
+
+const FieldContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding-top: 10px;
+    gap: 10px;
+`
+
+export default function CustomDatePicker({label, placeholder, value, setValue}) {
+    return (
+        <FieldContainer>
+            <Container>
+                <Label>{label}</Label>
+                <StyledDatePicker
+                    selected={value}
+                    onChange={date => setValue(date)}
+                    dateFormat="dd.MM.yyyy"
+                    placeholderText={placeholder}
+                    showPopperArrow={false}
+                    popperPlacement="bottom-start"
+                />
+            </Container>
+        </FieldContainer>
+    );
+}
