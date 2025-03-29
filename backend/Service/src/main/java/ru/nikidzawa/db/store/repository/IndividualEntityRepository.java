@@ -15,7 +15,10 @@ public interface IndividualEntityRepository extends JpaRepository<IndividualEnti
     Optional<IndividualEntity> findFirstByEmailOrNicknameAndPassword(@Param("nicknameOrEmail") String nicknameOrEmail,
                                                                      @Param("password") String password);
     Optional<IndividualEntity> findFirstByNickname(String nickname);
-    boolean existsByEmail(String email);
+
+    Boolean existsByEmail(String email);
+
+    Optional<IndividualEntity> findFirstByNicknameAndIdNot(String nickname, Long id);
 
     @Query("SELECT u FROM individual u WHERE LOWER(u.nickname) LIKE LOWER(CONCAT('%', :value, '%')) and u.id != :userId")
     List<IndividualEntity> search(@Param("value") String value, @Param("userId") Long userId);
