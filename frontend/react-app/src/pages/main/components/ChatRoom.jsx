@@ -4,6 +4,10 @@ import DateParser from "../../../helpers/DateParser";
 import UserController from "../../../store/UserController";
 import ActiveChatController from "../../../store/ActiveChatController";
 import {useEffect, useState} from "react";
+import ClientController from "../../../store/ClientController";
+import {Client} from "@stomp/stompjs";
+import {observer} from "mobx-react-lite";
+import PresenceResponse from "../../../network/response/PresenceResponse";
 
 const MainContainer = styled.div`
     overflow: hidden;
@@ -25,6 +29,26 @@ const UserAvatar = styled.img`
     border-radius: 50%;
     width: 50px;
     height: 50px;
+    min-width: 50px;
+    min-height: 50px;
+`
+
+const AvatarContainer = styled.div`
+    position: relative;
+`
+
+const OnlineCircle = styled.div`
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    background-color: green;
+    border: 1px solid #090909;
+    border-radius: 50%;
+    right: 0;
+    bottom: 0;
+    opacity: ${props => (props.isOnline ? "1" : "0")};
+    
+    transition: opacity 0.2s ease-in-out;
 `
 
 const UserData = styled.div`
@@ -33,6 +57,7 @@ const UserData = styled.div`
     gap: 5px;
     flex-direction: column;
     justify-content: center;
+    min-width: 0;
 `
 
 const Name = styled.div`
@@ -40,6 +65,8 @@ const Name = styled.div`
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    flex-shrink: 1;
+    min-width: 0;
 `
 
 const LastMessage = styled.div`
@@ -54,31 +81,51 @@ const UpperLine = styled.div`
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-width: 0;
 `
 
 const Date = styled.div`
     font-size: 13px;
     padding: 0 5px;
     color: #7f7f7f;
+    flex-shrink: 0;
 `
 
-export default function ChatRoom({chatRoom, setActiveChat}) {
+const ChatRoom = observer(({chatRoom, setActiveChat}) => {
     const [user, setUser] = useState({})
     const [lastMessage, setLastMessage] = useState(null)
+    const [isOnline, setIsOnline] = useState(null)
+    const stompClient = ClientController.getClient();
 
     function isMyMessage() {
         return UserController.getCurrentUser().id === lastMessage.senderId ? "Вы: " : "";
     }
 
     useEffect(() => {
+        if (stompClient) {
+            // Запрос текущего статуса
+            ClientController.checkUserOnlineStatus(chatRoom.companion.id);
+
+            // Подписка на получение статуса пользователя
+            stompClient.subscribe(`/client/${chatRoom.companion.id}/personal/presence`, (message) => {
+                setIsOnline(PresenceResponse.fromJSON(JSON.parse(message.body)).isOnline);
+            });
+        }
+    }, [stompClient]);
+
+    useEffect(() => {
         setUser(chatRoom.companion);
+        setIsOnline(chatRoom.companion.isOnline)
         setLastMessage(chatRoom.messages ? chatRoom.messages[chatRoom.messages.length - 1] : null);
     }, [chatRoom]);
 
     return (
             <MainContainer onClick={() => setActiveChat(chatRoom)}>
                 <ChatRoomContainer>
-                    <UserAvatar src={user.avatarHref}/>
+                    <AvatarContainer>
+                        <UserAvatar src={user.avatarHref}/>
+                        <OnlineCircle isOnline={isOnline}/>
+                    </AvatarContainer>
                     <UserData>
                         <UpperLine>
                             <Name>{`${user.name} ${user.surname}`}</Name>
@@ -89,6 +136,6 @@ export default function ChatRoom({chatRoom, setActiveChat}) {
                 </ChatRoomContainer>
             </MainContainer>
     );
-}
+})
 
-
+export default ChatRoom

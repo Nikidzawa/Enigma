@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface IndividualEntityRepository extends JpaRepository<IndividualEntity, Long> {
-    @Query("SELECT u FROM individual u WHERE (u.email = :nicknameOrEmail OR u.nickname = :nicknameOrEmail) and u.password = :password")
+    @Query("SELECT u FROM individual u WHERE (u.email = :nicknameOrEmail OR u.nickname ilike :nicknameOrEmail) and u.password = :password")
     Optional<IndividualEntity> findFirstByEmailOrNicknameAndPassword(@Param("nicknameOrEmail") String nicknameOrEmail,
                                                                      @Param("password") String password);
     Optional<IndividualEntity> findFirstByNickname(String nickname);

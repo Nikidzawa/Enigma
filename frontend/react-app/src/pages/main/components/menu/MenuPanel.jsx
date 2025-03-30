@@ -70,7 +70,7 @@ const InfoSection = styled.div`
     display: flex;
     flex-direction: column;
     margin-left: 15px;
-    gap: 7px;
+    gap: 5px;
     width: 225px;
     max-width: 225px;
 `
@@ -145,9 +145,8 @@ export default function MenuPanel ({setMenuIsVisible, menuIsVisible}) {
                     <ProfileInfo>
                         <ProfileImage src={UserController.getCurrentUser().avatarHref}/>
                         <InfoSection>
-
                             <Name>{UserController.getCurrentUser().name} {UserController.getCurrentUser().surname}</Name>
-                            <Info>{UserController.getCurrentUser().aboutMe || UserController.getCurrentUser().nickname}</Info>
+                            <Info>@{UserController.getCurrentUser().nickname}</Info>
                         </InfoSection>
                     </ProfileInfo>
                     <Panels>
@@ -172,5 +171,5 @@ export default function MenuPanel ({setMenuIsVisible, menuIsVisible}) {
             </ShadowMainContainer>
             <Profile visible={profileVisible} setVisible={setProfileVisible}/>
         </>
-)
+    )
 }

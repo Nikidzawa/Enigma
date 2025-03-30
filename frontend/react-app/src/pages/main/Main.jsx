@@ -15,6 +15,7 @@ import ChatRoomDto from "../../api/internal/dto/ChatRoomDto";
 import ClientController from "../../store/ClientController";
 import MessageDto from "../../api/internal/dto/MessageDto";
 import UserDto from "../../api/internal/dto/UserDto";
+import PresenceResponse from "../../network/response/PresenceResponse";
 
 const slideOutToBottom = keyframes`
     from {
@@ -196,9 +197,21 @@ export default function Main() {
         })
     }, []);
 
+    const onPresenceChange = useCallback(async (message) => {
+        const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
+        setChats(prevChats => {
+            return prevChats.map(chatRoom => {
+                if (chatRoom.companion.id === presenceResponse.userId) {
+                    return {...chatRoom, companion: {...chatRoom.companion, isOnline: presenceResponse.isOnline}};
+                }
+                return chatRoom;
+            });
+        });
+    }, []);
+
     useEffect(() => {
         updateUser().then(user => {
-            ClientController.connect(user.id, onMessageReceive).then(() => {
+            ClientController.connect(user.id, onMessageReceive, onPresenceChange).then(() => {
                 ChatApi.getAllUserChatsByUserId(user.id).then(response => setChats(
                     response.data.map(room => ChatRoomDto.fromJSON(room)))
                 );

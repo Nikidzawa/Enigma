@@ -24,6 +24,7 @@ public class IndividualEntityService {
 
     JWTService jwtService;
 
+    
     public JwtTokenResponse authenticate(String nicknameOrEmail, String password) {
         Optional<IndividualEntity> individualEntity = repository.findFirstByEmailOrNicknameAndPassword(nicknameOrEmail, password);
         if (individualEntity.isPresent()) {

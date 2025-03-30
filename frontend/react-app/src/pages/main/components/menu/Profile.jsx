@@ -207,8 +207,7 @@ const Profile = observer(({ setVisible, visible }) => {
             } else {
                 setNicknameAlreadyUsed(true);
             }
-            }
-        )
+        })
     }
 
     async function saveUser() {
@@ -262,13 +261,18 @@ const Profile = observer(({ setVisible, visible }) => {
                     </AvatarSection>
                     <Fields>
                         <Bio>
-                            <Field placeholder={'Your name'} label={'First name'} value={name} setValue={setName} maxLength={25}/>
-                            <Field placeholder={"Your surname"} label={'Last name'} value={surname} setValue={setSurname} maxLength={25}/>
+                            <Field placeholder={'Your name'} label={'First name'} value={name} setValue={setName}
+                                   maxLength={25}/>
+                            <Field placeholder={"Your surname"} label={'Last name'} value={surname}
+                                   setValue={setSurname} maxLength={25}/>
                         </Bio>
-                        <NicknameField placeholder={"Your nickname"} label={'Nickname'} value={nickname} setValue={setNickname} maxLength={30}/>
+                        <NicknameField placeholder={"Your nickname"} label={'Nickname'} value={nickname}
+                                       setValue={setNickname} maxLength={30}/>
                         {nicknameAlreadyUsed && <Exception>Никнейм уже используется</Exception>}
-                        <DateField placeholder={"Your birthdate"} label={'Birthdate'} value={birthdate} setValue={setBirthdate}/>
-                        <Field placeholder={"Tell about you"} label={'About me'} value={aboutMe} setValue={setAboutMe} maxLength={120}/>
+                        <DateField placeholder={"Your birthdate"} label={'Birthdate'} value={birthdate}
+                                   setValue={setBirthdate}/>
+                        <Field placeholder={"Tell about you"} label={'About me'} value={aboutMe} setValue={setAboutMe}
+                               maxLength={120}/>
                     </Fields>
                     <ButtonContainer>
                         <Button onClick={validate}>Edit</Button>

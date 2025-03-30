@@ -32,29 +32,8 @@ public class IndividualChatEntityService {
 
     ChatRoomDtoFactory factory;
 
-    IndividualChatEntityRepository individualChatEntityRepository;
-
-    IndividualEntityRepository individualEntityRepository;
-
     public List<ChatRoomDto> getAllChatsByUserId (Long currentUserId) {
         List<ChatRoomDataModel> chatRoomData = chatRoomRepository.findAllChatRoomsByUserId(currentUserId);
         return chatRoomData.stream().map(factory::convert).collect(Collectors.toList());
-    }
-
-    public ChatRoomDto getOrCreate(Long ownerId, Long companionId) {
-        Optional<IndividualChatEntity> optionalIndividualChat = individualChatEntityRepository.findByOwnerIdAndCompanionId(ownerId, companionId);
-        IndividualChatEntity individualChat = optionalIndividualChat.orElseGet(() -> individualChatEntityRepository.saveAndFlush(
-                IndividualChatEntity.builder()
-                        .ownerId(ownerId)
-                        .companionId(companionId)
-                        .createdAt(LocalDateTime.now())
-                        .build()
-        ));
-        IndividualEntity companion = individualEntityRepository.findById(companionId).orElseThrow(EntityNotFoundException::new);
-        return ChatRoomDto.builder()
-                .chat(individualChat)
-                .companion(IndividualDtoShortFactory.convert(companion))
-                .messages(new ArrayList<>())
-                .build();
     }
 }

@@ -7,6 +7,7 @@ export default class UserDtoShort {
         this.birthdate = birthdate;
         this.aboutMe = aboutMe;
         this.avatarHref = avatarHref;
+        this.isOnline = false;
     }
 
     static fromJSON(data) {
