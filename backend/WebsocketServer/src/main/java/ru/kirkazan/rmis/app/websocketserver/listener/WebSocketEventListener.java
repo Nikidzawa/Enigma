@@ -20,15 +20,18 @@ public class WebSocketEventListener {
 
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-        System.out.println("User connected: " + event.getUser().getName());
-        messagingTemplate.convertAndSendToUser(event.getUser().getName(), "/personal/presence", new PresenceStatus(event.getUser().getName(), true));
-        userPresenceService.userConnected(Long.valueOf(event.getUser().getName()));
+        if (userPresenceService.userConnected(Long.valueOf(event.getUser().getName()))) {
+            System.out.println("User connected: " + event.getUser().getName());
+            messagingTemplate.convertAndSendToUser(event.getUser().getName(), "/personal/presence", new PresenceStatus(event.getUser().getName(), true));
+        }
     }
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        System.out.println("User disconnected: " + event.getUser().getName());
-        messagingTemplate.convertAndSendToUser(event.getUser().getName(), "/personal/presence", new PresenceStatus(event.getUser().getName(), false));
-        userPresenceService.userDisconnected(Long.valueOf(event.getUser().getName()));
+        if (userPresenceService.userDisconnected(Long.valueOf(event.getUser().getName()))) {
+            System.out.println("User disconnected: " + event.getUser().getName());
+            messagingTemplate.convertAndSendToUser(event.getUser().getName(), "/personal/presence", new PresenceStatus(event.getUser().getName(), false));
+            userPresenceService.userDisconnected(Long.valueOf(event.getUser().getName()));
+        }
     }
 }

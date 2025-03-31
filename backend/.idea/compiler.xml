@@ -11,9 +11,8 @@
         <module name="DatabaseService" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
+    <bytecodeTargetLevel target="22">
       <module name="Enigma Project" target="21" />
-      <module name="TCPServer" target="21" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
