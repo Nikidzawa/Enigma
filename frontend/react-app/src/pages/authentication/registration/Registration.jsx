@@ -1,9 +1,10 @@
 import styled from "styled-components";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import EmailAndPasswordSection from "./sections/EmailAndPasswordSection";
 import Animation from "./components/Animation";
 import EmailVerificationSection from "./sections/EmailVerificationSection";
 import BioSection from "./sections/BioSection";
+import ClientController from "../../../store/ClientController";
 
 const MainComponent = styled.main`
     min-height: 100vh;
@@ -48,6 +49,10 @@ export default function Registration() {
     const [visibleSections, setVisibleSections] = useState([1]);
 
     const [hasPrev, setHasPrev] = useState(false);
+
+    useEffect(() => {
+        ClientController.disconnect();
+    }, [])
 
     function goBackSection() {
         setHasPrev(true);

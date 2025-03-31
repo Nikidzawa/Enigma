@@ -70,6 +70,20 @@ const MainContainer = styled.main`
     background-color: #121212;
 `;
 
+const EmptySection = styled.div`
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+`
+
+const EmptyText = styled.div`
+    padding: 5px 25px;
+    background-color: #292929;
+    border-radius: 20px;
+    font-size: 15px;
+`
+
 const LeftMenuContainer = styled.div`
     height: 100vh;
     display: flex;
@@ -329,12 +343,12 @@ export default function Main() {
                 <Resizer onMouseDown={e => {e.preventDefault(); setIsResizing(true)}}/>
             </LeftMenuContainer>
             {
-                activeChat && (
-                    <ActiveChat
-                        ref={activeChatRef}
-                        activeChat={activeChat}
-                        onMessageSend={updateLastMessageOrAddChat}
-                    />
+                activeChat ? (
+                    <ActiveChat ref={activeChatRef} activeChat={activeChat} onMessageSend={updateLastMessageOrAddChat}/>
+                ) : (
+                    <EmptySection>
+                        <EmptyText>Выберите, кому хотели бы написать</EmptyText>
+                    </EmptySection>
                 )
             }
         </MainContainer>

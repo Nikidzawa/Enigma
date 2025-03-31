@@ -10,6 +10,8 @@ import {observer} from "mobx-react-lite";
 import UserDtoShort from "../../../../api/internal/dto/UserDtoShort";
 import DateField from "./DateField";
 import NicknameField from "./NicknameField";
+import ImageResizer from "./ImageResizer";
+import Loader from "../../../authentication/registration/components/Loader";
 
 const fadeIn = keyframes`
     from {
@@ -96,8 +98,7 @@ const Button = styled.button`
     background-color: transparent;
     border: 2px solid white;
     color: white;
-    padding: 12px 23px;
-    min-width: 140px;
+    min-width: 130px;
     min-height: 40px;
     font-size: 19px;
     border-radius: 15px;
@@ -190,6 +191,12 @@ const Profile = observer(({ setVisible, visible }) => {
 
     const [nicknameAlreadyUsed, setNicknameAlreadyUsed] = useState(false);
 
+    const [resizerIsVisible, setResizerVisible] = useState(false);
+    const [selectedImage, setSelectedImage] = useState("");
+    const [avatarChanged, setAvatarChanged] = useState(false);
+
+    const [loading, setLoading] = useState(false);
+
     useEffect(() => {
         setName(user.name);
         setSurname(user.surname);
@@ -200,18 +207,26 @@ const Profile = observer(({ setVisible, visible }) => {
     }, [user])
 
     async function validate() {
+        setLoading(true)
         setNicknameAlreadyUsed(false);
-        await UserApi.nicknameIsUsed(nickname, user.id).then(response => {
-            if (response.data === false) {
-                saveUser();
-            } else {
-                setNicknameAlreadyUsed(true);
-            }
-        })
+        try {
+            await UserApi.nicknameIsUsed(nickname, user.id).then(async response => {
+                if (response.data === false) {
+                    await saveUser();
+                    setAvatarChanged(false);
+                } else {
+                    setNicknameAlreadyUsed(true);
+                }
+            })
+        } finally {
+            setLoading(false)
+        }
     }
 
     async function saveUser() {
-        const newUserData = new UserDtoShort(user.id, nickname, name, surname, new Date(birthdate), aboutMe, avatar);
+        const newUserData = new UserDtoShort(user.id, nickname, name, surname, new Date(birthdate), aboutMe,
+            avatarChanged ? await FireBase.uploadAvatar(FireBase.base64ToFile(avatar, user.id), user.id) : avatar
+        );
         UserApi.edit(newUserData).then(() => {
             UserController.setUser(newUserData);
             setVisible(false);
@@ -227,7 +242,11 @@ const Profile = observer(({ setVisible, visible }) => {
 
         reader.onloadend = async () => {
             const result = reader.result;
-            if (!result) return;
+            if (result) {
+                setSelectedImage(result);
+                setResizerVisible(true);
+                setAvatarChanged(true);
+            }
             try {
                 const newAvatarUrl = await FireBase.uploadAvatar(FireBase.base64ToFile(result, user.id), user.id);
                 setAvatar(newAvatarUrl);
@@ -239,46 +258,51 @@ const Profile = observer(({ setVisible, visible }) => {
 
     return (
         user && (
-            <ShadowMainContainer visible={visible} onClick={() => setVisible(false)}>
-                <ModalContainer onClick={e => e.stopPropagation()}>
-                    <UpperContainer>
-                        <Name>My Profile</Name>
-                        <Close src={CloseImage} onClick={() => setVisible(false)}/>
-                    </UpperContainer>
-                    <AvatarSection>
-                        <AvatarContainer>
-                            <ProfileImage src={avatar}/>
-                            <ChooseAvatarContainer>
-                                <ChooseAvatar src={CameraImg}/>
-                                <ChooseAvatarTrigger type={"file"} onChange={handleSetAvatar} accept="image/*"/>
-                            </ChooseAvatarContainer>
-                        </AvatarContainer>
-                        <UserInfo>
-                            <Fio>{name} {surname}</Fio>
-                        </UserInfo>
-                        <AboutMe>{aboutMe}</AboutMe>
-                        <Nickname>@{nickname}</Nickname>
-                    </AvatarSection>
-                    <Fields>
-                        <Bio>
-                            <Field placeholder={'Your name'} label={'First name'} value={name} setValue={setName}
-                                   maxLength={25}/>
-                            <Field placeholder={"Your surname"} label={'Last name'} value={surname}
-                                   setValue={setSurname} maxLength={25}/>
-                        </Bio>
-                        <NicknameField placeholder={"Your nickname"} label={'Nickname'} value={nickname}
-                                       setValue={setNickname} maxLength={30}/>
-                        {nicknameAlreadyUsed && <Exception>Никнейм уже используется</Exception>}
-                        <DateField placeholder={"Your birthdate"} label={'Birthdate'} value={birthdate}
-                                   setValue={setBirthdate}/>
-                        <Field placeholder={"Tell about you"} label={'About me'} value={aboutMe} setValue={setAboutMe}
-                               maxLength={120}/>
-                    </Fields>
-                    <ButtonContainer>
-                        <Button onClick={validate}>Edit</Button>
-                    </ButtonContainer>
-                </ModalContainer>
-            </ShadowMainContainer>
+            <>
+                <ShadowMainContainer visible={visible} onClick={() => setVisible(false)}>
+                    <ModalContainer onClick={e => e.stopPropagation()}>
+                        <UpperContainer>
+                            <Name>My Profile</Name>
+                            <Close src={CloseImage} onClick={() => setVisible(false)}/>
+                        </UpperContainer>
+                        <AvatarSection>
+                            <AvatarContainer>
+                                <ProfileImage src={avatar}/>
+                                <ChooseAvatarContainer>
+                                    <ChooseAvatar src={CameraImg}/>
+                                    <ChooseAvatarTrigger type={"file"} onChange={handleSetAvatar} accept="image/*"/>
+                                </ChooseAvatarContainer>
+                            </AvatarContainer>
+                            <UserInfo>
+                                <Fio>{name} {surname}</Fio>
+                            </UserInfo>
+                            <AboutMe>{aboutMe}</AboutMe>
+                            <Nickname>@{nickname}</Nickname>
+                        </AvatarSection>
+                        <Fields>
+                            <Bio>
+                                <Field placeholder={'Your name'} label={'First name'} value={name} setValue={setName}
+                                       maxLength={25}/>
+                                <Field placeholder={"Your surname"} label={'Last name'} value={surname}
+                                       setValue={setSurname} maxLength={25}/>
+                            </Bio>
+                            <NicknameField placeholder={"Your nickname"} label={'Nickname'} value={nickname}
+                                           setValue={setNickname} maxLength={30}/>
+                            {nicknameAlreadyUsed && <Exception>Никнейм уже используется</Exception>}
+                            <DateField placeholder={"Your birthdate"} label={'Birthdate'} value={birthdate}
+                                       setValue={setBirthdate}/>
+                            <Field placeholder={"Tell about you"} label={'About me'} value={aboutMe} setValue={setAboutMe}
+                                   maxLength={120}/>
+                        </Fields>
+                        <ButtonContainer>
+                            <Button onClick={validate}>{loading ? <Loader/> : "Edit"}</Button>
+                        </ButtonContainer>
+                    </ModalContainer>
+                </ShadowMainContainer>
+                {
+                    resizerIsVisible && <ImageResizer src={selectedImage} visible={resizerIsVisible} setResizerVisible={setResizerVisible} setAvatar={setAvatar}/>
+                }
+            </>
         )
     )
 });

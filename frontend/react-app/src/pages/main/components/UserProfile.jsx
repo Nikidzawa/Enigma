@@ -1,8 +1,7 @@
 import styled from "styled-components";
 import ChatRoomDto from "../../../api/internal/dto/ChatRoomDto";
 import UserDto from "../../../api/internal/dto/UserDto";
-import InfoProfile from "./menu/InfoProfile";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 
 const MainContainer = styled.div`
     :hover {
@@ -65,7 +64,7 @@ export default function UserProfile({userInfo, chats, setActiveChat}) {
 
     return (
         <>
-            <MainContainer onClick={() => setVisible(true)}>
+            <MainContainer onClick={() => openChat()}>
                 <ChatRoomContainer>
                     <UserAvatar src={userInfo.avatarHref}/>
                     <UserData>
@@ -74,7 +73,7 @@ export default function UserProfile({userInfo, chats, setActiveChat}) {
                     </UserData>
                 </ChatRoomContainer>
             </MainContainer>
-            <InfoProfile user={userInfo} visible={visible} setVisible={setVisible}/>
+            {/*<InfoProfile user={userInfo} visible={visible} setVisible={setVisible}/>*/}
         </>
     );
 }

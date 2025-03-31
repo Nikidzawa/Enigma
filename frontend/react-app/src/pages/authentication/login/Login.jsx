@@ -1,11 +1,12 @@
 import styled from "styled-components";
 import Logo from "../../../img/img.png"
 import {useNavigate} from "react-router-dom";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import UserApi from "../../../api/internal/controllers/UserApi";
 import UserController from "../../../store/UserController";
 import NicknameOrEmailAndPasswordFields from "./components/NicknameOrEmailAndPasswordFields";
 import FailFieldValidation from "../components/fields/FailFieldValidation";
+import ClientController from "../../../store/ClientController";
 
 
 const MainComponent = styled.main`
@@ -101,6 +102,11 @@ export default function Login() {
 
     const [failLoginEx, setFailLoginEx] = useState(false);
     const [fieldEmptyEx, setFieldEmptyEx] = useState(false);
+
+
+    useEffect(() => {
+        ClientController.disconnect();
+    }, [])
 
     async function authResponse() {
         setFieldEmptyEx(false);

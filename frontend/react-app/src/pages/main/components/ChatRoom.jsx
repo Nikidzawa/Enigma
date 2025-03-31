@@ -1,11 +1,8 @@
 import styled from "styled-components";
-import DefaultAvatar from "../../../img/i.png"
 import DateParser from "../../../helpers/DateParser";
 import UserController from "../../../store/UserController";
-import ActiveChatController from "../../../store/ActiveChatController";
 import {useEffect, useState} from "react";
 import ClientController from "../../../store/ClientController";
-import {Client} from "@stomp/stompjs";
 import {observer} from "mobx-react-lite";
 import PresenceResponse from "../../../network/response/PresenceResponse";
 
@@ -91,7 +88,7 @@ const Date = styled.div`
     flex-shrink: 0;
 `
 
-const ChatRoom = observer(({chatRoom, setActiveChat}) => {
+export default observer(function ChatRoom({chatRoom, setActiveChat}) {
     const [user, setUser] = useState({})
     const [lastMessage, setLastMessage] = useState(null)
     const [isOnline, setIsOnline] = useState(null)
@@ -137,5 +134,3 @@ const ChatRoom = observer(({chatRoom, setActiveChat}) => {
             </MainContainer>
     );
 })
-
-export default ChatRoom

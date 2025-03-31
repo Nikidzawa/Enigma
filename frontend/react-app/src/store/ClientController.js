@@ -1,8 +1,5 @@
 import {makeAutoObservable} from "mobx";
 import {Client} from "@stomp/stompjs";
-import ChatsController from "./ChatsController";
-import MessageRequest from "../network/request/MessageRequest";
-import MessageDto from "../api/internal/dto/MessageDto";
 
 class ClientController {
 
@@ -23,7 +20,7 @@ class ClientController {
             },
             onConnect: () => {
                 this.client = stompClient;
-                console.log('Connected!');
+
                 // Подписка на персональные уведомления по сообщениям
                 stompClient.subscribe(`/client/${userId}/queue/messages`, messageHandler);
 
@@ -36,9 +33,15 @@ class ClientController {
                 window.location.href = '/login';
             }
         });
-
         stompClient.activate();
     }
+
+    async disconnect() {
+        if (this.client && this.client.connected) {
+            this.client.deactivate()
+        }
+    }
+
     async sendMessage(message) {
         if (this.client.connected) {
             this.client.publish({
