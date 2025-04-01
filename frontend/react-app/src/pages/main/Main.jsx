@@ -207,7 +207,7 @@ export default function Main() {
         const messageDto = MessageDto.fromRequest(JSON.parse(message.body));
         UserApi.getUserById(messageDto.senderId).then(response => {
             updateLastMessageOrAddChat({message: messageDto, companion: UserDto.fromJSON(response.data)});
-            activeChatRef.current?.updateActiveChat(messageDto)
+            activeChatRef.current?.addNewMessage(messageDto)
         })
     }, []);
 
@@ -221,6 +221,7 @@ export default function Main() {
                 return chatRoom;
             });
         });
+        activeChatRef.current?.updateOnlineStatus(presenceResponse);
     }, []);
 
     useEffect(() => {
@@ -332,7 +333,7 @@ export default function Main() {
                         <ChatRoomsContainer isActive={isSearchMode}>
                             {
                                 chats?.map(chatRoom => (
-                                    <ChatRoom key={chatRoom.companion.id} chatRoom={chatRoom} setActiveChat={setActiveChat}/>
+                                    <ChatRoom key={chatRoom.companion.id} chatRoom={chatRoom} setActiveChat={setActiveChat} activeChatRef={activeChatRef}/>
                                     )
                                 )
                             }

@@ -88,7 +88,7 @@ const Date = styled.div`
     flex-shrink: 0;
 `
 
-export default observer(function ChatRoom({chatRoom, setActiveChat}) {
+export default observer(function ChatRoom({chatRoom, setActiveChat, activeChatRef}) {
     const [user, setUser] = useState({})
     const [lastMessage, setLastMessage] = useState(null)
     const [isOnline, setIsOnline] = useState(null)
@@ -105,7 +105,9 @@ export default observer(function ChatRoom({chatRoom, setActiveChat}) {
 
             // Подписка на получение статуса пользователя
             stompClient.subscribe(`/client/${chatRoom.companion.id}/personal/presence`, (message) => {
-                setIsOnline(PresenceResponse.fromJSON(JSON.parse(message.body)).isOnline);
+                const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
+                setIsOnline(presenceResponse.isOnline);
+                activeChatRef.current?.updateOnlineStatus(presenceResponse);
             });
         }
     }, [stompClient]);
