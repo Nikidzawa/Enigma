@@ -8,6 +8,7 @@ import FailFieldValidation from "../../components/fields/FailFieldValidation";
 import EmailCodeController from "../store/EmailCodeController";
 import UserDto from "../../../../api/internal/dto/UserDto";
 import FireBase from "../../../../api/external/FireBase";
+import ImageResizer from "../../../main/components/menu/ImageResizer";
 
 const MainContainer = styled.div`
     display: flex;
@@ -99,6 +100,9 @@ export default function BioSection ({goBack}) {
 
     const [nameEx, setNameEx] = useState(false);
 
+    const [resizerVisible, setResizerVisible] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null)
+
     async function register() {
         const userDto = new UserDto();
         userDto.name = name;
@@ -128,14 +132,19 @@ export default function BioSection ({goBack}) {
         }
     }
 
-    const handleSetAvatar = (e) => {
+    const handleSetAvatar = async (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setAvatar(reader.result);
-            };
             reader.readAsDataURL(file);
+
+            reader.onloadend = async () => {
+                const result = reader.result;
+                if (result) {
+                    setSelectedImage(result);
+                    setResizerVisible(true);
+                }
+            };
         }
     };
 
@@ -149,27 +158,32 @@ export default function BioSection ({goBack}) {
     }
 
     return (
-        <MainContainer>
-            <Image src={avatar || CameraImg} />
-            <ChooseImage type={"file"} onChange={handleSetAvatar} accept="image/*"/>
-            <FieldsContainer>
-                <Input value={name}
-                       onInput={e => setName(e.target.value)}
-                       onKeyDown={e => e.code === 'Enter' && surnameRef.current.focus()}
-                       autoFocus={true}
-                       placeholder={"Name"}/>
-                <ExceptionContainer position={"38px"}>
-                    {nameEx && (<FailFieldValidation>Укажите имя</FailFieldValidation>)}
-                </ExceptionContainer>
-                <Input value={surname}
-                       onInput={e => setSurname(e.target.value)}
-                       onKeyDown={e => e.code === 'Enter' && validate()}
-                       placeholder={"Surname (optional)"}
-                       ref={surnameRef}
-                />
-            </FieldsContainer>
-            <Button onClick={validate}>Register</Button>
-            <BackPageLink onClick={goBack}>Go Back</BackPageLink>
-        </MainContainer>
+        <>
+            <MainContainer>
+                <Image src={avatar || CameraImg} />
+                <ChooseImage type={"file"} onChange={handleSetAvatar} accept="image/*"/>
+                <FieldsContainer>
+                    <Input value={name}
+                           onInput={e => setName(e.target.value)}
+                           onKeyDown={e => e.code === 'Enter' && surnameRef.current.focus()}
+                           autoFocus={true}
+                           placeholder={"Name"}/>
+                    <ExceptionContainer position={"38px"}>
+                        {nameEx && (<FailFieldValidation>Укажите имя</FailFieldValidation>)}
+                    </ExceptionContainer>
+                    <Input value={surname}
+                           onInput={e => setSurname(e.target.value)}
+                           onKeyDown={e => e.code === 'Enter' && validate()}
+                           placeholder={"Surname (optional)"}
+                           ref={surnameRef}
+                    />
+                </FieldsContainer>
+                <Button onClick={validate}>Register</Button>
+                <BackPageLink onClick={goBack}>Go Back</BackPageLink>
+            </MainContainer>
+            {
+                resizerVisible && <ImageResizer src={selectedImage} setResizerVisible={setResizerVisible} visible={resizerVisible} setAvatar={setAvatar}/>
+            }
+        </>
     )
 }

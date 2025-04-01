@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>Service</module>
+        <module>Backend</module>
         <module>WebsocketServer</module>
     </modules>
 

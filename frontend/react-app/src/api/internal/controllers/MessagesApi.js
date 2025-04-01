@@ -1,6 +1,4 @@
 import BaseApiPath from "../ProtectedApi";
-import MessageDto from "../dto/MessageDto";
-import ActiveChatController from "../../../store/ActiveChatController";
 import api from "../Api";
 
 export default class MessagesApi extends BaseApiPath {

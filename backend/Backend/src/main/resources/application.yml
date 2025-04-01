@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/enigma
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  mvc:
+    servlet:
+      path: /api/
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: user
+      auto-offset-reset: earliest
+server:
+  port: 9000

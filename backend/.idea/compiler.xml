@@ -8,16 +8,17 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="WebsocketServer" />
-        <module name="DatabaseService" />
+        <module name="Backend" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="22">
       <module name="Enigma Project" target="21" />
+      <module name="Kafka" target="21" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="DatabaseService" options="-parameters" />
+      <module name="Backend" options="-parameters" />
       <module name="WebsocketServer" options="-parameters" />
     </option>
   </component>

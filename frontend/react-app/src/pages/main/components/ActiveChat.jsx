@@ -148,11 +148,20 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
     const [user, setUser] = useState({});
     const [chat, setChat] = useState({});
 
+    const [isOnline, setIsOnline] = useState(false);
+    const [lastOnlineDate, setLastOnlineDate] = useState(new Date());
+
     useImperativeHandle(ref, () => ({
-        updateActiveChat: async (message) => {
+        addNewMessage: async (message) => {
             if (activeChat?.companion.id === message.senderId) {
                 await setMessages(prev => [...prev, message]);
                 scrollToBottom();
+            }
+        },
+        updateOnlineStatus: async (presenceResponse) => {
+            if (activeChat?.companion.id === presenceResponse.userId) {
+                setIsOnline(presenceResponse.isOnline)
+                setLastOnlineDate(new Date())
             }
         }
     }));
@@ -160,6 +169,9 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
     useEffect(() => {
         setUser(activeChat.companion);
         setChat(activeChat.chat);
+
+        setLastOnlineDate(activeChat.companion.lastOnline);
+        setIsOnline(activeChat.companion.isOnline);
 
         const loadMessages = async () => {
             if (activeChat.chat) {
@@ -269,8 +281,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
             <UpperSection>
                 <Name>{user.name}</Name>
                 <OnlineStatusContainer>
-                    <OnlineStatusCircle/>
-                    <OnlineStatusText>В сети</OnlineStatusText>
+                    <OnlineStatusText>{isOnline ? 'В сети' : lastOnlineDate.toString()}</OnlineStatusText>
                 </OnlineStatusContainer>
             </UpperSection>
             <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>

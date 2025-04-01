@@ -53,6 +53,7 @@ const ModalContainer = styled.div`
     padding: 30px;
     position: relative;
     box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
+    width: 420px;
 `
 
 const ChooseAvatarContainer = styled.div`
@@ -170,13 +171,15 @@ const Name = styled.div`
 `
 
 const Close = styled.img`
-    width: 18px;
-    height: 18px;
+    width: 17px;
+    height: 17px;
     cursor: pointer;
 `
 
 const Exception = styled.div`
     color: red;
+    font-size: 15px;
+    padding-left: 1px;
 `
 
 const Profile = observer(({ setVisible, visible }) => {
@@ -190,9 +193,10 @@ const Profile = observer(({ setVisible, visible }) => {
     const [avatar, setAvatar] = useState("");
 
     const [nicknameAlreadyUsed, setNicknameAlreadyUsed] = useState(false);
+    const [nameIsEmptyEx, setNameIsEmptyEx] = useState(false);
 
     const [resizerIsVisible, setResizerVisible] = useState(false);
-    const [selectedImage, setSelectedImage] = useState("");
+    const [selectedImage, setSelectedImage] = useState(null);
     const [avatarChanged, setAvatarChanged] = useState(false);
 
     const [loading, setLoading] = useState(false);
@@ -204,12 +208,17 @@ const Profile = observer(({ setVisible, visible }) => {
         setAboutMe(user.aboutMe)
         setBirthdate(user.birthdate)
         setAvatar(user.avatarHref)
-    }, [user])
+    }, [user, visible])
 
     async function validate() {
         setLoading(true)
         setNicknameAlreadyUsed(false);
+        setNameIsEmptyEx(false);
         try {
+            if (!name) {
+                setNameIsEmptyEx(true);
+                return;
+            }
             await UserApi.nicknameIsUsed(nickname, user.id).then(async response => {
                 if (response.data === false) {
                     await saveUser();
@@ -245,13 +254,6 @@ const Profile = observer(({ setVisible, visible }) => {
             if (result) {
                 setSelectedImage(result);
                 setResizerVisible(true);
-                setAvatarChanged(true);
-            }
-            try {
-                const newAvatarUrl = await FireBase.uploadAvatar(FireBase.base64ToFile(result, user.id), user.id);
-                setAvatar(newAvatarUrl);
-            } catch (error) {
-                console.error("Ошибка загрузки аватара:", error);
             }
         };
     };
@@ -276,7 +278,7 @@ const Profile = observer(({ setVisible, visible }) => {
                             <UserInfo>
                                 <Fio>{name} {surname}</Fio>
                             </UserInfo>
-                            <AboutMe>{aboutMe}</AboutMe>
+                            { aboutMe && <AboutMe>{aboutMe}</AboutMe> }
                             <Nickname>@{nickname}</Nickname>
                         </AvatarSection>
                         <Fields>
@@ -286,6 +288,7 @@ const Profile = observer(({ setVisible, visible }) => {
                                 <Field placeholder={"Your surname"} label={'Last name'} value={surname}
                                        setValue={setSurname} maxLength={25}/>
                             </Bio>
+                            {nameIsEmptyEx && <Exception>Имя не может быть пустым</Exception>}
                             <NicknameField placeholder={"Your nickname"} label={'Nickname'} value={nickname}
                                            setValue={setNickname} maxLength={30}/>
                             {nicknameAlreadyUsed && <Exception>Никнейм уже используется</Exception>}
@@ -300,7 +303,7 @@ const Profile = observer(({ setVisible, visible }) => {
                     </ModalContainer>
                 </ShadowMainContainer>
                 {
-                    resizerIsVisible && <ImageResizer src={selectedImage} visible={resizerIsVisible} setResizerVisible={setResizerVisible} setAvatar={setAvatar}/>
+                    resizerIsVisible && <ImageResizer src={selectedImage} visible={resizerIsVisible} setResizerVisible={setResizerVisible} setAvatar={setAvatar} setAvatarChanged={setAvatarChanged}/>
                 }
             </>
         )

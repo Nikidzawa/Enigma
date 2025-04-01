@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="FrameworkDetectionExcludesConfiguration">
-    <file type="web" url="file://$PROJECT_DIR$/Service" />
+    <file type="web" url="file://$PROJECT_DIR$/Backend" />
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
@@ -17,11 +17,12 @@
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/Client/pom.xml" />
+        <option value="$PROJECT_DIR$/Kafka/pom.xml" />
         <option value="$PROJECT_DIR$/WebsocketProxy/pom.xml" />
       </set>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_23" default="true" project-jdk-name="azul-23" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_22" project-jdk-name="azul-23" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>

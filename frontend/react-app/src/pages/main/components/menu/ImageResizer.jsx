@@ -44,11 +44,17 @@ const MainContainer = styled.div`
 `
 
 const Button = styled.button`
-    width: 160px;
-    height: 25px;
-    font-size: 15px;
-    margin-top: 10px;
+    background-color: #090909;
+    border: 1px solid white;
+    color: white;
+    padding: 8px;
+    min-width: calc(140px + 1vh);
+    min-height: calc(28px + 1vh);
+    font-size: 17px;
     cursor: pointer;
+    border-radius: 5px;
+    margin: 15px 0;
+    font-family: Rubik;
 `
 
 const ImageContainer = styled.div`
@@ -57,10 +63,13 @@ const ImageContainer = styled.div`
     overflow: hidden;
     cursor: ${props => props.cursor || 'default'};
     user-select: none;
+    background-color: transparent;
 `;
 
 const ImageComponent = styled.img`
     pointer-events: none;
+    min-height: 120px;
+    min-width: 120px;
 `
 
 const Square = styled.div`
@@ -108,30 +117,27 @@ const ResizeHandle = styled.div`
     }
 `;
 
-export default function ImageResizer ({src, initialSize = 200, visible, setResizerVisible, setAvatar}) {
+export default function ImageResizer ({src, visible, setResizerVisible, setAvatar, setAvatarChanged}) {
     const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [size, setSize] = useState(initialSize);
+    const [size, setSize] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
     const [resizeDirection, setResizeDirection] = useState(null);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [initialSizeState, setInitialSizeState] = useState({ size: 0, position: { x: 0, y: 0 } });
     const imageRef = useRef(null);
-    const containerRef = useRef(null);
 
     useEffect(() => {
         const img = new Image();
-        img.crossOrigin = "Anonymous";
         img.onload = () => {
             if (imageRef.current) {
                 imageRef.current.src = src;
-                if (containerRef.current) {
-                    const rect = containerRef.current.getBoundingClientRect();
-                    setPosition({
-                        x: (rect.width - initialSize) / 2,
-                        y: (rect.height - initialSize) / 2
-                    });
-                }
+                const initialSize = Math.min(img.width, img.height) * 0.5;
+                setSize(initialSize);
+                setPosition({
+                    x: (imageRef.current.width / 2 - initialSize),
+                    y: (imageRef.current.width / 2 - initialSize)
+                });
             }
         };
         img.onerror = () => {
@@ -144,7 +150,7 @@ export default function ImageResizer ({src, initialSize = 200, visible, setResiz
     }, [src]);
 
     const getMousePos = (e) => {
-        const rect = containerRef.current.getBoundingClientRect();
+        const rect = imageRef.current.getBoundingClientRect();
         return {
             x: e.clientX - rect.left,
             y: e.clientY - rect.top
@@ -196,17 +202,19 @@ export default function ImageResizer ({src, initialSize = 200, visible, setResiz
 
     const handleMouseMove = (e) => {
         const pos = getMousePos(e);
-        const container = containerRef.current;
-        if (!container) return;
+        if (!imageRef.current) return;
+
+        const imgWidth = imageRef.current.width;
+        const imgHeight = imageRef.current.height;
 
         if (isDragging) {
             setPosition({
-                x: Math.max(0, Math.min(pos.x - dragStart.x, container.clientWidth - size)),
-                y: Math.max(0, Math.min(pos.y - dragStart.y, container.clientHeight - size))
+                x: Math.max(0, Math.min(pos.x - dragStart.x, imgWidth - size)),
+                y: Math.max(0, Math.min(pos.y - dragStart.y, imgHeight - size))
             });
         } else if (isResizing) {
             const minSize = 50;
-            const maxSize = Math.min(container.clientWidth, container.clientHeight);
+            const maxSize = Math.min(imgWidth, imgHeight);
 
             switch (resizeDirection) {
                 case 'top-left':
@@ -262,13 +270,12 @@ export default function ImageResizer ({src, initialSize = 200, visible, setResiz
         setIsDragging(false);
         setIsResizing(false);
         setResizeDirection(null);
-        cropImage();
     };
 
     const cropImage = () => {
         try {
             const image = imageRef.current;
-            if (!image || !containerRef.current) return;
+            if (!image) return;
 
             const rect = image.getBoundingClientRect();
             const scaleX = image.naturalWidth / rect.width;
@@ -285,7 +292,9 @@ export default function ImageResizer ({src, initialSize = 200, visible, setResiz
                 0, 0, size * scaleX, size * scaleY
             );
 
-            setAvatar(canvas.toDataURL())
+            setAvatar(canvas.toDataURL());
+            setResizerVisible(false);
+            setAvatarChanged(true);
         } catch (error) {
             console.error("Error cropping image:", error);
         }
@@ -301,9 +310,9 @@ export default function ImageResizer ({src, initialSize = 200, visible, setResiz
     }, [isDragging, isResizing, position, size, dragStart, resizeDirection]);
 
     return (
-        <ShadowContainer visible={visible} onMouseDown={() => setResizerVisible(false)}>
-            <MainContainer onClick={e => e.stopPropagation()}>
-                <ImageContainer ref={containerRef} onMouseDown={handleMouseDown}
+        <ShadowContainer visible={visible} onMouseDown={e => e.target === e.currentTarget && setResizerVisible(false)}>
+            <MainContainer>
+                <ImageContainer onMouseDown={handleMouseDown}
                     cursor={isDragging ? 'grabbing' : (isResizing ? `${resizeDirection}-resize` : 'default')}>
                     <ImageComponent ref={imageRef}/>
                     <Square size={size} x={position.x} y={position.y}>
