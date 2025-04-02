@@ -1,10 +1,14 @@
 import styled from "styled-components";
 import DateParser from "../../../helpers/DateParser";
 import UserController from "../../../store/UserController";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import ClientController from "../../../store/ClientController";
 import {observer} from "mobx-react-lite";
 import PresenceResponse from "../../../network/response/PresenceResponse";
+import ChatRoomDto from "../../../api/internal/dto/ChatRoomDto";
+import UserDto from "../../../api/internal/dto/UserDto";
+import UserApi from "../../../api/internal/controllers/UserApi";
+import MessageDto from "../../../api/internal/dto/MessageDto";
 
 const MainContainer = styled.div`
     overflow: hidden;
@@ -81,17 +85,17 @@ const UpperLine = styled.div`
     min-width: 0;
 `
 
-const Date = styled.div`
+const DateComponent = styled.div`
     font-size: 13px;
     padding: 0 5px;
     color: #7f7f7f;
     flex-shrink: 0;
 `
 
-export default observer(function ChatRoom({chatRoom, setActiveChat, activeChatRef}) {
-    const [user, setUser] = useState({})
-    const [lastMessage, setLastMessage] = useState(null)
-    const [isOnline, setIsOnline] = useState(null)
+export default observer(function ChatRoom({chatRoom, setActiveChat, activeChatRef, updateChatRoomPresenceData, updateChatRoomUserData}) {
+    const [user, setUser] = useState({});
+    const [lastMessage, setLastMessage] = useState(null);
+    const [isOnline, setIsOnline] = useState(null);
     const stompClient = ClientController.getClient();
 
     function isMyMessage() {
@@ -104,11 +108,29 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, activeChatRe
             ClientController.checkUserOnlineStatus(chatRoom.companion.id);
 
             // Подписка на получение статуса пользователя
-            stompClient.subscribe(`/client/${chatRoom.companion.id}/personal/presence`, (message) => {
+            const presenceSubscription = stompClient.subscribe(`/client/${chatRoom.companion.id}/personal/presence`, (message) => {
                 const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
                 setIsOnline(presenceResponse.isOnline);
+                updateChatRoomPresenceData(presenceResponse, new Date());
                 activeChatRef.current?.updateOnlineStatus(presenceResponse);
             });
+
+            // Подписка на обновление профиля
+            const profileSubscription = stompClient.subscribe(`/client/${chatRoom.companion.id}/profile/changed`, (message) => {
+                UserApi.getUserById(JSON.parse(message.body).userId).then(response => {
+                        const userDto = UserDto.fromJSON(response.data);
+                        userDto.isOnline = true;
+                        userDto.lastOnline = new Date();
+                        updateChatRoomUserData(userDto);
+                        activeChatRef.current?.updateProfileData(userDto);
+                    }
+                );
+            });
+
+            return () => {
+                presenceSubscription.unsubscribe();
+                profileSubscription.unsubscribe();
+            };
         }
     }, [stompClient]);
 
@@ -128,7 +150,7 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, activeChatRe
                     <UserData>
                         <UpperLine>
                             <Name>{`${user.name} ${user.surname}`}</Name>
-                            <Date>{lastMessage ? DateParser.parseDate(lastMessage.createdAt) : ""}</Date>
+                            <DateComponent>{lastMessage ? DateParser.parseDate(lastMessage.createdAt) : ""}</DateComponent>
                         </UpperLine>
                         <LastMessage>{lastMessage ? (isMyMessage() + lastMessage.text) : "Сообщений нет"}</LastMessage>
                     </UserData>

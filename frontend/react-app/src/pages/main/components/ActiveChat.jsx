@@ -149,7 +149,8 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
     const [chat, setChat] = useState({});
 
     const [isOnline, setIsOnline] = useState(false);
-    const [lastOnlineDate, setLastOnlineDate] = useState(new Date());
+    const [lastOnlineDate, setLastOnlineDate] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useImperativeHandle(ref, () => ({
         addNewMessage: async (message) => {
@@ -162,6 +163,11 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
             if (activeChat?.companion.id === presenceResponse.userId) {
                 setIsOnline(presenceResponse.isOnline)
                 setLastOnlineDate(new Date())
+            }
+        },
+        updateProfileData: async (userDto) => {
+            if (activeChat?.companion.id === userDto.id) {
+                setUser(userDto);
             }
         }
     }));
@@ -190,6 +196,8 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                 scrollToBottom();
             }, 0);
         });
+
+        setLoading(false);
     }, []);
 
     function defaultSort(array) {
@@ -271,17 +279,18 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                 onMessageSend({message: message, companion: user});
                 setText("");
                 scrollToBottom();
-                await ClientController.sendMessage(new MessageRequest(message.id, message.createdAt, message.senderId, user.id, message.text));
+                ClientController.sendMessage(new MessageRequest(message.id, message.createdAt, message.senderId, user.id, message.text));
             });
         }
     }
 
     return (
+        !loading &&
         <MainContainer>
             <UpperSection>
                 <Name>{user.name}</Name>
                 <OnlineStatusContainer>
-                    <OnlineStatusText>{isOnline ? 'В сети' : lastOnlineDate.toString()}</OnlineStatusText>
+                    <OnlineStatusText>{isOnline ? 'В сети' : 'Был в сети в ' + DateParser.parseToDateAndTime(lastOnlineDate)}</OnlineStatusText>
                 </OnlineStatusContainer>
             </UpperSection>
             <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>

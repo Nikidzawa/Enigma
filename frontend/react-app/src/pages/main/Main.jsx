@@ -212,16 +212,7 @@ export default function Main() {
     }, []);
 
     const onPresenceChange = useCallback(async (message) => {
-        const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
-        setChats(prevChats => {
-            return prevChats.map(chatRoom => {
-                if (chatRoom.companion.id === presenceResponse.userId) {
-                    return {...chatRoom, companion: {...chatRoom.companion, isOnline: presenceResponse.isOnline}};
-                }
-                return chatRoom;
-            });
-        });
-        activeChatRef.current?.updateOnlineStatus(presenceResponse);
+        updateChatRoomPresenceData(PresenceResponse.fromJSON(JSON.parse(message.body)));
     }, []);
 
     useEffect(() => {
@@ -264,6 +255,30 @@ export default function Main() {
 
         return () => clearTimeout(timer);
     }, [searchCategory, searchValue]);
+
+    async function updateChatRoomPresenceData(presenceResponse, lastOnline) {
+        setChats(prevChats => {
+            return prevChats.map(chatRoom => {
+                if (chatRoom.companion.id === presenceResponse.userId) {
+                    const updatedCompanion = {...chatRoom.companion, isOnline: presenceResponse.isOnline, ...(lastOnline && { lastOnline })};
+                    return { ...chatRoom, companion: updatedCompanion };
+                }
+                return chatRoom;
+            });
+        });
+        activeChatRef.current?.updateOnlineStatus(presenceResponse);
+    }
+
+    async function updateChatRoomUserData (userDto) {
+        setChats(prevChats => {
+            return prevChats.map(chatRoom => {
+                if (chatRoom.companion.id === userDto.id) {
+                    return {...chatRoom, companion: userDto};
+                }
+                return chatRoom;
+            });
+        });
+    }
 
     function stopSearch () {
         setSearching(false);
@@ -333,7 +348,11 @@ export default function Main() {
                         <ChatRoomsContainer isActive={isSearchMode}>
                             {
                                 chats?.map(chatRoom => (
-                                    <ChatRoom key={chatRoom.companion.id} chatRoom={chatRoom} setActiveChat={setActiveChat} activeChatRef={activeChatRef}/>
+                                    <ChatRoom key={chatRoom.companion.id}
+                                              updateChatRoomPresenceData={updateChatRoomPresenceData}
+                                              updateChatRoomUserData={updateChatRoomUserData}
+                                              chatRoom={chatRoom} setActiveChat={setActiveChat} activeChatRef={activeChatRef}
+                                    />
                                     )
                                 )
                             }

@@ -24,7 +24,7 @@ export default class UserDto {
             data.birthdate,
             data.aboutMe,
             data.avatarHref,
-            data.lastOnline
+            new Date(`${data.lastOnline}`)
         );
     }
 }

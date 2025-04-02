@@ -20,7 +20,7 @@ export default class UserDtoShort {
             data.birthdate,
             data.aboutMe,
             data.avatarHref,
-            data.lastOnline
+            new Date(`${data.lastOnline}`)
         );
     }
 }

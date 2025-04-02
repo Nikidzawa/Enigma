@@ -12,6 +12,7 @@ import DateField from "./DateField";
 import NicknameField from "./NicknameField";
 import ImageResizer from "./ImageResizer";
 import Loader from "../../../authentication/registration/components/Loader";
+import ClientController from "../../../../store/ClientController";
 
 const fadeIn = keyframes`
     from {
@@ -239,6 +240,7 @@ const Profile = observer(({ setVisible, visible }) => {
         UserApi.edit(newUserData).then(() => {
             UserController.setUser(newUserData);
             setVisible(false);
+            ClientController.updateUserProfile(newUserData.id);
         });
     }
 

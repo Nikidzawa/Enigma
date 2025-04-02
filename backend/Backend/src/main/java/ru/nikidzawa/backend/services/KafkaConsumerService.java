@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 /**
  * @author Nikidzawa
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = true)
@@ -27,6 +26,5 @@ public class KafkaConsumerService {
            individualEntity.setLastOnline(LocalDateTime.now());
            individualEntityRepository.saveAndFlush(individualEntity);
         });
-        log.atInfo().log("User logout! {}", userId);
     }
 }
