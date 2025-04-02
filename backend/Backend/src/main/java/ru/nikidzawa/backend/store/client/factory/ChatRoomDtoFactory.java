@@ -19,6 +19,8 @@ public class ChatRoomDtoFactory {
                         .nickname(chatRoomDataModel.getUserNickname())
                         .name(chatRoomDataModel.getUserName())
                         .surname(chatRoomDataModel.getUserSurname())
+                        .birthdate(chatRoomDataModel.getBirthdate())
+                        .aboutMe(chatRoomDataModel.getAboutMe())
                         .avatarHref(chatRoomDataModel.getAvatarHref())
                         .lastOnline(chatRoomDataModel.getLastOnline())
                         .build()

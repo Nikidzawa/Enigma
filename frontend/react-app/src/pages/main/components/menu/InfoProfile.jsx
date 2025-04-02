@@ -1,6 +1,11 @@
 import styled, {keyframes} from "styled-components";
 import {useEffect, useState} from "react";
 import CloseImage from "../../../../img/close2.png";
+import DateField from "./DateField";
+import MailImage from "../../../../img/mail-blue.png";
+import HandImage from "../../../../img/hand.png";
+import DateParser from "../../../../helpers/DateParser";
+import NicknameField from "./NicknameField";
 
 const fadeIn = keyframes`
     from {
@@ -39,9 +44,10 @@ const ShadowMainContainer = styled.div`
 const ModalContainer = styled.div`
     border-radius: 20px;
     background-color: #1a1a1a;
-    padding: 30px;
+    padding: 25px 25px 25px 30px;
     position: relative;
     box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
+    width: 380px;
 `
 
 const ProfileImage = styled.img`
@@ -60,7 +66,7 @@ const AvatarSection  = styled.div`
     align-items: center;
     text-align: center;
     flex: 1;
-    gap: 10px;
+    gap: 5px;
     padding-top: 30px;
     padding-bottom: 10px;
 `
@@ -102,7 +108,57 @@ const Close = styled.img`
     cursor: pointer;
 `
 
-export default function InfoProfile({firstRender, user, visible, setVisible}) {
+const ButtonContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-top: 10px;
+    gap: 10px;
+`
+
+const Button = styled.button`
+    width: 100%;
+    height: 35px;
+    background-color: transparent;
+    color: #007a7a;
+    border: 2px solid #007a7a;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    background-image: url("${MailImage}");
+    background-position: 5px;
+    background-size: 25px;
+    background-repeat: no-repeat;
+`
+
+const OnlineInfoContainer = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: center;
+`
+
+const OnlineStatusText = styled.div`
+    font-size: 15px;
+    padding-top: 3px;
+    color: #a0a0a0;
+`
+
+const OnlineCircle = styled.div`
+    width: 10px;
+    height: 10px;
+    background-color: #007a7a;
+    border-radius: 50%;
+    opacity: ${props => (props.isOnline ? "1" : "0")};
+`
+
+const InfoContainer = styled.div`
+
+
+`
+
+export default function InfoProfile({user, isOnline, lastOnlineDate, visible, setVisible, onOpenChat}) {
 
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
@@ -115,14 +171,14 @@ export default function InfoProfile({firstRender, user, visible, setVisible}) {
         setName(user.name);
         setSurname(user.surname);
         setNickname(user.nickname);
-        setAboutMe(user.aboutMe)
-        setBirthdate(user.birthdate)
-        setAvatar(user.avatarHref)
+        setAboutMe(user.aboutMe);
+        setBirthdate(user.birthdate);
+        setAvatar(user.avatarHref);
     }, [user])
 
     return (
         user && (
-            <ShadowMainContainer firstRender={firstRender} visible={visible} onClick={() => setVisible(false)}>
+            <ShadowMainContainer visible={visible} onClick={() => setVisible(false)}>
                 <ModalContainer onClick={e => e.stopPropagation()}>
                     <UpperContainer>
                         <Name>Profile</Name>
@@ -135,9 +191,21 @@ export default function InfoProfile({firstRender, user, visible, setVisible}) {
                         <UserInfo>
                             <Fio>{name} {surname}</Fio>
                         </UserInfo>
-                        <AboutMe>{aboutMe}</AboutMe>
-                        <Nickname>@{nickname}</Nickname>
+                        {aboutMe && <AboutMe>{aboutMe}</AboutMe>}
+                        <OnlineInfoContainer>
+                            <OnlineCircle isOnline={isOnline}></OnlineCircle>
+                            <OnlineStatusText>{isOnline ? 'В сети' : 'Был в сети в ' + DateParser.parseToDateAndTime(lastOnlineDate)}</OnlineStatusText>
+                        </OnlineInfoContainer>
                     </AvatarSection>
+                    <ButtonContainer>
+                        <Button onClick={() => {onOpenChat && onOpenChat(user); setVisible(false)}}>Написать</Button>
+                    </ButtonContainer>
+                    <InfoContainer>
+                        <NicknameField value={nickname} disabled={true}/>
+                        {
+                            birthdate && <DateField value={birthdate} disabled={true}/>
+                        }
+                    </InfoContainer>
                 </ModalContainer>
             </ShadowMainContainer>
         )

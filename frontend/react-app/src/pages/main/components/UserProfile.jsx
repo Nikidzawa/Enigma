@@ -1,7 +1,10 @@
 import styled from "styled-components";
 import ChatRoomDto from "../../../api/internal/dto/ChatRoomDto";
 import UserDto from "../../../api/internal/dto/UserDto";
-import {useState} from "react";
+import {useEffect, useState} from "react";
+import InfoProfile from "./menu/InfoProfile";
+import ClientController from "../../../store/ClientController";
+import PresenceResponse from "../../../network/response/PresenceResponse";
 
 const MainContainer = styled.div`
     :hover {
@@ -49,31 +52,40 @@ const Nickname = styled.div`
     overflow: hidden;
 `
 
-export default function UserProfile({userInfo, chats, setActiveChat}) {
-    const [visible, setVisible] = useState(false);
+export default function UserProfile({userDto, openChat}) {
+    const [profileVisible, setProfileVisible] = useState(false);
+    const stompClient = ClientController.getClient();
+    const [isOnline, setIsOnline] = useState(true);
+    const [lastOnlineDate, setLastOnlineDate] = useState(null);
 
-    async function openChat () {
-        let existingChat = chats.find(chat => chat.companion.id === userInfo.id);
-        if (!existingChat) {
-            existingChat = new ChatRoomDto(
-                new UserDto(userInfo.id, userInfo.nickname, userInfo.name, userInfo.surname, null, null, userInfo.avatarHref), [], null
-            )
-        }
-        setActiveChat(existingChat);
-    }
+
+    useEffect(() => {
+        const presenceSubscription = stompClient.subscribe(`/client/${userDto.id}/personal/presence`, (message) => {
+            const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
+            setIsOnline(presenceResponse.isOnline);
+            setLastOnlineDate(new Date());
+        });
+
+        return () => presenceSubscription.unsubscribe();
+    }, []);
 
     return (
         <>
-            <MainContainer onClick={() => openChat()}>
+            <MainContainer onClick={() => setProfileVisible(true)}>
                 <ChatRoomContainer>
-                    <UserAvatar src={userInfo.avatarHref}/>
+                    <UserAvatar src={userDto.avatarHref}/>
                     <UserData>
-                        <Name>{`${userInfo.name} ${userInfo.surname ? userInfo.surname : ''}`}</Name>
-                        <Nickname>{`@${userInfo.nickname}`}</Nickname>
+                        <Name>{`${userDto.name} ${userDto.surname ? userDto.surname : ''}`}</Name>
+                        <Nickname>{`@${userDto.nickname}`}</Nickname>
                     </UserData>
                 </ChatRoomContainer>
             </MainContainer>
-            {/*<InfoProfile user={userInfo} visible={visible} setVisible={setVisible}/>*/}
+            {
+                profileVisible && <InfoProfile user={userDto} visible={profileVisible} setVisible={setProfileVisible}
+                                        isOnline={isOnline} lastOnlineDate={lastOnlineDate}
+                                        onOpenChat={openChat}
+                />
+            }
         </>
     );
 }

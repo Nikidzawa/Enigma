@@ -19,7 +19,7 @@ public class IndivChatMessagesRepository {
                 SELECT m.* FROM indiv_chat_messages chat_messages
                 join messages m on m.id = chat_messages.message_id
                 where chat_messages.indiv_chat_id = ? and m.id < ?
-                ORDER BY m.id ASC
+                ORDER BY m.id DESC
                 LIMIT 30
                 """;
         return jdbcTemplate.query(sql, new MessageDataModel.MessageRowMapper(), chatId, lastMessageId);
@@ -30,7 +30,7 @@ public class IndivChatMessagesRepository {
                 SELECT m.* FROM indiv_chat_messages chat_messages
                 join messages m on m.id = chat_messages.message_id
                 where chat_messages.indiv_chat_id = ?
-                ORDER BY m.id ASC
+                ORDER BY m.id DESC
                 LIMIT 30
                 """;
         return jdbcTemplate.query(sql, new MessageDataModel.MessageRowMapper(), chatId);

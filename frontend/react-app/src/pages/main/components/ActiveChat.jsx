@@ -7,6 +7,7 @@ import DateParser from "../../../helpers/DateParser";
 import MessageDto from "../../../api/internal/dto/MessageDto";
 import MessageRequest from "../../../network/request/MessageRequest";
 import ClientController from "../../../store/ClientController";
+import InfoProfile from "./menu/InfoProfile";
 
 const MainContainer = styled.div`
     flex: 1;
@@ -66,23 +67,13 @@ const BottomSection = styled.div`
 
 const Name = styled.div`
     font-size: 20px;
-`
-const OnlineStatusContainer = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    cursor: pointer;
 `
 
 const OnlineStatusText = styled.div`
     font-size: 15px;
     color: #a0a0a0;
-`
-
-const OnlineStatusCircle = styled.div`
-    height: 10px;
-    width: 10px;
-    border-radius: 50%;
-    background-color: green;
+    cursor: default;
 `
 
 const Input = styled.input`
@@ -152,6 +143,8 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
     const [lastOnlineDate, setLastOnlineDate] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const [profileVisible, setProfileVisible] = useState(false);
+
     useImperativeHandle(ref, () => ({
         addNewMessage: async (message) => {
             if (activeChat?.companion.id === message.senderId) {
@@ -162,7 +155,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
         updateOnlineStatus: async (presenceResponse) => {
             if (activeChat?.companion.id === presenceResponse.userId) {
                 setIsOnline(presenceResponse.isOnline)
-                setLastOnlineDate(new Date())
+                setLastOnlineDate(lastOnlineDate || new Date())
             }
         },
         updateProfileData: async (userDto) => {
@@ -286,40 +279,41 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
 
     return (
         !loading &&
-        <MainContainer>
-            <UpperSection>
-                <Name>{user.name}</Name>
-                <OnlineStatusContainer>
-                    <OnlineStatusText>{isOnline ? 'В сети' : 'Был в сети в ' + DateParser.parseToDateAndTime(lastOnlineDate)}</OnlineStatusText>
-                </OnlineStatusContainer>
-            </UpperSection>
-            <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
-                {
-                    messages.map((message) => (
-                        message.senderId === UserController.getCurrentUser().id ? (
-                            <MyMessage key={message.id}>
-                                <MyMessageText>{message.text}</MyMessageText>
-                                <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
-                            </MyMessage>
-                        ) : (
-                            <OtherMessage key={message.id}>
-                                <OtherMessageText>{message.text}</OtherMessageText>
-                                <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
-                            </OtherMessage>
-                        )
-                    ))
-                }
-            </ChatSection>
-            <BottomSection>
-                <Input
-                    value={text}
-                    onInput={(e) => setText(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                    placeholder={"Введите сообщение"}
-                />
-                <SendButton onClick={sendMessage} src={SendImage}/>
-            </BottomSection>
-        </MainContainer>
+            <>
+                <MainContainer>
+                    <UpperSection>
+                        <Name onClick={() => setProfileVisible(true)}>{user.name}</Name>
+                        <OnlineStatusText>{isOnline ? 'В сети' : 'Был в сети в ' + DateParser.parseToDateAndTime(lastOnlineDate)}</OnlineStatusText>
+                    </UpperSection>
+                    <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
+                        {
+                            messages.map((message) => (
+                                message.senderId === UserController.getCurrentUser().id ? (
+                                    <MyMessage key={message.id}>
+                                        <MyMessageText>{message.text}</MyMessageText>
+                                        <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
+                                    </MyMessage>
+                                ) : (
+                                    <OtherMessage key={message.id}>
+                                        <OtherMessageText>{message.text}</OtherMessageText>
+                                        <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
+                                    </OtherMessage>
+                                )
+                            ))
+                        }
+                    </ChatSection>
+                    <BottomSection>
+                        <Input
+                            value={text}
+                            onInput={(e) => setText(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                            placeholder={"Введите сообщение"}
+                        />
+                        <SendButton onClick={sendMessage} src={SendImage}/>
+                    </BottomSection>
+                </MainContainer>
+                {profileVisible && <InfoProfile user={user} isOnline={isOnline} lastOnlineDate={lastOnlineDate} visible={profileVisible} setVisible={setProfileVisible}/>}
+            </>
     );
 });
 

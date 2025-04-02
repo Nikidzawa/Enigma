@@ -75,6 +75,7 @@ const EmptySection = styled.div`
     flex: 1;
     justify-content: center;
     align-items: center;
+    padding: 5px;
 `
 
 const EmptyText = styled.div`
@@ -82,6 +83,7 @@ const EmptyText = styled.div`
     background-color: #292929;
     border-radius: 20px;
     font-size: 15px;
+    text-align: center;
 `
 
 const LeftMenuContainer = styled.div`
@@ -278,6 +280,7 @@ export default function Main() {
                 return chatRoom;
             });
         });
+        activeChatRef.current?.updateProfileData(userDto);
     }
 
     function stopSearch () {
@@ -303,6 +306,14 @@ export default function Main() {
                 return [...prevChats, new ChatRoomDto(companion, [message], null)];
             }
         });
+    }
+
+    async function openChat (userInfo) {
+        let existingChat = chats.find(chat => chat.companion.id === userInfo.id);
+        if (!existingChat) {
+            existingChat = new ChatRoomDto(userInfo, [], null)
+        }
+        setActiveChat(existingChat);
     }
 
     return (
@@ -335,8 +346,8 @@ export default function Main() {
                         <SearchPanel>
                             <SearchLabel>Глобальный поиск</SearchLabel>
                             {
-                                searchCategory === 'PEOPLES' && searchResults.map(userInfo => (
-                                    <UserProfile key={userInfo.id} userInfo={userInfo} chats={chats} setActiveChat={setActiveChat}/>
+                                searchCategory === 'PEOPLES' && searchResults.map(userDto => (
+                                    <UserProfile key={userDto.id} userDto={userDto} openChat={openChat}/>
                                     )
                                 )
                             }
@@ -344,32 +355,29 @@ export default function Main() {
                                 searchResults.length === 0 && <EmptySearchResult>Ничего не найдено</EmptySearchResult>
                             }
                         </SearchPanel>
-                    : (
+                        :
                         <ChatRoomsContainer isActive={isSearchMode}>
                             {
                                 chats?.map(chatRoom => (
                                     <ChatRoom key={chatRoom.companion.id}
                                               updateChatRoomPresenceData={updateChatRoomPresenceData}
                                               updateChatRoomUserData={updateChatRoomUserData}
-                                              chatRoom={chatRoom} setActiveChat={setActiveChat} activeChatRef={activeChatRef}
+                                              chatRoom={chatRoom} setActiveChat={setActiveChat}
                                     />
                                     )
                                 )
                             }
                         </ChatRoomsContainer>
-                    )
-
                 }
                 <Resizer onMouseDown={e => {e.preventDefault(); setIsResizing(true)}}/>
             </LeftMenuContainer>
             {
-                activeChat ? (
+                activeChat ?
                     <ActiveChat ref={activeChatRef} activeChat={activeChat} onMessageSend={updateLastMessageOrAddChat}/>
-                ) : (
+                    :
                     <EmptySection>
                         <EmptyText>Выберите, кому хотели бы написать</EmptyText>
                     </EmptySection>
-                )
             }
         </MainContainer>
     );

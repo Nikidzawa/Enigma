@@ -12,10 +12,10 @@ const Container = styled.div`
 const Label = styled.div`
     color: #8e8e8e;
     position: absolute;
-    left: 10px;
+    left: 13px;
     top: 5px;
     z-index: 1;
-    font-size: 15px;
+    font-size: 14px;
 `;
 
 const DatePickerWrapper = styled.div`
@@ -51,17 +51,18 @@ const FieldContainer = styled.div`
     gap: 10px;
 `;
 
-export default function CustomDatePicker({label, placeholder, value, setValue}) {
+export default function DateField({value, setValue, disabled}) {
     return (
         <FieldContainer>
             <Container>
-                <Label>{label}</Label>
+                <Label>Birthdate</Label>
                 <DatePickerWrapper>
                     <StyledDatePicker
+                        disabled={disabled}
                         selected={value}
                         onChange={date => setValue(date)}
                         dateFormat="dd.MM.yyyy"
-                        placeholderText={placeholder}
+                        placeholderText={'Your birthdate'}
                         showPopperArrow={false}
                         popperPlacement="bottom-start"
                     />

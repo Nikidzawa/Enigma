@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -18,6 +19,8 @@ public class ChatRoomDataModel {
     String userNickname;
     String userName;
     String userSurname;
+    LocalDate birthdate;
+    String aboutMe;
     String avatarHref;
     LocalDateTime lastOnline;
 
@@ -39,6 +42,8 @@ public class ChatRoomDataModel {
                     rs.getString("user_nickname"),
                     rs.getString("user_name"),
                     rs.getString("user_surname"),
+                    rs.getObject("birthdate", LocalDate.class),
+                    rs.getString("about_me"),
                     rs.getString("avatar_href"),
                     rs.getObject("last_online", LocalDateTime.class),
 

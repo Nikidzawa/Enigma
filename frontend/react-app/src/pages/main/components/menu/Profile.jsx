@@ -51,7 +51,7 @@ const ShadowMainContainer = styled.div`
 const ModalContainer = styled.div`
     border-radius: 20px;
     background-color: #1a1a1a;
-    padding: 30px;
+    padding: 25px;
     position: relative;
     box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
     width: 420px;
@@ -98,12 +98,12 @@ const Bio = styled.div`
 
 const Button = styled.button`
     background-color: transparent;
-    border: 2px solid white;
-    color: white;
+    border: 2px solid #d8d8d8;
+    color: #d8d8d8;
     min-width: 130px;
     min-height: 40px;
     font-size: 19px;
-    border-radius: 15px;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -115,7 +115,7 @@ const ButtonContainer = styled.div`
     flex: 1;
     align-items: center;
     justify-content: center;
-    margin: 40px 0 10px 0;
+    margin: 30px 0 10px 0;
 `
 
 const AvatarContainer = styled.div`
@@ -291,11 +291,9 @@ const Profile = observer(({ setVisible, visible }) => {
                                        setValue={setSurname} maxLength={25}/>
                             </Bio>
                             {nameIsEmptyEx && <Exception>Имя не может быть пустым</Exception>}
-                            <NicknameField placeholder={"Your nickname"} label={'Nickname'} value={nickname}
-                                           setValue={setNickname} maxLength={30}/>
+                            <NicknameField value={nickname} setValue={setNickname}/>
                             {nicknameAlreadyUsed && <Exception>Никнейм уже используется</Exception>}
-                            <DateField placeholder={"Your birthdate"} label={'Birthdate'} value={birthdate}
-                                       setValue={setBirthdate}/>
+                            <DateField value={birthdate} setValue={setBirthdate}/>
                             <Field placeholder={"Tell about you"} label={'About me'} value={aboutMe} setValue={setAboutMe}
                                    maxLength={120}/>
                         </Fields>

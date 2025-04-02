@@ -41,16 +41,17 @@ const FieldContainer = styled.div`
     gap: 10px;
 `
 
-export default function NicknameField ({placeholder, label, value, setValue, maxLength}) {
+export default function NicknameField ({value, setValue, disabled}) {
     return (
         <FieldContainer>
             <Container>
-                <Label>{label}</Label>
+                <Label>{'Nickname'}</Label>
                 <Input
-                    placeholder={placeholder}
+                    placeholder={'Your nickname'}
                     value={value}
                     onChange={e => setValue(e.target.value.trim().toLowerCase())}
-                    maxLength={maxLength}
+                    maxLength={30}
+                    disabled={disabled}
                 />
             </Container>
         </FieldContainer>
