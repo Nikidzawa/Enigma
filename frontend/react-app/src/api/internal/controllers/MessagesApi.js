@@ -2,7 +2,6 @@ import BaseApiPath from "../ProtectedApi";
 import api from "../Api";
 
 export default class MessagesApi extends BaseApiPath {
-    static path = `${this.protectedApi}/messages`
 
     static async getMessagesByChatId(chatId, lastMessageId) {
         return api.get(`messages/getByChatId/${chatId}?lastMessageId=${lastMessageId}`)

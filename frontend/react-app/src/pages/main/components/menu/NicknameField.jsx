@@ -17,7 +17,7 @@ const Label = styled.div`
 
 const Input = styled.input`
     border: none;
-    background-color: #434343;
+    background-color: #3c3c3c;
     border-radius: 5px;
     color: white;
     height: 35px;

@@ -8,6 +8,11 @@ import MessageDto from "../../../api/internal/dto/MessageDto";
 import MessageRequest from "../../../network/request/MessageRequest";
 import ClientController from "../../../store/ClientController";
 import InfoProfile from "./menu/InfoProfile";
+import PresenceApi from "../../../api/internal/controllers/PresenceApi";
+import PresenceDto from "../../../api/internal/dto/PresenceDto";
+import PresenceResponse from "../../../network/response/PresenceResponse";
+import UserApi from "../../../api/internal/controllers/UserApi";
+import UserDto from "../../../api/internal/dto/UserDto";
 
 const MainContainer = styled.div`
     flex: 1;
@@ -128,6 +133,8 @@ const OtherMessageText = styled.div`
 `
 
 const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
+    const stompClient = ClientController.getClient();
+
     const [text, setText] = useState("");
     const [messages, setMessages] = useState([]);
     const [scrollIsVisible, setScrollIsVisible] = useState(true);
@@ -147,30 +154,44 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
 
     useImperativeHandle(ref, () => ({
         addNewMessage: async (message) => {
-            if (activeChat?.companion.id === message.senderId) {
+            if (activeChat?.companion.id === message.senderId && messages.filter(lastMessage => lastMessage.id === message.id).length === 0) {
                 await setMessages(prev => [...prev, message]);
                 scrollToBottom();
-            }
-        },
-        updateOnlineStatus: async (presenceResponse) => {
-            if (activeChat?.companion.id === presenceResponse.userId) {
-                setIsOnline(presenceResponse.isOnline)
-                setLastOnlineDate(new Date())
-            }
-        },
-        updateProfileData: async (userDto) => {
-            if (activeChat?.companion.id === userDto.id) {
-                setUser(userDto);
             }
         }
     }));
 
     useEffect(() => {
+        if (stompClient) {
+            // Подписка на получение статуса пользователя
+            const presenceSubscription = stompClient.subscribe(`/client/${activeChat.companion.id}/personal/presence`, (message) => {
+                const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
+                if (activeChat?.companion.id === presenceResponse.userId) {
+                    setIsOnline(presenceResponse.isOnline);
+                    setLastOnlineDate(presenceResponse.lastOnlineDate);
+                }
+            });
+
+            // Подписка на обновление профиля
+            const profileSubscription = stompClient.subscribe(`/client/${activeChat.companion.id}/profile/changed`, (message) => {
+                UserApi.getUserById(JSON.parse(message.body).userId).then(response => {
+                    const userDto = UserDto.fromJSON(response.data);
+                    if (activeChat?.companion.id === userDto.id) {
+                        setUser(userDto);
+                    }
+                });
+            });
+
+            return () => {
+                presenceSubscription.unsubscribe();
+                profileSubscription.unsubscribe();
+            };
+        }
+    }, [stompClient]);
+
+    useEffect(() => {
         setUser(activeChat.companion);
         setChat(activeChat.chat);
-
-        setLastOnlineDate(activeChat.companion.lastOnline);
-        setIsOnline(activeChat.companion.isOnline);
 
         const loadMessages = async () => {
             if (activeChat.chat) {
@@ -191,6 +212,14 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
         });
 
         setLoading(false);
+    }, []);
+
+    useEffect(() => {
+        PresenceApi.getActual(activeChat.companion.id).then(response => {
+            const presenceData = PresenceDto.fromJSON(response.data);
+            setIsOnline(presenceData.isOnline);
+            setLastOnlineDate(presenceData.lastOnlineDate);
+        });
     }, []);
 
     function defaultSort(array) {
@@ -283,7 +312,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                 <MainContainer>
                     <UpperSection>
                         <Name onClick={() => setProfileVisible(true)}>{user.name}</Name>
-                        <OnlineStatusText>{DateParser.parseOnlineDate(isOnline, lastOnlineDate)}</OnlineStatusText>
+                        {lastOnlineDate && <OnlineStatusText>{DateParser.parseOnlineDate(isOnline, lastOnlineDate)}</OnlineStatusText>}
                     </UpperSection>
                     <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
                         {

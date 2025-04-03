@@ -112,7 +112,6 @@ const ButtonContainer = styled.div`
     display: flex;
     flex-direction: column;
     flex: 1;
-    margin-top: 10px;
     gap: 10px;
 `
 
@@ -137,6 +136,7 @@ const OnlineInfoContainer = styled.div`
     align-items: center;
     gap: 5px;
     justify-content: center;
+    padding: 5px 0;
 `
 
 const OnlineStatusText = styled.div`

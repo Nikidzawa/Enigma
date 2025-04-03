@@ -9,7 +9,7 @@ export default class PresenceResponse {
         return new PresenceResponse (
             data.userId,
             data.isOnline,
-            data.lastOnlineDate
+            new Date(data.lastOnlineDate)
         )
     }
 }

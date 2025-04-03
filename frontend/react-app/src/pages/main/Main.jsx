@@ -266,6 +266,12 @@ export default function Main() {
         }
     };
 
+    const updateChatCompanion = (updatedCompanion) => {
+        setChats(prevChats => prevChats.map(chat =>
+            chat.companion.id === updatedCompanion.id ? { ...chat, companion: updatedCompanion } : chat
+        ));
+    };
+
     async function updateLastMessageOrAddChat ({message, companion}) {
         setChats(prevChats => {
             const existingChatIndex = prevChats.findIndex(chatRoom => chatRoom.companion.id === companion.id);
@@ -330,8 +336,8 @@ export default function Main() {
                         <ChatRoomsContainer isActive={isSearchMode}>
                             {
                                 chats?.map(chatRoom => (
-                                    <ChatRoom key={chatRoom.companion.id} chatRoom={chatRoom}
-                                              setActiveChat={setActiveChat} activeChatRef={activeChatRef}
+                                    <ChatRoom key={chatRoom.companion.id} chatRoom={chatRoom} setActiveChat={setActiveChat}
+                                              updateChatCompanion={updateChatCompanion}
                                     />
                                     )
                                 )

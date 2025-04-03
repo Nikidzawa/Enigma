@@ -29,7 +29,7 @@ const DatePickerWrapper = styled.div`
 const StyledDatePicker = styled(DatePicker)`
     width: 100%;
     border: none;
-    background-color: #434343;
+    background-color: #3c3c3c;
     border-radius: 5px;
     color: white;
     height: 35px;

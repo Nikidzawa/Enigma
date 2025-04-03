@@ -9,6 +9,7 @@ import UserDto from "../../../api/internal/dto/UserDto";
 import UserApi from "../../../api/internal/controllers/UserApi";
 import PresenceApi from "../../../api/internal/controllers/PresenceApi";
 import PresenceDto from "../../../api/internal/dto/PresenceDto";
+import ChatRoomDto from "../../../api/internal/dto/ChatRoomDto";
 
 const MainContainer = styled.div`
     overflow: hidden;
@@ -92,7 +93,7 @@ const DateComponent = styled.div`
     flex-shrink: 0;
 `
 
-export default observer(function ChatRoom({chatRoom, setActiveChat, activeChatRef}) {
+export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCompanion}) {
     const [user, setUser] = useState({});
     const [lastMessage, setLastMessage] = useState(null);
 
@@ -112,7 +113,6 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, activeChatRe
                 const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
                 setIsOnline(presenceResponse.isOnline);
                 setLastOnlineDate(presenceResponse.lastOnlineDate);
-                activeChatRef.current?.updateOnlineStatus(presenceResponse);
             });
 
             // Подписка на обновление профиля
@@ -120,7 +120,7 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, activeChatRe
                 UserApi.getUserById(JSON.parse(message.body).userId).then(response => {
                     const userDto = UserDto.fromJSON(response.data);
                     setUser(userDto);
-                    activeChatRef.current?.updateProfileData(userDto);
+                    updateChatCompanion(userDto);
                 });
             });
 
@@ -132,6 +132,7 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, activeChatRe
     }, [stompClient]);
 
     useEffect(() => {
+        setUser(chatRoom.companion);
         PresenceApi.getActual(chatRoom.companion.id).then(response => {
             const presenceData = PresenceDto.fromJSON(response.data);
             setIsOnline(presenceData.isOnline);

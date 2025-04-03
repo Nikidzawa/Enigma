@@ -5,6 +5,8 @@ import {useEffect, useState} from "react";
 import InfoProfile from "./menu/InfoProfile";
 import ClientController from "../../../store/ClientController";
 import PresenceResponse from "../../../network/response/PresenceResponse";
+import PresenceApi from "../../../api/internal/controllers/PresenceApi";
+import PresenceDto from "../../../api/internal/dto/PresenceDto";
 
 const MainContainer = styled.div`
     :hover {
@@ -53,21 +55,30 @@ const Nickname = styled.div`
 `
 
 export default function UserProfile({userDto, openChat}) {
-    const [profileVisible, setProfileVisible] = useState(false);
     const stompClient = ClientController.getClient();
+    const [profileVisible, setProfileVisible] = useState(false);
     const [isOnline, setIsOnline] = useState(true);
     const [lastOnlineDate, setLastOnlineDate] = useState(null);
 
+    useEffect(() => {
+        PresenceApi.getActual(userDto.id).then(response => {
+            const presenceData = PresenceDto.fromJSON(response.data);
+            setIsOnline(presenceData.isOnline);
+            setLastOnlineDate(presenceData.lastOnlineDate);
+        });
+    }, [])
 
     useEffect(() => {
-        const presenceSubscription = stompClient.subscribe(`/client/${userDto.id}/personal/presence`, (message) => {
-            const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
-            setIsOnline(presenceResponse.isOnline);
-            setLastOnlineDate(new Date());
-        });
+        if (stompClient) {
+            const presenceSubscription = stompClient.subscribe(`/client/${userDto.id}/personal/presence`, (message) => {
+                const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
+                setIsOnline(presenceResponse.isOnline);
+                setLastOnlineDate(presenceResponse.lastOnlineDate);
+            });
 
-        return () => presenceSubscription.unsubscribe();
-    }, []);
+            return () => presenceSubscription.unsubscribe();
+        }
+    }, [stompClient]);
 
     return (
         <>

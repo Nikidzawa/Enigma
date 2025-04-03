@@ -4,8 +4,6 @@
   "private": true,
   "dependencies": {
     "@lottiefiles/dotlottie-react": "^0.13.2",
-    "@pqina/pintura": "^8.92.7",
-    "@pqina/react-pintura": "^9.0.4",
     "@stomp/stompjs": "^7.1.0",
     "axios": "^1.7.9",
     "firebase": "^10.12.1",

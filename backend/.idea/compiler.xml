@@ -12,6 +12,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="22">
+      <module name="DatabaseService" target="21" />
       <module name="Enigma Project" target="21" />
       <module name="Kafka" target="21" />
     </bytecodeTargetLevel>

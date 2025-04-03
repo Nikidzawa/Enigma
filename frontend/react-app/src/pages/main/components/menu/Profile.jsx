@@ -130,7 +130,6 @@ const AvatarSection  = styled.div`
     flex: 1;
     gap: 10px;
     padding-top: 30px;
-    padding-bottom: 10px;
 `
 
 const UserInfo = styled.div`
