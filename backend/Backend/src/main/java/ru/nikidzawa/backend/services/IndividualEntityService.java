@@ -10,8 +10,11 @@ import ru.nikidzawa.backend.exceptions.UnauthorizedException;
 import ru.nikidzawa.backend.store.client.dto.IndividualDtoShort;
 import ru.nikidzawa.backend.store.client.factory.IndividualDtoShortFactory;
 import ru.nikidzawa.backend.store.entity.IndividualEntity;
+import ru.nikidzawa.backend.store.entity.IndividualPresenceEntity;
 import ru.nikidzawa.backend.store.repository.IndividualEntityRepository;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +24,8 @@ import java.util.Optional;
 public class IndividualEntityService {
 
     IndividualEntityRepository repository;
+
+    IndividualPresenceService presenceService;
 
     JWTService jwtService;
 
@@ -40,6 +45,7 @@ public class IndividualEntityService {
 
     public JwtTokenResponse save(IndividualEntity individualEntity) {
         IndividualEntity savedUser = repository.saveAndFlush(individualEntity);
+        presenceService.create(new IndividualPresenceEntity(individualEntity.getId(), false, LocalDateTime.now()));
         savedUser.setNickname(individualEntity.getId().toString());
         savedUser = repository.saveAndFlush(savedUser);
         return JwtTokenResponse.builder()

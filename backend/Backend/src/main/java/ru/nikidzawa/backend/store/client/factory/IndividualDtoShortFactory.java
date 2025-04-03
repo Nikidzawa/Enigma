@@ -16,7 +16,6 @@ public class IndividualDtoShortFactory {
                 .birthdate(individualEntity.getBirthdate())
                 .aboutMe(individualEntity.getAboutMe())
                 .avatarHref(individualEntity.getAvatarHref())
-                .lastOnline(individualEntity.getLastOnline())
                 .build();
     }
 }

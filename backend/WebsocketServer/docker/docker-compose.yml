@@ -1,0 +1,9 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - '8090'
+    ports:
+      - '8090:8090'

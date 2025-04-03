@@ -3,10 +3,9 @@ package ru.nikidzawa.backend.services;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import ru.nikidzawa.backend.store.repository.IndividualEntityRepository;
+import ru.nikidzawa.backend.store.repository.IndividualPresenceRepository;
 
 import java.time.LocalDateTime;
 
@@ -18,13 +17,23 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = true)
 public class KafkaConsumerService {
 
-    IndividualEntityRepository individualEntityRepository;
+    IndividualPresenceRepository individualPresenceRepository;
 
     @KafkaListener(topics = "logout-topic", groupId = "user")
-    public void listen(String userId) {
-        individualEntityRepository.findById(Long.valueOf(userId)).ifPresent(individualEntity -> {
-           individualEntity.setLastOnline(LocalDateTime.now());
-           individualEntityRepository.saveAndFlush(individualEntity);
+    public void logoutTopicListener(String userId) {
+        individualPresenceRepository.findById(Long.valueOf(userId)).ifPresent(userPresence -> {
+            userPresence.setLastOnlineDate(LocalDateTime.now());
+            userPresence.setIsOnline(false);
+            individualPresenceRepository.saveAndFlush(userPresence);
+        });
+    }
+
+    @KafkaListener(topics = "login-topic", groupId = "user")
+    public void loginTopicListener(String userId) {
+        individualPresenceRepository.findById(Long.valueOf(userId)).ifPresent(userPresence -> {
+            userPresence.setLastOnlineDate(LocalDateTime.now());
+            userPresence.setIsOnline(true);
+            individualPresenceRepository.saveAndFlush(userPresence);
         });
     }
 }

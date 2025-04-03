@@ -24,8 +24,6 @@ class ClientController {
                 // Подписка на персональные уведомления по полученным сообщениям
                 stompClient.subscribe(`/client/${userId}/queue/messages`, messageHandler);
 
-                // Подписка на персональные уведомления по онлайн-статусу
-                stompClient.subscribe(`/client/${userId}/queue/presence`, presenceHandler);
             },
             onStompError: (error) => {
                 console.error(error.message);
@@ -49,13 +47,6 @@ class ClientController {
                 body: JSON.stringify(message)
             });
         }
-    }
-
-    async checkUserOnlineStatus(userId) {
-        this.client.publish({
-            destination: '/server/presence/check',
-            body: JSON.stringify({userId: userId})
-        })
     }
 
     async updateUserProfile(userId) {

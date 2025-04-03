@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - '9000'
+    ports:
+      - '9000:9000'
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_URL=jdbc:postgresql://database:5432/postgres
+    depends_on:
+      - database
+
+  database:
+    image: 'postgres'
+    container_name: database
+    expose:
+      - '5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres

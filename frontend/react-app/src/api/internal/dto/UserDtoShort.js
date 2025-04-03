@@ -1,5 +1,5 @@
 export default class UserDtoShort {
-    constructor(id, nickname, name, surname, birthdate, aboutMe, avatarHref, lastOnline) {
+    constructor(id, nickname, name, surname, birthdate, aboutMe, avatarHref) {
         this.id = id;
         this.nickname = nickname;
         this.name = name;
@@ -7,8 +7,6 @@ export default class UserDtoShort {
         this.birthdate = birthdate;
         this.aboutMe = aboutMe;
         this.avatarHref = avatarHref;
-        this.isOnline = false;
-        this.lastOnline = lastOnline;
     }
 
     static fromJSON(data) {
@@ -19,8 +17,7 @@ export default class UserDtoShort {
             data.surname || '',
             data.birthdate,
             data.aboutMe,
-            data.avatarHref,
-            new Date(`${data.lastOnline}`)
+            data.avatarHref
         );
     }
 }

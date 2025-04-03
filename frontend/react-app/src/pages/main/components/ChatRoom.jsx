@@ -7,6 +7,8 @@ import {observer} from "mobx-react-lite";
 import PresenceResponse from "../../../network/response/PresenceResponse";
 import UserDto from "../../../api/internal/dto/UserDto";
 import UserApi from "../../../api/internal/controllers/UserApi";
+import PresenceApi from "../../../api/internal/controllers/PresenceApi";
+import PresenceDto from "../../../api/internal/dto/PresenceDto";
 
 const MainContainer = styled.div`
     overflow: hidden;
@@ -90,10 +92,13 @@ const DateComponent = styled.div`
     flex-shrink: 0;
 `
 
-export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatRoomPresenceData, updateChatRoomUserData}) {
+export default observer(function ChatRoom({chatRoom, setActiveChat, activeChatRef}) {
     const [user, setUser] = useState({});
     const [lastMessage, setLastMessage] = useState(null);
+
     const [isOnline, setIsOnline] = useState(null);
+    const [lastOnlineDate, setLastOnlineDate] = useState(null);
+
     const stompClient = ClientController.getClient();
 
     function isMyMessage() {
@@ -102,23 +107,20 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatRo
 
     useEffect(() => {
         if (stompClient) {
-            // Запрос текущего статуса
-            ClientController.checkUserOnlineStatus(chatRoom.companion.id);
-
             // Подписка на получение статуса пользователя
             const presenceSubscription = stompClient.subscribe(`/client/${chatRoom.companion.id}/personal/presence`, (message) => {
                 const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
                 setIsOnline(presenceResponse.isOnline);
-                updateChatRoomPresenceData(presenceResponse, new Date());
+                setLastOnlineDate(presenceResponse.lastOnlineDate);
+                activeChatRef.current?.updateOnlineStatus(presenceResponse);
             });
 
             // Подписка на обновление профиля
             const profileSubscription = stompClient.subscribe(`/client/${chatRoom.companion.id}/profile/changed`, (message) => {
                 UserApi.getUserById(JSON.parse(message.body).userId).then(response => {
                     const userDto = UserDto.fromJSON(response.data);
-                    userDto.isOnline = true;
-                    userDto.lastOnline = new Date();
-                    updateChatRoomUserData(userDto);
+                    setUser(userDto);
+                    activeChatRef.current?.updateProfileData(userDto);
                 });
             });
 
@@ -130,8 +132,14 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatRo
     }, [stompClient]);
 
     useEffect(() => {
-        setUser(chatRoom.companion);
-        setIsOnline(chatRoom.companion.isOnline)
+        PresenceApi.getActual(chatRoom.companion.id).then(response => {
+            const presenceData = PresenceDto.fromJSON(response.data);
+            setIsOnline(presenceData.isOnline);
+            setLastOnlineDate(presenceData.lastOnlineDate);
+        });
+    }, []);
+
+    useEffect(() => {
         setLastMessage(chatRoom.messages ? chatRoom.messages[chatRoom.messages.length - 1] : null);
     }, [chatRoom]);
 

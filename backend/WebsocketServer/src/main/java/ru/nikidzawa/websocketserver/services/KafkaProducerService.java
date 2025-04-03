@@ -18,4 +18,8 @@ public class KafkaProducerService {
     public void sendLogoutData(String userId) {
         kafkaTemplate.send("logout-topic", userId);
     }
+
+    public void sendLoginData(String userId) {
+        kafkaTemplate.send("login-topic", userId);
+    }
 }

@@ -194,7 +194,7 @@ export default function InfoProfile({user, isOnline, lastOnlineDate, visible, se
                         {aboutMe && <AboutMe>{aboutMe}</AboutMe>}
                         <OnlineInfoContainer>
                             <OnlineCircle isOnline={isOnline}></OnlineCircle>
-                            <OnlineStatusText>{isOnline ? 'В сети' : 'Был в сети в ' + DateParser.parseToDateAndTime(lastOnlineDate)}</OnlineStatusText>
+                            <OnlineStatusText>{DateParser.parseOnlineDate(isOnline, lastOnlineDate)}</OnlineStatusText>
                         </OnlineInfoContainer>
                     </AvatarSection>
                     <ButtonContainer>

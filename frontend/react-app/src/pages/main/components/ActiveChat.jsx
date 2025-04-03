@@ -155,7 +155,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
         updateOnlineStatus: async (presenceResponse) => {
             if (activeChat?.companion.id === presenceResponse.userId) {
                 setIsOnline(presenceResponse.isOnline)
-                setLastOnlineDate(lastOnlineDate || new Date())
+                setLastOnlineDate(new Date())
             }
         },
         updateProfileData: async (userDto) => {
@@ -283,7 +283,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                 <MainContainer>
                     <UpperSection>
                         <Name onClick={() => setProfileVisible(true)}>{user.name}</Name>
-                        <OnlineStatusText>{isOnline ? 'В сети' : 'Был в сети в ' + DateParser.parseToDateAndTime(lastOnlineDate)}</OnlineStatusText>
+                        <OnlineStatusText>{DateParser.parseOnlineDate(isOnline, lastOnlineDate)}</OnlineStatusText>
                     </UpperSection>
                     <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
                         {

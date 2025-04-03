@@ -13,6 +13,8 @@ import ru.nikidzawa.websocketserver.services.KafkaProducerService;
 import ru.nikidzawa.websocketserver.services.UserPresenceService;
 import ru.nikidzawa.websocketserver.store.PresenceStatus;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -28,16 +30,23 @@ public class WebSocketEventListener {
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
         if (event.getUser() != null && userPresenceService.userConnected(Long.valueOf(event.getUser().getName()))) {
-            log.atInfo().log("User connected: {}", event.getUser().getName());
-            messagingTemplate.convertAndSendToUser(event.getUser().getName(), "/personal/presence", new PresenceStatus(event.getUser().getName(), true));
+            messagingTemplate.convertAndSendToUser(
+                    event.getUser().getName(),
+                    "/personal/presence",
+                    new PresenceStatus(event.getUser().getName(), true, LocalDateTime.now())
+            );
+            kafkaProducerService.sendLoginData(event.getUser().getName());
         }
     }
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
         if (event.getUser() != null && userPresenceService.userDisconnected(Long.valueOf(event.getUser().getName()))) {
-            log.atInfo().log("User disconnected: {}", event.getUser().getName());
-            messagingTemplate.convertAndSendToUser(event.getUser().getName(), "/personal/presence", new PresenceStatus(event.getUser().getName(), false));
+            messagingTemplate.convertAndSendToUser(
+                    event.getUser().getName(),
+                    "/personal/presence",
+                    new PresenceStatus(event.getUser().getName(), false, LocalDateTime.now())
+            );
             kafkaProducerService.sendLogoutData(event.getUser().getName());
         }
     }
