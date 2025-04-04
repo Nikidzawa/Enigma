@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import DateParser from "../../../helpers/DateParser";
 import UserController from "../../../store/UserController";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import ClientController from "../../../store/ClientController";
 import {observer} from "mobx-react-lite";
 import PresenceResponse from "../../../network/response/PresenceResponse";
@@ -9,7 +9,8 @@ import UserDto from "../../../api/internal/dto/UserDto";
 import UserApi from "../../../api/internal/controllers/UserApi";
 import PresenceApi from "../../../api/internal/controllers/PresenceApi";
 import PresenceDto from "../../../api/internal/dto/PresenceDto";
-import ChatRoomDto from "../../../api/internal/dto/ChatRoomDto";
+import TypingResponse from "../../../network/response/TypingResponse";
+import TypingAnimation from "./menu/TypingAnimation";
 
 const MainContainer = styled.div`
     overflow: hidden;
@@ -23,7 +24,7 @@ const ChatRoomContainer = styled.div`
     height: 50px;
     padding: 5px;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     cursor: pointer;
 `
 
@@ -56,7 +57,7 @@ const OnlineCircle = styled.div`
 const UserData = styled.div`
     width: 100%;
     display: flex;
-    gap: 5px;
+    gap: 3px;
     flex-direction: column;
     justify-content: center;
     min-width: 0;
@@ -93,12 +94,23 @@ const DateComponent = styled.div`
     flex-shrink: 0;
 `
 
+const Typing = styled.div`
+    color: #009a9a;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+`
+
 export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCompanion}) {
     const [user, setUser] = useState({});
     const [lastMessage, setLastMessage] = useState(null);
 
     const [isOnline, setIsOnline] = useState(null);
     const [lastOnlineDate, setLastOnlineDate] = useState(null);
+
+    const [isTyping, setTyping] = useState(false);
+    const typingTimeoutRef = useRef(null);
 
     const stompClient = ClientController.getClient();
 
@@ -113,6 +125,11 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCo
                 const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
                 setIsOnline(presenceResponse.isOnline);
                 setLastOnlineDate(presenceResponse.lastOnlineDate);
+
+                if (!presenceResponse.isOnline) {
+                    setTyping(false);
+                    clearTimeout(typingTimeoutRef.current);
+                }
             });
 
             // Подписка на обновление профиля
@@ -124,9 +141,30 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCo
                 });
             });
 
+            // Подписка на отслеживание статуса "Печатает"
+            const typingSubscription = stompClient.subscribe(`/client/${chatRoom.companion.id}/queue/typing`, (message) => {
+                const typingResponse = TypingResponse.fromJSON(JSON.parse(message.body))
+                if (typingTimeoutRef.current) {
+                    clearTimeout(typingTimeoutRef.current);
+                }
+                setTyping(typingResponse.isTyping);
+
+                if (typingResponse.isTyping) {
+                    typingTimeoutRef.current = setTimeout(() => {
+                        setTyping(false);
+                    }, 3500);
+                } else {
+                    clearTimeout(typingTimeoutRef.current);
+                }
+            })
+
             return () => {
                 presenceSubscription.unsubscribe();
                 profileSubscription.unsubscribe();
+                typingSubscription.unsubscribe();
+                if (typingTimeoutRef.current) {
+                    clearTimeout(typingTimeoutRef.current);
+                }
             };
         }
     }, [stompClient]);
@@ -156,7 +194,7 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCo
                             <Name>{`${user.name} ${user.surname}`}</Name>
                             <DateComponent>{lastMessage ? DateParser.parseDate(lastMessage.createdAt) : ""}</DateComponent>
                         </UpperLine>
-                        <LastMessage>{lastMessage ? (isMyMessage() + lastMessage.text) : "Сообщений нет"}</LastMessage>
+                        {isTyping ? <Typing>Пишет<TypingAnimation/></Typing> : <LastMessage>{lastMessage ? (isMyMessage() + lastMessage.text) : "Сообщений нет"}</LastMessage>}
                     </UserData>
                 </ChatRoomContainer>
             </MainContainer>

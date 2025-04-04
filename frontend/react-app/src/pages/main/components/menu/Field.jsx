@@ -9,14 +9,14 @@ const Container = styled.div`
 const Label = styled.div`
     color: #8e8e8e;
     position: absolute;
-    left: 7px;
-    top: 5px;
+    left: 10px;
+    top: 6px;
     font-size: 15px;
 `
 
 const Input = styled.input`
     border: none;
-    background-color: #3c3c3c;
+    background-color: #353535;
     border-radius: 5px;
     color: white;
     height: 35px;

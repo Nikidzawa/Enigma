@@ -8,6 +8,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import ru.nikidzawa.websocketserver.store.ChatMessage;
+import ru.nikidzawa.websocketserver.store.Typing;
 
 /**
  * @author Nikidzawa
@@ -22,5 +23,11 @@ public class ChatController {
     @MessageMapping("/message/send")
     public void processMessage(@Payload ChatMessage chatMessage) {
         messagingTemplate.convertAndSendToUser(chatMessage.getReceiverId(),"/queue/messages", chatMessage);
+        messagingTemplate.convertAndSendToUser(chatMessage.getSenderId(), "/queue/typing", new Typing(chatMessage.getSenderId(), false));
+    }
+
+    @MessageMapping("/chat/typing")
+    public void isTyping(@Payload Typing typing) {
+        messagingTemplate.convertAndSendToUser(typing.getUserId(), "/queue/typing", typing);
     }
 }

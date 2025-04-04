@@ -42,7 +42,7 @@ const ShadowMainContainer = styled.div`
     z-index: 1000;
     opacity: ${props => props.visible ? "1" : "0"};
     pointer-events: ${props => props.visible ? "auto" : "none"};;
-    animation: ${props => props.visible ? fadeIn : fadeOut} 0.2s ease;
+    animation: ${props => props.visible ? fadeIn : props.isFirstRender ? 'none' : fadeOut} 0.2s ease;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -145,10 +145,6 @@ const Fio = styled.div`
     max-width: 400px;
 `
 
-const Nickname = styled.div`
-    cursor: default;
-`
-
 const AboutMe = styled.div`
     width: 350px;
 `
@@ -200,6 +196,11 @@ const Profile = observer(({ setVisible, visible }) => {
     const [avatarChanged, setAvatarChanged] = useState(false);
 
     const [loading, setLoading] = useState(false);
+    const [isFirstRender, setIsFirstRender] = useState(true);
+
+    useEffect(() => {
+        visible && isFirstRender && setIsFirstRender(false);
+    }, [visible]);
 
     useEffect(() => {
         setName(user.name);
@@ -262,7 +263,7 @@ const Profile = observer(({ setVisible, visible }) => {
     return (
         user && (
             <>
-                <ShadowMainContainer visible={visible} onClick={() => setVisible(false)}>
+                <ShadowMainContainer visible={visible} onClick={() => setVisible(false)} isFirstRender={isFirstRender}>
                     <ModalContainer onClick={e => e.stopPropagation()}>
                         <UpperContainer>
                             <Name>My Profile</Name>
@@ -280,7 +281,6 @@ const Profile = observer(({ setVisible, visible }) => {
                                 <Fio>{name} {surname}</Fio>
                             </UserInfo>
                             { aboutMe && <AboutMe>{aboutMe}</AboutMe> }
-                            <Nickname>@{nickname}</Nickname>
                         </AvatarSection>
                         <Fields>
                             <Bio>

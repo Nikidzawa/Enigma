@@ -13,6 +13,8 @@ import PresenceDto from "../../../api/internal/dto/PresenceDto";
 import PresenceResponse from "../../../network/response/PresenceResponse";
 import UserApi from "../../../api/internal/controllers/UserApi";
 import UserDto from "../../../api/internal/dto/UserDto";
+import TypingResponse from "../../../network/response/TypingResponse";
+import OnlineStatusComponent from "./menu/OnlineStatusComponent";
 
 const MainContainer = styled.div`
     flex: 1;
@@ -39,7 +41,7 @@ const ChatSection = styled.div`
     flex-direction: column;
     gap: 10px;
     font-size: 16px;
-    padding: 10px 7px 10px 0;
+    padding: 10px 9px 10px 0;
     -webkit-background-clip: text;
     transition: background-color 1s ease;
 
@@ -75,12 +77,6 @@ const Name = styled.div`
     cursor: pointer;
 `
 
-const OnlineStatusText = styled.div`
-    font-size: 15px;
-    color: #a0a0a0;
-    cursor: default;
-`
-
 const Input = styled.input`
     background-color: unset;
     border: none;
@@ -100,36 +96,53 @@ const SendButton = styled.img`
 
 const MyMessage = styled.div`
     max-width: 500px;
-    background: #246adf;
-    border-radius: 15px;
-    padding: 7px 13px;
+    min-width: 35px;
+    background: #006c81;
+    border-radius: 15px 0 15px 15px;
+    padding: 7px 10px 5px 20px;
     align-self: flex-end;
     display: flex;
     flex-direction: column;
+    gap: 1px;
 `
 
 const OtherMessage = styled.div`
     max-width: 500px;
-    background: #575757;
-    border-radius: 15px;
-    padding: 7px 13px;
+    min-width: 35px;
+    background: #353535;
+    border-radius: 0 15px 15px 15px;
+    padding: 7px 20px 5px 10px;
     align-self: flex-start;
     display: flex;
     flex-direction: column;
+    gap: 1px;
 `
 
-const MessageSendDate = styled.div`
+const MyMessageSendDate = styled.div`
     font-size: 12px;
     color: #cacaca;
     align-self: flex-end;
+    cursor: default;
+`
+
+const OtherMessageSendDate = styled.div`
+    font-size: 12px;
+    color: #cacaca;
+    align-self: flex-start;
+    cursor: default;
 `
 
 const MyMessageText = styled.div`
     align-self: flex-end;
+    font-size: 15px;
+    word-break: break-word;
+
 `
 
 const OtherMessageText = styled.div`
     align-self: flex-start;
+    font-size: 15px;
+    word-break: break-word;
 `
 
 const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
@@ -151,6 +164,10 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
     const [loading, setLoading] = useState(true);
 
     const [profileVisible, setProfileVisible] = useState(false);
+
+    const [lastTypingCall, setLastTypingCall] = useState(0);
+    const typingTimeoutRef = useRef(null);
+    const [isTyping, setTyping] = useState(false);
 
     useImperativeHandle(ref, () => ({
         addNewMessage: async (message) => {
@@ -182,7 +199,25 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                 });
             });
 
+            // Подписка на отслеживание статуса "Печатает"
+            const typingSubscription = stompClient.subscribe(`/client/${activeChat.companion.id}/queue/typing`, (message) => {
+                const typingResponse = TypingResponse.fromJSON(JSON.parse(message.body))
+                if (typingTimeoutRef.current) {
+                    clearTimeout(typingTimeoutRef.current);
+                }
+                setTyping(typingResponse.isTyping);
+
+                if (typingResponse.isTyping) {
+                    typingTimeoutRef.current = setTimeout(() => {
+                        setTyping(false);
+                    }, 3500);
+                } else {
+                    clearTimeout(typingTimeoutRef.current);
+                }
+            })
+
             return () => {
+                typingSubscription.unsubscribe();
                 presenceSubscription.unsubscribe();
                 profileSubscription.unsubscribe();
             };
@@ -241,7 +276,6 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
         if (ChatSectionRef.current && !isLoadMessages) {
             const scrollTop = ChatSectionRef.current.scrollTop;
             const threshold = 250;
-            const prevScrollHeight = ChatSectionRef.current.scrollHeight;
 
             if (scrollTop <= threshold) {
                 setLoadMessages(true);
@@ -263,10 +297,6 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                             setMessages((prevMessages) => {
                                 return [...defaultSort(latestMessages), ...prevMessages];
                             });
-
-                            setTimeout(() => {
-                                ChatSectionRef.current.scrollTop =
-                                    ChatSectionRef.current.scrollHeight - prevScrollHeight + threshold;}, 100);
                         } else {
                             setBlockLoadMessages(true);
                         }
@@ -292,6 +322,15 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
         }
     }
 
+    function onInput(e) {
+        setText(e.target.value);
+        const now = Date.now();
+        if (now - lastTypingCall > 2000) {
+            ClientController.typing(UserController.getCurrentUser().id);
+            setLastTypingCall(now);
+        }
+    }
+
     async function sendMessage() {
         if (text) {
             const newMessage = new MessageDto(null, new Date(), text, UserController.getCurrentUser().id);
@@ -302,6 +341,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                 setText("");
                 scrollToBottom();
                 ClientController.sendMessage(new MessageRequest(message.id, message.createdAt, message.senderId, user.id, message.text));
+                setLastTypingCall(2000)
             });
         }
     }
@@ -312,7 +352,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                 <MainContainer>
                     <UpperSection>
                         <Name onClick={() => setProfileVisible(true)}>{user.name}</Name>
-                        {lastOnlineDate && <OnlineStatusText>{DateParser.parseOnlineDate(isOnline, lastOnlineDate)}</OnlineStatusText>}
+                        <OnlineStatusComponent isTyping={isTyping} isOnline={isOnline} lastOnlineDate={lastOnlineDate}/>
                     </UpperSection>
                     <ChatSection ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
                         {
@@ -320,12 +360,12 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                                 message.senderId === UserController.getCurrentUser().id ? (
                                     <MyMessage key={message.id}>
                                         <MyMessageText>{message.text}</MyMessageText>
-                                        <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
+                                        <MyMessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MyMessageSendDate>
                                     </MyMessage>
                                 ) : (
                                     <OtherMessage key={message.id}>
                                         <OtherMessageText>{message.text}</OtherMessageText>
-                                        <MessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MessageSendDate>
+                                        <OtherMessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</OtherMessageSendDate>
                                     </OtherMessage>
                                 )
                             ))
@@ -334,14 +374,14 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                     <BottomSection>
                         <Input
                             value={text}
-                            onInput={(e) => setText(e.target.value)}
+                            onInput={onInput}
                             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                             placeholder={"Введите сообщение"}
                         />
                         <SendButton onClick={sendMessage} src={SendImage}/>
                     </BottomSection>
                 </MainContainer>
-                {profileVisible && <InfoProfile user={user} isOnline={isOnline} lastOnlineDate={lastOnlineDate} visible={profileVisible} setVisible={setProfileVisible}/>}
+                <InfoProfile user={user} isOnline={isOnline} lastOnlineDate={lastOnlineDate} visible={profileVisible} setVisible={setProfileVisible}/>
             </>
     );
 });

@@ -1,5 +1,6 @@
 import {makeAutoObservable} from "mobx";
 import {Client} from "@stomp/stompjs";
+import TypingResponse from "../network/response/TypingResponse";
 
 class ClientController {
 
@@ -53,6 +54,13 @@ class ClientController {
         this.client.publish({
             destination: '/server/profile/changed',
             body: JSON.stringify({userId: userId})
+        })
+    }
+
+    async typing(userId) {
+        this.client.publish({
+            destination: '/server/chat/typing',
+            body: JSON.stringify(new TypingResponse(userId, true))
         })
     }
 

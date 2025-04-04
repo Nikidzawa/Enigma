@@ -26,8 +26,7 @@ export default class DateParser {
         } else return this.parseToWeekDay(createdAt);
     }
 
-    static parseOnlineDate(isOnline, date) {
-        if (isOnline) {return 'В сети'}
+    static parseOnlineDate(date) {
         let lastOnlineStr = 'Был(а) '
 
         const now = new Date();

@@ -3,9 +3,8 @@ import {useEffect, useState} from "react";
 import CloseImage from "../../../../img/close2.png";
 import DateField from "./DateField";
 import MailImage from "../../../../img/mail-blue.png";
-import HandImage from "../../../../img/hand.png";
-import DateParser from "../../../../helpers/DateParser";
 import NicknameField from "./NicknameField";
+import OnlineStatusComponent from "./OnlineStatusComponent";
 
 const fadeIn = keyframes`
     from {
@@ -35,7 +34,7 @@ const ShadowMainContainer = styled.div`
     z-index: 1000;
     opacity: ${props => props.visible ? "1" : "0"};
     pointer-events: ${props => props.visible ? "auto" : "none"};;
-    animation: ${props => props.visible ? fadeIn : fadeOut} 0.2s ease;
+    animation: ${props => props.visible ? fadeIn : props.isFirstRender ? 'none' : fadeOut} 0.2s ease;    
     display: flex;
     justify-content: center;
     align-items: center;
@@ -44,7 +43,7 @@ const ShadowMainContainer = styled.div`
 const ModalContainer = styled.div`
     border-radius: 20px;
     background-color: #1a1a1a;
-    padding: 25px 25px 25px 30px;
+    padding: 20px 20px 20px 25px;
     position: relative;
     box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
     width: 380px;
@@ -68,7 +67,7 @@ const AvatarSection  = styled.div`
     flex: 1;
     gap: 5px;
     padding-top: 30px;
-    padding-bottom: 10px;
+    padding-bottom: 15px;
 `
 
 const UserInfo = styled.div`
@@ -84,12 +83,9 @@ const Fio = styled.div`
     max-width: 400px;
 `
 
-const Nickname = styled.div`
-    cursor: default;
-`
-
 const AboutMe = styled.div`
     width: 350px;
+    cursor: default;
 `
 
 const UpperContainer = styled.div`
@@ -110,18 +106,17 @@ const Close = styled.img`
 
 const ButtonContainer = styled.div`
     display: flex;
-    flex-direction: column;
     flex: 1;
     gap: 10px;
 `
 
 const Button = styled.button`
-    width: 100%;
+    width: 500px;
     height: 35px;
     background-color: transparent;
-    color: #007a7a;
-    border: 2px solid #007a7a;
-    font-size: 16px;
+    color: #009398;
+    border: 2px solid #009398;
+    font-size: 15px;
     border-radius: 10px;
     cursor: pointer;
     font-weight: bold;
@@ -131,41 +126,19 @@ const Button = styled.button`
     background-repeat: no-repeat;
 `
 
-const OnlineInfoContainer = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    justify-content: center;
-    padding: 5px 0;
-`
-
-const OnlineStatusText = styled.div`
-    font-size: 15px;
-    padding-top: 3px;
-    color: #a0a0a0;
-`
-
-const OnlineCircle = styled.div`
-    width: 10px;
-    height: 10px;
-    background-color: #007a7a;
-    border-radius: 50%;
-    opacity: ${props => (props.isOnline ? "1" : "0")};
-`
-
-const InfoContainer = styled.div`
-
-
-`
-
 export default function InfoProfile({user, isOnline, lastOnlineDate, visible, setVisible, onOpenChat}) {
-
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
     const [nickname, setNickname] = useState("");
     const [birthdate, setBirthdate] = useState("");
     const [aboutMe, setAboutMe] = useState("");
     const [avatar, setAvatar] = useState("");
+
+    const [isFirstRender, setIsFirstRender] = useState(true);
+
+    useEffect(() => {
+        visible && isFirstRender && setIsFirstRender(false);
+    }, [visible]);
 
     useEffect(() => {
         setName(user.name);
@@ -178,7 +151,7 @@ export default function InfoProfile({user, isOnline, lastOnlineDate, visible, se
 
     return (
         user && (
-            <ShadowMainContainer visible={visible} onClick={() => setVisible(false)}>
+            <ShadowMainContainer visible={visible} onClick={() => setVisible(false)} isFirstRender={isFirstRender}>
                 <ModalContainer onClick={e => e.stopPropagation()}>
                     <UpperContainer>
                         <Name>Profile</Name>
@@ -192,20 +165,19 @@ export default function InfoProfile({user, isOnline, lastOnlineDate, visible, se
                             <Fio>{name} {surname}</Fio>
                         </UserInfo>
                         {aboutMe && <AboutMe>{aboutMe}</AboutMe>}
-                        <OnlineInfoContainer>
-                            <OnlineCircle isOnline={isOnline}></OnlineCircle>
-                            <OnlineStatusText>{DateParser.parseOnlineDate(isOnline, lastOnlineDate)}</OnlineStatusText>
-                        </OnlineInfoContainer>
+                        <div style={{paddingTop: '2px'}}>
+                            <OnlineStatusComponent isTyping={false} isOnline={isOnline} lastOnlineDate={lastOnlineDate}/>
+                        </div>
                     </AvatarSection>
                     <ButtonContainer>
                         <Button onClick={() => {onOpenChat && onOpenChat(user); setVisible(false)}}>Написать</Button>
                     </ButtonContainer>
-                    <InfoContainer>
+                    <div>
                         <NicknameField value={nickname} disabled={true}/>
                         {
                             birthdate && <DateField value={birthdate} disabled={true}/>
                         }
-                    </InfoContainer>
+                    </div>
                 </ModalContainer>
             </ShadowMainContainer>
         )
