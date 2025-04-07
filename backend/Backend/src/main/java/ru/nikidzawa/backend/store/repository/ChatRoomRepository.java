@@ -29,6 +29,7 @@ public class ChatRoomRepository {
                     last_message.text as last_message_text,
                     last_message.created_at AS last_message_send_time,
                     last_message.sender_id AS last_message_sender_id,
+                    last_message.is_read AS last_message_is_read,
                     chat.id as chat_id,
                     chat.owner_id as chat_owner_id,
                     chat.companion_id as chat_companion_id,

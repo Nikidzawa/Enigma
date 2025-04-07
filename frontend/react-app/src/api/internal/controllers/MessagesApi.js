@@ -1,7 +1,6 @@
-import BaseApiPath from "../ProtectedApi";
 import api from "../Api";
 
-export default class MessagesApi extends BaseApiPath {
+export default class MessagesApi {
 
     static async getMessagesByChatId(chatId, lastMessageId) {
         return api.get(`messages/getByChatId/${chatId}?lastMessageId=${lastMessageId}`)
@@ -12,7 +11,7 @@ export default class MessagesApi extends BaseApiPath {
 
     }
 
-    static send(senderId, receiverId, message) {
+    static save(senderId, receiverId, message) {
         return api.post(`/messages/send?senderId=${senderId}&receiverId=${receiverId}`, message);
     }
 }

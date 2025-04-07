@@ -1,6 +1,5 @@
 import {useCallback, useEffect, useRef, useState} from "react";
 import styled, {keyframes} from "styled-components";
-import ActiveChat from "./components/ActiveChat";
 import ChatApi from "../../api/internal/controllers/ChatApi";
 import UserController from "../../store/UserController";
 import ChatRoom from "./components/ChatRoom";
@@ -15,7 +14,7 @@ import ChatRoomDto from "../../api/internal/dto/ChatRoomDto";
 import ClientController from "../../store/ClientController";
 import MessageDto from "../../api/internal/dto/MessageDto";
 import UserDto from "../../api/internal/dto/UserDto";
-import PresenceResponse from "../../network/response/PresenceResponse";
+import ActiveChat from "./components/activeChat/ActiveChat";
 
 const slideOutToBottom = keyframes`
     from {
@@ -274,8 +273,7 @@ export default function Main() {
 
     async function updateLastMessageOrAddChat ({message, companion}) {
         setChats(prevChats => {
-            const existingChatIndex = prevChats.findIndex(chatRoom => chatRoom.companion.id === companion.id);
-            if (existingChatIndex !== -1) {
+            if (prevChats.findIndex(chatRoom => chatRoom.companion.id === companion.id) !== -1) {
                 return prevChats.map(chatRoom =>
                     chatRoom.companion.id === companion.id ? {...chatRoom, messages: [...chatRoom.messages, message]} : chatRoom
                 );
@@ -294,7 +292,7 @@ export default function Main() {
     }
 
     return (
-        <MainContainer onMouseMove={handleMouseMove} onMouseUp={() => setIsResizing(false)}>
+        <MainContainer onMouseMove={handleMouseMove} onMouseUp={() => setIsResizing(false)} onMouseLeave={() => setIsResizing(false)}>
             <LeftMenuContainer width={chatListWidth}>
                 <TopMenuContainer>
                     <MenuButton src={MenuImg} onClick={() => setMenuIsVisible(true)}/>
@@ -315,8 +313,6 @@ export default function Main() {
                                     onClick={() => setSearchCategory('MESSAGES')}>Сообщения</SearchCategory>
                     <SearchCategory className={searchCategory === 'PEOPLES' ? 'active' : ''}
                                     onClick={() => setSearchCategory('PEOPLES')}>Люди</SearchCategory>
-                    <SearchCategory className={searchCategory === 'GROUPS' ? 'active' : ''}
-                                    onClick={() => setSearchCategory('GROUPS')}>Сообщества</SearchCategory>
                 </SearchCategories>
                 {
                     isSearchMode ?

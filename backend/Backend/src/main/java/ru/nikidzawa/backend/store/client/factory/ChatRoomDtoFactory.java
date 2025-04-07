@@ -29,6 +29,7 @@ public class ChatRoomDtoFactory {
                                 .createdAt(chatRoomDataModel.getLastMessageSendTime())
                                 .text(chatRoomDataModel.getLastMessageText())
                                 .senderId(chatRoomDataModel.getLastMessageSenderId())
+                                .isRead(chatRoomDataModel.getLastMessageIsRead())
                                 .build()
                         )
                 ).chat(IndividualChatEntity.builder()

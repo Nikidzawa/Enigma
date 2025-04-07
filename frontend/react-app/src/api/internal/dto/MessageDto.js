@@ -1,9 +1,10 @@
 export default class MessageDto {
-    constructor(id, createdAt, text, senderId) {
+    constructor(id, createdAt, text, senderId, isRead) {
         this.id = id;
         this.createdAt = createdAt;
         this.text = text;
         this.senderId = senderId;
+        this.isRead = isRead || false;
     }
 
     static fromJSON(data) {
@@ -12,6 +13,7 @@ export default class MessageDto {
             new Date(`${data.createdAt}Z`),
             data.text,
             data.senderId,
+            data.isRead || false
         );
     }
 
