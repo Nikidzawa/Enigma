@@ -3,6 +3,7 @@ package ru.nikidzawa.backend.store.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import java.time.LocalDateTime;
 
@@ -28,4 +29,7 @@ public class MessageEntity {
 
     @Column(name = "text", columnDefinition = "VARCHAR(2048)", nullable = false)
     String text;
+
+    @Column(name = "is_read")
+    Boolean isRead = false;
 }

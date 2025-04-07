@@ -18,6 +18,7 @@ public class MessageDataModel {
     Long senderId;
     LocalDateTime createdAt;
     String text;
+    Boolean isRead;
 
     public static class MessageRowMapper implements RowMapper<MessageDataModel> {
         @Override
@@ -26,7 +27,8 @@ public class MessageDataModel {
                     rs.getLong("id"),
                     rs.getLong("sender_id"),
                     rs.getObject("created_at", LocalDateTime.class),
-                    rs.getString("text")
+                    rs.getString("text"),
+                    rs.getBoolean("is_read")
             );
         }
     }

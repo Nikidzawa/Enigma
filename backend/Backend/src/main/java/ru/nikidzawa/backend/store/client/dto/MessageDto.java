@@ -15,4 +15,5 @@ public class MessageDto {
     LocalDateTime createdAt;
     String text;
     Long senderId;
+    Boolean isRead;
 }

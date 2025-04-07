@@ -13,6 +13,7 @@ public class MessageDtoFactory {
                 .text(messageEntity.getText())
                 .createdAt(messageEntity.getCreatedAt())
                 .senderId(messageEntity.getSenderId())
+                .isRead(messageEntity.getIsRead())
                 .build();
     }
 
@@ -22,6 +23,7 @@ public class MessageDtoFactory {
                 .senderId(messageDataModel.getSenderId())
                 .createdAt(messageDataModel.getCreatedAt())
                 .text(messageDataModel.getText())
+                .isRead(messageDataModel.getIsRead())
                 .build();
     }
 }
