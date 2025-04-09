@@ -15,6 +15,7 @@ import MessageRequest from "../../../../network/request/MessageRequest";
 import OnlineStatusComponent from "../menu/OnlineStatusComponent";
 import InfoProfile from "../menu/InfoProfile";
 import UserApi from "../../../../api/internal/controllers/UserApi";
+import MessageReadResponse from "../../../../network/response/MessageReadResponse";
 
 const MainContainer = styled.div`
     flex: 1;
@@ -121,18 +122,23 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                 setTyping(typingResponse.isTyping);
 
                 if (typingResponse.isTyping) {
-                    typingTimeoutRef.current = setTimeout(() => {
-                        setTyping(false);
-                    }, 3500);
+                    typingTimeoutRef.current = setTimeout(() => {setTyping(false);}, 3500);
                 } else {
                     clearTimeout(typingTimeoutRef.current);
                 }
             })
 
+            // Подписка на статус "Прочитано" у сообщений
+            const messageReadStatusSubscription = stompClient.subscribe(`/client/${activeChat.companion.id}/queue/read`, (message) => {
+                const messageReadResponse = MessageReadResponse.fromJSON(JSON.parse(message.body));
+                messagesSectionRef?.current.changeMessageReadStatus(messageReadResponse);
+            });
+
             return () => {
                 typingSubscription.unsubscribe();
                 presenceSubscription.unsubscribe();
                 profileSubscription.unsubscribe();
+                messageReadStatusSubscription.unsubscribe();
             };
         }
     }, [stompClient]);
@@ -156,7 +162,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
         setText(e.target.value);
         const now = Date.now();
         if (now - lastTypingCall > 2000) {
-            ClientController.typing(UserController.getCurrentUser().id);
+            ClientController.typing();
             setLastTypingCall(now);
         }
     }

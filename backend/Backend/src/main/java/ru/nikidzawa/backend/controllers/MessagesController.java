@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import ru.nikidzawa.backend.services.MessagesService;
 import ru.nikidzawa.backend.store.client.dto.MessageDto;
+import ru.nikidzawa.backend.store.client.factory.MessageDtoFactory;
 import ru.nikidzawa.backend.store.entity.MessageEntity;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class MessagesController {
     private static final String GET_MESSAGES_BY_CHAT_ID = "getByChatId/{chatId}";
     private static final String GET_MESSAGES_BY_SENDER_ID_AND_RECEIVER_ID = "get";
     private static final String SEND_MESSAGE = "send";
+    private static final String READ_MESSAGE = "read/{messageId}";
 
     MessagesService service;
 
@@ -43,5 +45,10 @@ public class MessagesController {
     public List<MessageDto> getMessagesBySenderIdAndReceiverId (@RequestParam Long senderId,
                                                                 @RequestParam Long receiverId) {
         return service.getMessagesBySenderIdAndReceiverId(senderId, receiverId);
+    }
+
+    @PutMapping(READ_MESSAGE)
+    public void read(@PathVariable Long messageId) {
+        service.read(messageId);
     }
 }

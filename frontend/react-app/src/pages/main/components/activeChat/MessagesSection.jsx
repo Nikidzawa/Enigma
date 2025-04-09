@@ -1,10 +1,12 @@
 import styled from "styled-components";
-import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
+import {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react";
 import MessagesApi from "../../../../api/internal/controllers/MessagesApi";
 import MessageDto from "../../../../api/internal/dto/MessageDto";
 import UserController from "../../../../store/UserController";
 import DateParser from "../../../../helpers/DateParser";
-import ChatRoomDto from "../../../../api/internal/dto/ChatRoomDto";
+import WhiteCheckMarkImg from "../../../../img/two-ticks.png"
+import BlackCheckMark from "../../../../img/two-ticks-black.png"
+import ClientController from "../../../../store/ClientController";
 
 const MessagesSectionMainComponent = styled.div`
     height: calc(100% - 110px);
@@ -41,7 +43,7 @@ const MyMessage = styled.div`
     min-width: 35px;
     background: #006c81;
     border-radius: 15px 0 15px 15px;
-    padding: 7px 10px 5px 20px;
+    padding: 7px 10px 5px 12px;
     align-self: flex-end;
     display: flex;
     flex-direction: column;
@@ -87,6 +89,18 @@ const OtherMessageText = styled.div`
     word-break: break-word;
 `
 
+const ButtonSection = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    justify-content: end;
+`
+
+const ReadMark = styled.img`
+    width: 14px;
+    height: 8px;
+`
+
 const MessagesSection = forwardRef(({chat, user}, ref) => {
 
     const [messages, setMessages] = useState([]);
@@ -97,7 +111,9 @@ const MessagesSection = forwardRef(({chat, user}, ref) => {
 
     const scrollTimeout = useRef(null);
     const ChatSectionRef = useRef(null);
-    const messageRefs = useRef({});
+
+    const observerRefs = useRef({});
+    const messageRefs = useRef(new Set());
 
     useImperativeHandle(ref, () => ({
         addMessageIntoChat: async (message) => {
@@ -105,35 +121,42 @@ const MessagesSection = forwardRef(({chat, user}, ref) => {
                 setMessages(prev => [...prev, message]);
                 scrollToBottom();
             }
+        },
+        changeMessageReadStatus: async (messageReadResponse) => {
+            setMessages(prev => prev.map(msg =>
+                msg.id === messageReadResponse.messageId ? {...msg, isRead: true} : msg
+            ));
         }
     }));
 
+    const unreadMessages = useMemo(() =>
+            messages.filter(m => !m.isRead && m.senderId !== UserController.getCurrentUser().id),
+        [messages]
+    );
+
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting && entry.target.getAttribute("data-is-read")) {
-                        const prevMessage = messages.find(message => message.id === Number.parseInt(entry.target.getAttribute("id")))
-                        prevMessage.isRead = true;
-                        // setMessages(prevMessages =>
-                        //     prevMessages.map(message => message.id === prevMessage.id ? { ...message, isRead: true } : message)
-                        // );
-                        console.log( prevMessage)
-                    }
-                });
-            },
-            {
-                root: ChatSectionRef.current,
-                threshold: 0.5,
+        unreadMessages.forEach(message => {
+            if (messageRefs.current[message.id] && !observerRefs.current[message.id]) {
+                const observer = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                ClientController.read(message.id)
+                                MessagesApi.read(message.id)
+                                setMessages(prev => prev.map(msg =>
+                                    msg.id === message.id ? {...msg, isRead: true} : msg
+                                ));
+                                observer.unobserve(entry.target)
+                                delete observerRefs.current[message.id];
+                            }
+                        });
+                    }, {threshold: 0.5, root: ChatSectionRef.current}
+                );
+                observer.observe(messageRefs.current[message.id]);
+                observerRefs.current[message.id] = observer;
             }
-        );
-
-        Object.values(messageRefs.current).forEach(ref => ref && observer.observe(ref));
-
-        return () => {
-            observer.disconnect();
-        };
-    }, [messages]);
+        });
+    }, [unreadMessages]);
 
     useEffect(() => {
         const loadMessages = async () => {
@@ -227,11 +250,16 @@ const MessagesSection = forwardRef(({chat, user}, ref) => {
                     message.senderId === UserController.getCurrentUser().id ? (
                         <MyMessage key={message.id}>
                             <MyMessageText>{message.text}</MyMessageText>
-                            <MyMessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MyMessageSendDate>
+                            <ButtonSection>
+                                {
+                                    <ReadMark src={message.isRead ? WhiteCheckMarkImg : BlackCheckMark}/>
+                                }
+                                <MyMessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MyMessageSendDate>
+                            </ButtonSection>
                         </MyMessage>
                     ) : (
                         <OtherMessage key={message.id}
-                                      id={message.id}
+                                      id={`${message.id}`}
                                       data-is-read={message.isRead}
                                       ref={el => messageRefs.current[message.id] = el}
                         >

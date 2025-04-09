@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+import ru.nikidzawa.backend.exceptions.NotFoundException;
 import ru.nikidzawa.backend.store.client.dataModel.MessageDataModel;
 import ru.nikidzawa.backend.store.client.dto.MessageDto;
 import ru.nikidzawa.backend.store.client.factory.MessageDtoFactory;
@@ -83,5 +84,12 @@ public class MessagesService {
         );
         chatMessagesRepository.saveIndivChatMessage(receiverIndividualChat.getId(), message.getId());
         return factory.convert(message);
+    }
+
+    public void read (Long messageId) {
+        MessageEntity message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("Сообщение не найдено"));
+        message.setIsRead(true);
+        messageRepository.saveAndFlush(message);
     }
 }

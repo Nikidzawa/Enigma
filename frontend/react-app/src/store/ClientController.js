@@ -1,6 +1,8 @@
 import {makeAutoObservable} from "mobx";
 import {Client} from "@stomp/stompjs";
 import TypingResponse from "../network/response/TypingResponse";
+import MessageReadResponse from "../network/response/MessageReadResponse";
+import UserController from "./UserController";
 
 class ClientController {
 
@@ -57,10 +59,17 @@ class ClientController {
         })
     }
 
-    async typing(userId) {
+    async typing() {
         this.client.publish({
             destination: '/server/chat/typing',
-            body: JSON.stringify(new TypingResponse(userId, true))
+            body: JSON.stringify(new TypingResponse(UserController.getCurrentUser().id, true))
+        })
+    }
+
+    async read(messageId) {
+        this.client.publish({
+            destination: '/server/message/read',
+            body: JSON.stringify(new MessageReadResponse(UserController.getCurrentUser().id, messageId))
         })
     }
 

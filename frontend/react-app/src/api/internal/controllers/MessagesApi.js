@@ -14,4 +14,8 @@ export default class MessagesApi {
     static save(senderId, receiverId, message) {
         return api.post(`/messages/send?senderId=${senderId}&receiverId=${receiverId}`, message);
     }
+
+    static async read(messageId) {
+        api.put(`/messages/read/${messageId}`);
+    }
 }
