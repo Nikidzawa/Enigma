@@ -12,7 +12,7 @@ class ClientController {
         makeAutoObservable(this);
     }
 
-    async connect(userId, messageHandler, presenceHandler) {
+    async connect(userId) {
         const { Client } = require('@stomp/stompjs');
         const SockJS = require('sockjs-client');
 
@@ -23,10 +23,6 @@ class ClientController {
             },
             onConnect: () => {
                 this.client = stompClient;
-
-                // Подписка на персональные уведомления по полученным сообщениям
-                stompClient.subscribe(`/client/${userId}/queue/messages`, messageHandler);
-
             },
             onStompError: (error) => {
                 console.error(error.message);

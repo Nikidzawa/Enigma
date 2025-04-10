@@ -5,12 +5,13 @@ import {useEffect, useRef, useState} from "react";
 import ClientController from "../../../store/ClientController";
 import {observer} from "mobx-react-lite";
 import PresenceResponse from "../../../network/response/PresenceResponse";
-import UserDto from "../../../api/internal/dto/UserDto";
-import UserApi from "../../../api/internal/controllers/UserApi";
 import PresenceApi from "../../../api/internal/controllers/PresenceApi";
 import PresenceDto from "../../../api/internal/dto/PresenceDto";
 import TypingResponse from "../../../network/response/TypingResponse";
 import TypingAnimation from "./menu/TypingAnimation";
+import WhiteCheckMarkImg from "../../../img/two-ticks.png";
+import BlackCheckMark from "../../../img/two-ticks-black.png";
+import ActiveChatController from "../../../store/ActiveChatController";
 
 const MainContainer = styled.div`
     overflow: hidden;
@@ -57,7 +58,7 @@ const OnlineCircle = styled.div`
 const UserData = styled.div`
     width: 100%;
     display: flex;
-    gap: 3px;
+    gap: 5px;
     flex-direction: column;
     justify-content: center;
     min-width: 0;
@@ -89,9 +90,7 @@ const UpperLine = styled.div`
 
 const DateComponent = styled.div`
     font-size: 13px;
-    padding: 0 5px;
     color: #7f7f7f;
-    flex-shrink: 0;
 `
 
 const Typing = styled.div`
@@ -102,12 +101,24 @@ const Typing = styled.div`
     gap: 3px;
 `
 
-export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCompanion}) {
+const ReadStatusAndMessageDate = styled.div`
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 5px;
+    gap: 4px;
+`
+
+const ReadMark = styled.img`
+    width: 13px;
+    height: 7px;
+`
+
+export default observer(function ChatRoom({chatRoom}) {
     const [user, setUser] = useState({});
     const [lastMessage, setLastMessage] = useState(null);
 
     const [isOnline, setIsOnline] = useState(null);
-    const [lastOnlineDate, setLastOnlineDate] = useState(null);
 
     const [isTyping, setTyping] = useState(false);
     const typingTimeoutRef = useRef(null);
@@ -115,7 +126,7 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCo
     const stompClient = ClientController.getClient();
 
     function isMyMessage() {
-        return UserController.getCurrentUser().id === lastMessage.senderId ? "Вы: " : "";
+        return UserController.getCurrentUser().id === lastMessage.senderId;
     }
 
     useEffect(() => {
@@ -124,21 +135,11 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCo
             const presenceSubscription = stompClient.subscribe(`/client/${chatRoom.companion.id}/personal/presence`, (message) => {
                 const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
                 setIsOnline(presenceResponse.isOnline);
-                setLastOnlineDate(presenceResponse.lastOnlineDate);
 
                 if (!presenceResponse.isOnline) {
                     setTyping(false);
                     clearTimeout(typingTimeoutRef.current);
                 }
-            });
-
-            // Подписка на обновление профиля
-            const profileSubscription = stompClient.subscribe(`/client/${chatRoom.companion.id}/profile/changed`, (message) => {
-                UserApi.getUserById(JSON.parse(message.body).userId).then(response => {
-                    const userDto = UserDto.fromJSON(response.data);
-                    setUser(userDto);
-                    updateChatCompanion(userDto);
-                });
             });
 
             // Подписка на отслеживание статуса "Печатает"
@@ -160,7 +161,6 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCo
 
             return () => {
                 presenceSubscription.unsubscribe();
-                profileSubscription.unsubscribe();
                 typingSubscription.unsubscribe();
                 if (typingTimeoutRef.current) {
                     clearTimeout(typingTimeoutRef.current);
@@ -174,16 +174,16 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCo
         PresenceApi.getActual(chatRoom.companion.id).then(response => {
             const presenceData = PresenceDto.fromJSON(response.data);
             setIsOnline(presenceData.isOnline);
-            setLastOnlineDate(presenceData.lastOnlineDate);
         });
     }, []);
 
     useEffect(() => {
         setLastMessage(chatRoom.messages ? chatRoom.messages[chatRoom.messages.length - 1] : null);
+        setUser(chatRoom.companion);
     }, [chatRoom]);
 
     return (
-            <MainContainer onClick={() => setActiveChat(chatRoom)}>
+            <MainContainer onClick={() => ActiveChatController.setActiveChat(chatRoom)}>
                 <ChatRoomContainer>
                     <AvatarContainer>
                         <UserAvatar src={user.avatarHref}/>
@@ -192,9 +192,19 @@ export default observer(function ChatRoom({chatRoom, setActiveChat, updateChatCo
                     <UserData>
                         <UpperLine>
                             <Name>{`${user.name} ${user.surname}`}</Name>
-                            <DateComponent>{lastMessage ? DateParser.parseDate(lastMessage.createdAt) : ""}</DateComponent>
+                            {
+                                lastMessage && (
+                                    <ReadStatusAndMessageDate>
+                                        {
+                                            isMyMessage() && <ReadMark src={lastMessage.isRead ? WhiteCheckMarkImg : BlackCheckMark}/>
+                                        }
+                                        <DateComponent>{lastMessage ? DateParser.parseDate(lastMessage.createdAt) : ""}</DateComponent>
+                                    </ReadStatusAndMessageDate>
+                                )
+                            }
                         </UpperLine>
-                        {isTyping ? <Typing>Пишет<TypingAnimation/></Typing> : <LastMessage>{lastMessage ? (isMyMessage() + lastMessage.text) : "Сообщений нет"}</LastMessage>}
+                        {isTyping ? <Typing>Пишет<TypingAnimation/></Typing>
+                            : <LastMessage>{lastMessage ? ((isMyMessage() ? "Вы: " : "") + lastMessage.text) : "Сообщений нет"}</LastMessage>}
                     </UserData>
                 </ChatRoomContainer>
             </MainContainer>

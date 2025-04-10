@@ -7,6 +7,7 @@ import DateParser from "../../../../helpers/DateParser";
 import WhiteCheckMarkImg from "../../../../img/two-ticks.png"
 import BlackCheckMark from "../../../../img/two-ticks-black.png"
 import ClientController from "../../../../store/ClientController";
+import MessageReadResponse from "../../../../network/response/MessageReadResponse";
 
 const MessagesSectionMainComponent = styled.div`
     height: calc(100% - 110px);
@@ -55,7 +56,7 @@ const OtherMessage = styled.div`
     min-width: 35px;
     background: #353535;
     border-radius: 0 15px 15px 15px;
-    padding: 7px 20px 5px 10px;
+    padding: 7px 12px 5px 10px;
     align-self: flex-start;
     display: flex;
     flex-direction: column;
@@ -102,7 +103,7 @@ const ReadMark = styled.img`
 `
 
 const MessagesSection = forwardRef(({chat, user}, ref) => {
-
+    const stompClient = ClientController.getClient();
     const [messages, setMessages] = useState([]);
 
     const [isLoadMessages, setLoadMessages] = useState(false);
@@ -117,17 +118,38 @@ const MessagesSection = forwardRef(({chat, user}, ref) => {
 
     useImperativeHandle(ref, () => ({
         addMessageIntoChat: async (message) => {
-            if (messages.findIndex(lastMessage => lastMessage.id === message.id) === -1) {
-                setMessages(prev => [...prev, message]);
-                scrollToBottom();
-            }
-        },
-        changeMessageReadStatus: async (messageReadResponse) => {
-            setMessages(prev => prev.map(msg =>
-                msg.id === messageReadResponse.messageId ? {...msg, isRead: true} : msg
-            ));
+            setMessages(prev => [...prev, message]);
+            scrollToBottom();
         }
     }));
+
+    useEffect(() => {
+        if (stompClient && stompClient.connected) {
+
+            //Подписка на получение сообщений
+            const messagesSubscription = stompClient.subscribe(`/client/${UserController.getCurrentUser().id}/queue/messages`, (message) => {
+                const parsedMessage = JSON.parse(message.body);
+                if (Number.parseInt(parsedMessage.senderId) === user.id) {
+                    const messageDto = MessageDto.fromRequest(parsedMessage);
+                    setMessages(prev => [...prev, messageDto]);
+                    scrollToBottom();
+                }
+            });
+
+            // Подписка на обновление статуса сообщений
+            const messageReadStatusSubscription = stompClient.subscribe(`/client/${user.id}/queue/read`, (message) => {
+                const messageReadResponse = MessageReadResponse.fromJSON(JSON.parse(message.body));
+                setMessages(prev => prev.map(msg =>
+                    msg.id === messageReadResponse.messageId ? {...msg, isRead: true} : msg
+                ));
+            });
+
+            return () => {
+                messagesSubscription.unsubscribe();
+                messageReadStatusSubscription.unsubscribe();
+            };
+        }
+    }, [stompClient]);
 
     const unreadMessages = useMemo(() =>
             messages.filter(m => !m.isRead && m.senderId !== UserController.getCurrentUser().id),
@@ -185,7 +207,7 @@ const MessagesSection = forwardRef(({chat, user}, ref) => {
                     top: ChatSectionRef.current.scrollHeight,
                     behavior: "instant",
                 });
-            }, 0);
+            }, 100);
         }
     };
 

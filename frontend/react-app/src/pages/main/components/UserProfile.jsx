@@ -54,7 +54,7 @@ const Nickname = styled.div`
     overflow: hidden;
 `
 
-export default function UserProfile({userDto, openChat}) {
+export default function UserProfile({userDto}) {
     const stompClient = ClientController.getClient();
     const [profileVisible, setProfileVisible] = useState(false);
     const [isOnline, setIsOnline] = useState(true);
@@ -94,7 +94,6 @@ export default function UserProfile({userDto, openChat}) {
             {
                 profileVisible && <InfoProfile user={userDto} visible={profileVisible} setVisible={setProfileVisible}
                                         isOnline={isOnline} lastOnlineDate={lastOnlineDate}
-                                        onOpenChat={openChat}
                 />
             }
         </>

@@ -5,6 +5,8 @@ import DateField from "./DateField";
 import MailImage from "../../../../img/mail-blue.png";
 import NicknameField from "./NicknameField";
 import OnlineStatusComponent from "./OnlineStatusComponent";
+import ChatRoomsController from "../../../../store/ChatRoomsController";
+import ActiveChatController from "../../../../store/ActiveChatController";
 
 const fadeIn = keyframes`
     from {
@@ -126,7 +128,11 @@ const Button = styled.button`
     background-repeat: no-repeat;
 `
 
-export default function InfoProfile({user, isOnline, lastOnlineDate, visible, setVisible, onOpenChat}) {
+const OnlineStatusContainer = styled.div`
+    padding-top: 2px;
+`
+
+export default function InfoProfile({user, isOnline, lastOnlineDate, visible, setVisible}) {
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
     const [nickname, setNickname] = useState("");
@@ -149,6 +155,12 @@ export default function InfoProfile({user, isOnline, lastOnlineDate, visible, se
         setAvatar(user.avatarHref);
     }, [user])
 
+    function openChat() {
+        const chat = ChatRoomsController.findChatByUserDtoOrGetNew(user);
+        ActiveChatController.setActiveChat(chat);
+        setVisible(false)
+    }
+
     return (
         user && (
             <ShadowMainContainer visible={visible} onClick={() => setVisible(false)} isFirstRender={isFirstRender}>
@@ -165,12 +177,12 @@ export default function InfoProfile({user, isOnline, lastOnlineDate, visible, se
                             <Fio>{name} {surname}</Fio>
                         </UserInfo>
                         {aboutMe && <AboutMe>{aboutMe}</AboutMe>}
-                        <div style={{paddingTop: '2px'}}>
+                        <OnlineStatusContainer>
                             <OnlineStatusComponent isTyping={false} isOnline={isOnline} lastOnlineDate={lastOnlineDate}/>
-                        </div>
+                        </OnlineStatusContainer>
                     </AvatarSection>
                     <ButtonContainer>
-                        <Button onClick={() => {onOpenChat && onOpenChat(user); setVisible(false)}}>Написать</Button>
+                        <Button onClick={openChat}>Написать</Button>
                     </ButtonContainer>
                     <div>
                         <NicknameField value={nickname} disabled={true}/>

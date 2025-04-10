@@ -15,6 +15,10 @@ import ClientController from "../../store/ClientController";
 import MessageDto from "../../api/internal/dto/MessageDto";
 import UserDto from "../../api/internal/dto/UserDto";
 import ActiveChat from "./components/activeChat/ActiveChat";
+import ChatRooms from "./components/chatRooms/ChatRooms";
+import ChatRoomsController from "../../store/ChatRoomsController";
+import ActiveChatOrEmpty from "./components/activeChat/ActiveChatOrEmpty";
+import ActiveChatController from "../../store/ActiveChatController";
 
 const slideOutToBottom = keyframes`
     from {
@@ -24,17 +28,6 @@ const slideOutToBottom = keyframes`
     to {
         transform: translateY(0);
         opacity: 1;
-    }
-`;
-
-const slideOutToBottom2 = keyframes`
-    from {
-        transform: translateY(-35%);
-        opacity: 1;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 0;
     }
 `;
 
@@ -50,17 +43,6 @@ const slideOutToUp = keyframes`
     }
 `;
 
-const slideOutToUp2 = keyframes`
-    from {
-        transform: translateY(20%);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0%);
-        opacity: 1;
-    }
-`;
-
 const MainContainer = styled.main`
     height: 100vh;
     width: 100vw;
@@ -68,22 +50,6 @@ const MainContainer = styled.main`
     justify-content: space-between;
     background-color: #121212;
 `;
-
-const EmptySection = styled.div`
-    display: flex;
-    flex: 1;
-    justify-content: center;
-    align-items: center;
-    padding: 5px;
-`
-
-const EmptyText = styled.div`
-    padding: 5px 25px;
-    background-color: #292929;
-    border-radius: 20px;
-    font-size: 15px;
-    text-align: center;
-`
 
 const LeftMenuContainer = styled.div`
     height: 100vh;
@@ -186,16 +152,9 @@ const SearchPanel = styled.div`
     height: 40%;
 `
 
-const ChatRoomsContainer = styled.div`
-    animation: ${props => props.isActive ? slideOutToBottom2 : slideOutToUp2} 0.25s forwards;
-`
-
 export default function Main() {
     const [chatListWidth, setChatListWidth] = useState(500);
     const [isResizing, setIsResizing] = useState(false);
-    const [chats, setChats] = useState([]);
-    const [activeChat, setActiveChat] = useState(null);
-    const activeChatRef = useRef();
 
     const [isSearchMode, setSearching] = useState(false);
     const [searchValue, setSearchValue] = useState("");
@@ -207,19 +166,12 @@ export default function Main() {
     const onMessageReceive = useCallback(async (message) => {
         const messageDto = MessageDto.fromRequest(JSON.parse(message.body));
         UserApi.getUserById(messageDto.senderId).then(response => {
-            updateLastMessageOrAddChat({message: messageDto, companion: UserDto.fromJSON(response.data)});
-            activeChatRef.current?.addNewMessage(messageDto)
+            ChatRoomsController.updateLastMessageOrAddChat({message: messageDto, companion: UserDto.fromJSON(response.data)});
         })
     }, []);
 
     useEffect(() => {
-        updateUser().then(user => {
-            ClientController.connect(user.id, onMessageReceive).then(() => {
-                ChatApi.getAllUserChatsByUserId(user.id).then(response => setChats(
-                    response.data.map(room => ChatRoomDto.fromJSON(room)))
-                );
-            });
-        });
+        updateUser().then(user => ClientController.connect(user.id, onMessageReceive));
 
         async function updateUser() {
             let user = UserController.getCurrentUser();
@@ -232,7 +184,7 @@ export default function Main() {
 
         const handleKeyDown = (e) => {
             if (e.code === 'Escape') {
-                setActiveChat(null);
+                ActiveChatController.setActiveChat(null);
             }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -265,32 +217,6 @@ export default function Main() {
         }
     };
 
-    const updateChatCompanion = (updatedCompanion) => {
-        setChats(prevChats => prevChats.map(chat =>
-            chat.companion.id === updatedCompanion.id ? { ...chat, companion: updatedCompanion } : chat
-        ));
-    };
-
-    async function updateLastMessageOrAddChat ({message, companion}) {
-        setChats(prevChats => {
-            if (prevChats.findIndex(chatRoom => chatRoom.companion.id === companion.id) !== -1) {
-                return prevChats.map(chatRoom =>
-                    chatRoom.companion.id === companion.id ? {...chatRoom, messages: [...chatRoom.messages, message]} : chatRoom
-                );
-            } else {
-                return [...prevChats, new ChatRoomDto(companion, [message], null)];
-            }
-        });
-    }
-
-    async function openChat (userInfo) {
-        let existingChat = chats.find(chat => chat.companion.id === userInfo.id);
-        if (!existingChat) {
-            existingChat = new ChatRoomDto(userInfo, [], null)
-        }
-        setActiveChat(existingChat);
-    }
-
     return (
         <MainContainer onMouseMove={handleMouseMove} onMouseUp={() => setIsResizing(false)} onMouseLeave={() => setIsResizing(false)}>
             <LeftMenuContainer width={chatListWidth}>
@@ -320,7 +246,7 @@ export default function Main() {
                             <SearchLabel>Глобальный поиск</SearchLabel>
                             {
                                 searchCategory === 'PEOPLES' && searchResults.map(userDto => (
-                                    <UserProfile key={userDto.id} userDto={userDto} openChat={openChat}/>
+                                    <UserProfile key={userDto.id} userDto={userDto}/>
                                     )
                                 )
                             }
@@ -329,27 +255,11 @@ export default function Main() {
                             }
                         </SearchPanel>
                         :
-                        <ChatRoomsContainer isActive={isSearchMode}>
-                            {
-                                chats?.map(chatRoom => (
-                                    <ChatRoom key={chatRoom.companion.id} chatRoom={chatRoom} setActiveChat={setActiveChat}
-                                              updateChatCompanion={updateChatCompanion}
-                                    />
-                                    )
-                                )
-                            }
-                        </ChatRoomsContainer>
+                        <ChatRooms isSearchMode={isSearchMode}/>
                 }
                 <Resizer onMouseDown={e => {e.preventDefault(); setIsResizing(true)}}/>
             </LeftMenuContainer>
-            {
-                activeChat ?
-                    <ActiveChat ref={activeChatRef} activeChat={activeChat} onMessageSend={updateLastMessageOrAddChat}/>
-                    :
-                    <EmptySection>
-                        <EmptyText>Выберите, кому хотели бы написать</EmptyText>
-                    </EmptySection>
-            }
+            <ActiveChatOrEmpty/>
         </MainContainer>
     );
 }

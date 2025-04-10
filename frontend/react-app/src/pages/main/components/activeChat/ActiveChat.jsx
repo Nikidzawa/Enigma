@@ -16,6 +16,7 @@ import OnlineStatusComponent from "../menu/OnlineStatusComponent";
 import InfoProfile from "../menu/InfoProfile";
 import UserApi from "../../../../api/internal/controllers/UserApi";
 import MessageReadResponse from "../../../../network/response/MessageReadResponse";
+import ChatRoomsController from "../../../../store/ChatRoomsController";
 
 const MainContainer = styled.div`
     flex: 1;
@@ -64,7 +65,7 @@ const SendButton = styled.img`
     cursor: pointer;
 `
 
-const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
+export default function ActiveChat ({activeChat}) {
     const stompClient = ClientController.getClient();
 
     const [text, setText] = useState("");
@@ -85,12 +86,6 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
     const [isTyping, setTyping] = useState(false);
 
     const messagesSectionRef = useRef();
-
-    useImperativeHandle(ref, () => ({
-        addNewMessage: async (message) => {
-            messagesSectionRef?.current.addMessageIntoChat(message);
-        }
-    }));
 
     useEffect(() => {
         if (stompClient) {
@@ -128,17 +123,10 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                 }
             })
 
-            // Подписка на статус "Прочитано" у сообщений
-            const messageReadStatusSubscription = stompClient.subscribe(`/client/${activeChat.companion.id}/queue/read`, (message) => {
-                const messageReadResponse = MessageReadResponse.fromJSON(JSON.parse(message.body));
-                messagesSectionRef?.current.changeMessageReadStatus(messageReadResponse);
-            });
-
             return () => {
                 typingSubscription.unsubscribe();
                 presenceSubscription.unsubscribe();
                 profileSubscription.unsubscribe();
-                messageReadStatusSubscription.unsubscribe();
             };
         }
     }, [stompClient]);
@@ -174,7 +162,7 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
                 const newMessage = new MessageDto(null, new Date(), text, UserController.getCurrentUser().id);
                 MessagesApi.save(UserController.getCurrentUser().id, user.id, newMessage).then(async response => {
                     const message = await MessageDto.fromJSON(response.data);
-                    onMessageSend({message: message, companion: user});
+                    ChatRoomsController.updateLastMessageOrAddChat({message: message, companion: user});
                     ClientController.sendMessage(new MessageRequest(message.id, message.createdAt, message.senderId, user.id, message.text));
                     messagesSectionRef?.current.addMessageIntoChat(message);
                     setText("");
@@ -207,6 +195,4 @@ const ActiveChat = forwardRef(({activeChat, onMessageSend}, ref) => {
             />
         </>
     );
-});
-
-export default ActiveChat;
+}
