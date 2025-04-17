@@ -15,13 +15,12 @@ import MessageRequest from "../../../../network/request/MessageRequest";
 import OnlineStatusComponent from "../menu/OnlineStatusComponent";
 import InfoProfile from "../menu/InfoProfile";
 import UserApi from "../../../../api/internal/controllers/UserApi";
-import MessageReadResponse from "../../../../network/response/MessageReadResponse";
 import ChatRoomsController from "../../../../store/ChatRoomsController";
 
 const MainContainer = styled.div`
     flex: 1;
     justify-content: space-between;
-    padding: 5px 10px;
+    padding: 5px 5px;
     z-index: 100;
     background-color: #121212;
 `
@@ -33,6 +32,7 @@ const UpperSection = styled.div`
     gap: 3px;
     border-bottom: 1px solid #707070;
     justify-content: center;
+    padding-left: 5px;
 `
 
 const BottomSection = styled.div`

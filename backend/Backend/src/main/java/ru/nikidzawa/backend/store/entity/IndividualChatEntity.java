@@ -14,6 +14,11 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "indiv_chat")
+@Table(indexes = {
+        @Index(name = "idx_indiv_chat_owner", columnList = "owner_id"),
+        @Index(name = "idx_indiv_chat_companion", columnList = "companion_id"),
+        @Index(name = "idx_indiv_chat_owner_companion", columnList = "owner_id, companion_id", unique = true)
+})
 public class IndividualChatEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,  generator = "indiv_chat_seq")

@@ -8,7 +8,7 @@ import ChatRoomDto from "../api/internal/dto/ChatRoomDto";
 class ChatRoomsController {
     chatRooms = [];
     stompClient = null;
-    subscriptions = new Map(); // Для управления подписками
+    subscriptions = new Map();
 
     constructor() {
         makeAutoObservable(this);
@@ -16,10 +16,6 @@ class ChatRoomsController {
 
     getChatRooms() {
         return this.chatRooms;
-    }
-
-    setChatRooms(chatRooms) {
-        this.chatRooms = chatRooms;
     }
 
     init(chatRooms, stompClient, userId) {
@@ -72,10 +68,12 @@ class ChatRoomsController {
         const messageDto = MessageDto.fromRequest(JSON.parse(message.body));
         try {
             const response = await UserApi.getUserById(messageDto.senderId);
+            const companion = UserDto.fromJSON(response.data);
             this.updateLastMessageOrAddChat({
                 message: messageDto,
-                companion: UserDto.fromJSON(response.data),
+                companion: companion,
             });
+            this.addNotification(companion.id)
         } catch (error) {
             console.error("Failed to handle incoming message:", error);
         }
@@ -132,10 +130,7 @@ class ChatRoomsController {
             };
             this.chatRooms = updatedChats;
         } else {
-            this.chatRooms = [
-                ...this.chatRooms,
-                new ChatRoomDto(companion, [message], null),
-            ];
+            this.chatRooms = [...this.chatRooms, new ChatRoomDto(companion, [message], null)];
         }
     }
 
@@ -146,8 +141,16 @@ class ChatRoomsController {
         );
     }
 
-    destroy() {
-        this.cleanupSubscriptions();
+    removeNotification(companionId) {
+        this.chatRooms = this.chatRooms.map(chat =>
+            chat.companion.id === companionId ? {...chat, unreadCount: chat.unreadCount - 1} : chat
+        );
+    }
+
+    addNotification(companionId) {
+        this.chatRooms = this.chatRooms.map(chat =>
+            chat.companion.id === companionId ? {...chat, unreadCount: chat.unreadCount += 1} : chat
+        );
     }
 }
 

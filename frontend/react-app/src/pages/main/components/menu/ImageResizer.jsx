@@ -70,6 +70,7 @@ const ImageComponent = styled.img`
     pointer-events: none;
     min-height: 120px;
     min-width: 120px;
+    max-height: 90vh;
 `
 
 const Square = styled.div`

@@ -163,15 +163,8 @@ export default function Main() {
 
     const [menuIsVisible, setMenuIsVisible] = useState(false);
 
-    const onMessageReceive = useCallback(async (message) => {
-        const messageDto = MessageDto.fromRequest(JSON.parse(message.body));
-        UserApi.getUserById(messageDto.senderId).then(response => {
-            ChatRoomsController.updateLastMessageOrAddChat({message: messageDto, companion: UserDto.fromJSON(response.data)});
-        })
-    }, []);
-
     useEffect(() => {
-        updateUser().then(user => ClientController.connect(user.id, onMessageReceive));
+        updateUser().then(user => ClientController.connect(user.id));
 
         async function updateUser() {
             let user = UserController.getCurrentUser();
@@ -189,7 +182,7 @@ export default function Main() {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => {window.removeEventListener('keydown', handleKeyDown);};
-    }, [onMessageReceive])
+    }, [])
 
     useEffect(() => {
         const timer = setTimeout(() => {

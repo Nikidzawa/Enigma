@@ -37,7 +37,8 @@ public class ChatRoomDtoFactory {
                         .ownerId(chatRoomDataModel.getOwnerId())
                         .companionId(chatRoomDataModel.getCompanionId())
                         .createdAt(chatRoomDataModel.getCreatedAt())
-                        .build()
-                ).build();
+                        .build())
+                .unreadCount(chatRoomDataModel.getUnreadCount())
+                .build();
     }
 }

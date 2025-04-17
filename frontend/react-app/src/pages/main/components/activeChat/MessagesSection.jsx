@@ -8,6 +8,7 @@ import WhiteCheckMarkImg from "../../../../img/two-ticks.png"
 import BlackCheckMark from "../../../../img/two-ticks-black.png"
 import ClientController from "../../../../store/ClientController";
 import MessageReadResponse from "../../../../network/response/MessageReadResponse";
+import ChatRoomsController from "../../../../store/ChatRoomsController";
 
 const MessagesSectionMainComponent = styled.div`
     height: calc(100% - 110px);
@@ -17,12 +18,12 @@ const MessagesSectionMainComponent = styled.div`
     flex-direction: column;
     gap: 10px;
     font-size: 16px;
-    padding: 10px 9px 10px 0;
+    padding: 10px 6px 10px 6px;
     -webkit-background-clip: text;
     transition: background-color 1s ease;
 
     &::-webkit-scrollbar {
-        width: 8px;
+        max-width: 5px;
     }
 
     &::-webkit-scrollbar-thumb {
@@ -44,11 +45,11 @@ const MyMessage = styled.div`
     min-width: 35px;
     background: #006c81;
     border-radius: 15px 0 15px 15px;
-    padding: 7px 10px 5px 12px;
+    padding: 7px 10px 6px 12px;
     align-self: flex-end;
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
 `
 
 const OtherMessage = styled.div`
@@ -56,11 +57,11 @@ const OtherMessage = styled.div`
     min-width: 35px;
     background: #353535;
     border-radius: 0 15px 15px 15px;
-    padding: 7px 12px 5px 10px;
+    padding: 7px 12px 6px 10px;
     align-self: flex-start;
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
 `
 
 const MyMessageSendDate = styled.div`
@@ -168,6 +169,7 @@ const MessagesSection = forwardRef(({chat, user}, ref) => {
                                 setMessages(prev => prev.map(msg =>
                                     msg.id === message.id ? {...msg, isRead: true} : msg
                                 ));
+                                ChatRoomsController.removeNotification(user.id)
                                 observer.unobserve(entry.target)
                                 delete observerRefs.current[message.id];
                             }

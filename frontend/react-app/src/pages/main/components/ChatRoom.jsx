@@ -71,6 +71,7 @@ const Name = styled.div`
     overflow: hidden;
     flex-shrink: 1;
     min-width: 0;
+    margin-right: 5px;
 `
 
 const LastMessage = styled.div`
@@ -105,7 +106,7 @@ const ReadStatusAndMessageDate = styled.div`
     display: flex;
     align-items: center;
     flex-shrink: 0;
-    padding: 0 5px;
+    margin-right: 5px;
     gap: 4px;
 `
 
@@ -114,9 +115,39 @@ const ReadMark = styled.img`
     height: 7px;
 `
 
+const MiddleLine = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+`
+
+const LastMessageOrTypingContainer = styled.div`
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    flex-shrink: 1;
+    min-width: 0;
+    padding-right: 5px;
+`
+
+const NewMessagesCountContainer = styled.div`
+    display: flex;
+    font-size: 13px;
+    background-color: #009a9a;
+    border-radius: 50%;
+    width: 17px;
+    height: 17px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 5px;
+`
+
 export default observer(function ChatRoom({chatRoom}) {
     const [user, setUser] = useState({});
     const [lastMessage, setLastMessage] = useState(null);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const [isOnline, setIsOnline] = useState(null);
 
@@ -179,8 +210,15 @@ export default observer(function ChatRoom({chatRoom}) {
 
     useEffect(() => {
         setLastMessage(chatRoom.messages ? chatRoom.messages[chatRoom.messages.length - 1] : null);
+    }, [chatRoom.messages]);
+
+    useEffect(() => {
         setUser(chatRoom.companion);
-    }, [chatRoom]);
+    }, [chatRoom.companion]);
+
+    useEffect(() => {
+        setUnreadCount(chatRoom.unreadCount);
+    }, [chatRoom.unreadCount]);
 
     return (
             <MainContainer onClick={() => ActiveChatController.setActiveChat(chatRoom)}>
@@ -203,8 +241,15 @@ export default observer(function ChatRoom({chatRoom}) {
                                 )
                             }
                         </UpperLine>
-                        {isTyping ? <Typing>Пишет<TypingAnimation/></Typing>
-                            : <LastMessage>{lastMessage ? ((isMyMessage() ? "Вы: " : "") + lastMessage.text) : "Сообщений нет"}</LastMessage>}
+                        <MiddleLine>
+                            <LastMessageOrTypingContainer>
+                                {isTyping ? <Typing>Пишет<TypingAnimation/></Typing>
+                                    : <LastMessage>{lastMessage ? ((isMyMessage() ? "Вы: " : "") + lastMessage.text) : "Сообщений нет"}</LastMessage>}
+                            </LastMessageOrTypingContainer>
+                            {
+                                unreadCount > 0 && <NewMessagesCountContainer>{unreadCount}</NewMessagesCountContainer>
+                            }
+                        </MiddleLine>
                     </UserData>
                 </ChatRoomContainer>
             </MainContainer>

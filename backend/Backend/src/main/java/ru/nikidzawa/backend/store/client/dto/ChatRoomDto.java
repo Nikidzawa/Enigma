@@ -15,4 +15,5 @@ public class ChatRoomDto {
     IndividualDtoShort companion;
     List<MessageDto> messages;
     IndividualChatEntity chat;
+    Integer unreadCount;
 }

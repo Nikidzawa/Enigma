@@ -1,6 +1,6 @@
 import styled, {keyframes} from "styled-components";
 import ChatRoom from "../ChatRoom";
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import ChatApi from "../../../../api/internal/controllers/ChatApi";
 import ChatRoomDto from "../../../../api/internal/dto/ChatRoomDto";
 import {observer} from "mobx-react-lite";
@@ -51,10 +51,7 @@ export default observer(function ChatRooms({isSearchMode}) {
     return (
         <ChatRoomsContainer isActive={isSearchMode}>
             {
-                chats?.map(chatRoom => (
-                        <ChatRoom key={chatRoom.companion.id} chatRoom={chatRoom}/>
-                    )
-                )
+                chats?.map(chatRoom => <ChatRoom key={chatRoom.companion.id} chatRoom={chatRoom}/>)
             }
         </ChatRoomsContainer>
     )

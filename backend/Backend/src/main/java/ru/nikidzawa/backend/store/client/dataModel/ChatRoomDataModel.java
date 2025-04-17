@@ -28,6 +28,7 @@ public class ChatRoomDataModel {
     LocalDateTime lastMessageSendTime;
     Long lastMessageSenderId;
     Boolean lastMessageIsRead;
+    Integer unreadCount;
 
     Long chatId;
     Long ownerId;
@@ -51,6 +52,7 @@ public class ChatRoomDataModel {
                     rs.getObject("last_message_send_time", LocalDateTime.class),
                     rs.getLong("last_message_sender_id"),
                     rs.getBoolean("last_message_is_read"),
+                    rs.getInt("unread_count"),
 
                     rs.getLong("chat_id"),
                     rs.getLong("chat_owner_id"),

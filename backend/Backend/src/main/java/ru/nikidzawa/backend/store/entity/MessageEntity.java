@@ -14,6 +14,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "messages")
+@Table(indexes = {
+        @Index(name = "idx_message_sender", columnList = "sender_id"),
+        @Index(name = "idx_message_created", columnList = "created_at"),
+        @Index(name = "idx_message_read", columnList = "is_read")
+})
 public class MessageEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,  generator = "message_seq")
