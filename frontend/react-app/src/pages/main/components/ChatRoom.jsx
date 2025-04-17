@@ -132,16 +132,21 @@ const LastMessageOrTypingContainer = styled.div`
 `
 
 const NewMessagesCountContainer = styled.div`
+    width: 18px;
+    height: 18px;
+    margin-right: 5px;
+`
+
+const NewMessagesCount = styled.div`
     display: flex;
     font-size: 13px;
     background-color: #009a9a;
     border-radius: 50%;
-    width: 17px;
-    height: 17px;
+    width: 18px;
+    height: 18px;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    margin-right: 5px;
 `
 
 export default observer(function ChatRoom({chatRoom}) {
@@ -246,9 +251,11 @@ export default observer(function ChatRoom({chatRoom}) {
                                 {isTyping ? <Typing>Пишет<TypingAnimation/></Typing>
                                     : <LastMessage>{lastMessage ? ((isMyMessage() ? "Вы: " : "") + lastMessage.text) : "Сообщений нет"}</LastMessage>}
                             </LastMessageOrTypingContainer>
-                            {
-                                unreadCount > 0 && <NewMessagesCountContainer>{unreadCount}</NewMessagesCountContainer>
-                            }
+                            <NewMessagesCountContainer>
+                                {
+                                    unreadCount > 0 && <NewMessagesCount>{unreadCount}</NewMessagesCount>
+                                }
+                            </NewMessagesCountContainer>
                         </MiddleLine>
                     </UserData>
                 </ChatRoomContainer>

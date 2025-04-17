@@ -18,13 +18,15 @@ class ChatRoomsController {
         return this.chatRooms;
     }
 
-    init(chatRooms, stompClient, userId) {
+    initAll(chatRooms, stompClient, userId) {
         this.cleanupSubscriptions();
         this.chatRooms = chatRooms;
         this.stompClient = stompClient;
 
         this.initReceiveMessages(userId);
-        this.initChatRoomsSubscriptions();
+        this.chatRooms.forEach((chatRoom) => {
+            this.initChatRoomSubscriptions(chatRoom);
+        });
     }
 
     cleanupSubscriptions() {
@@ -38,12 +40,6 @@ class ChatRoomsController {
             this.handleIncomingMessage
         );
         this.subscriptions.set(`messages-${userId}`, subscription.unsubscribe);
-    }
-
-    initChatRoomsSubscriptions() {
-        this.chatRooms.forEach((chatRoom) => {
-            this.initChatRoomSubscriptions(chatRoom);
-        });
     }
 
     initChatRoomSubscriptions(chatRoom) {
@@ -73,6 +69,8 @@ class ChatRoomsController {
                 message: messageDto,
                 companion: companion,
             });
+            console.log(companion)
+            console.log(this.chatRooms)
             this.addNotification(companion.id)
         } catch (error) {
             console.error("Failed to handle incoming message:", error);
@@ -130,7 +128,9 @@ class ChatRoomsController {
             };
             this.chatRooms = updatedChats;
         } else {
-            this.chatRooms = [...this.chatRooms, new ChatRoomDto(companion, [message], null)];
+            const newChatRoom = new ChatRoomDto(companion, [message], null, 0);
+            this.chatRooms = [...this.chatRooms, newChatRoom];
+            this.initChatRoomSubscriptions(newChatRoom)
         }
     }
 

@@ -25,20 +25,30 @@ public class ChatRoomRepository {
             companion.birthdate as birthdate,
             companion.about_me as about_me,
             companion.avatar_href as avatar_href,
+            last_message.id as last_message_id,
+            last_message.text as last_message_text,
+            last_message.created_at AS last_message_send_time,
+            last_message.sender_id AS last_message_sender_id,
+            last_message.is_read AS last_message_is_read,
             chat.id as chat_id,
             chat.owner_id as chat_owner_id,
             chat.companion_id as chat_companion_id,
             chat.created_at as chat_created_at,
-            last_message.*,
-            COUNT(*) FILTER (WHERE m.is_read = false) OVER (PARTITION BY chat.id) AS unread_count
-            FROM indiv_chat chat
-            JOIN individual companion ON companion.id = chat.companion_id
-            LEFT JOIN (
-                SELECT m.*, ichat.indiv_chat_id, ROW_NUMBER() OVER (PARTITION BY ichat.indiv_chat_id ORDER BY m.id DESC) AS rn
-                FROM messages m
-                    JOIN indiv_chat_messages ichat ON ichat.message_id = m.id
-                ) AS last_message ON last_message.indiv_chat_id = chat.id AND last_message.rn = 1
-                WHERE chat.owner_id = ?;
+            unread_count.*
+        FROM indiv_chat chat
+            JOIN individual companion on companion.id = chat.companion_id
+            LEFT JOIN LATERAL (
+            select m.* from messages m
+            join indiv_chat_messages ichat on ichat.message_id = m.id and ichat.indiv_chat_id = chat.id
+            order by m.id desc
+            limit 1
+            ) as last_message on true
+            LEFT JOIN LATERAL (
+            select COUNT(*) as unread_count from messages m
+            join indiv_chat_messages ichat on ichat.message_id = m.id and ichat.indiv_chat_id = chat.id
+            where m.is_read is false and m.sender_id = chat.companion_id 
+            ) as unread_count on true
+        WHERE chat.owner_id = ?
         """;
         return jdbcTemplate.query(sql, new ChatRoomDataModel.ChatRoomRowMapper(), userId);
     }

@@ -43,7 +43,7 @@ export default observer(function ChatRooms({isSearchMode}) {
         if (chats.length === 0 && user && stompClient && stompClient.connected) {
             ChatApi.getAllUserChatsByUserId(user.id).then(response => {
                 const chatsDto = response.data.map(room => ChatRoomDto.fromJSON(room))
-                ChatRoomsController.init(chatsDto, stompClient, user.id)
+                ChatRoomsController.initAll(chatsDto, stompClient, user.id)
             });
         }
     }, [user, stompClient])
