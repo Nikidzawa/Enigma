@@ -17,7 +17,6 @@
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/Client/pom.xml" />
-        <option value="$PROJECT_DIR$/Kafka/pom.xml" />
         <option value="$PROJECT_DIR$/WebsocketProxy/pom.xml" />
       </set>
     </option>

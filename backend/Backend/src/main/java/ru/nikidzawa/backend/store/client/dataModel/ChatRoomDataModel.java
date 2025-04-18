@@ -22,6 +22,7 @@ public class ChatRoomDataModel {
     LocalDate birthdate;
     String aboutMe;
     String avatarHref;
+    LocalDateTime lastLogoutDate;
 
     Long lastMessageId;
     String lastMessageText;
@@ -46,6 +47,7 @@ public class ChatRoomDataModel {
                     rs.getObject("birthdate", LocalDate.class),
                     rs.getString("about_me"),
                     rs.getString("avatar_href"),
+                    rs.getObject("last_logout_dt", LocalDateTime.class),
 
                     rs.getLong("last_message_id"),
                     rs.getString("last_message_text"),

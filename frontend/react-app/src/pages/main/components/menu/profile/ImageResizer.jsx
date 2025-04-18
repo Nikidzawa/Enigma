@@ -29,7 +29,7 @@ const ShadowContainer = styled.div`
     z-index: 1000;
     opacity: ${props => props.visible ? "1" : "0"};
     pointer-events: ${props => props.visible ? "auto" : "none"};;
-    animation: ${props => props.visible ? fadeIn : fadeOut} 0.2s ease;
+    animation: ${props => props.visible ? fadeIn : props.isFirstRender ? 'none' : fadeOut} 0.2s ease;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -37,7 +37,6 @@ const ShadowContainer = styled.div`
 
 const MainContainer = styled.div`
     display: flex;
-    flex: 1;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -127,6 +126,12 @@ export default function ImageResizer ({src, visible, setResizerVisible, setAvata
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [initialSizeState, setInitialSizeState] = useState({ size: 0, position: { x: 0, y: 0 } });
     const imageRef = useRef(null);
+
+    const [isFirstRender, setIsFirstRender] = useState(true);
+
+    useEffect(() => {
+        visible && isFirstRender && setIsFirstRender(false);
+    }, [visible]);
 
     useEffect(() => {
         const img = new Image();
@@ -311,7 +316,9 @@ export default function ImageResizer ({src, visible, setResizerVisible, setAvata
     }, [isDragging, isResizing, position, size, dragStart, resizeDirection]);
 
     return (
-        <ShadowContainer visible={visible} onMouseDown={e => e.target === e.currentTarget && setResizerVisible(false)}>
+        <ShadowContainer visible={visible}
+                         isFirstRender={isFirstRender}
+                         onMouseDown={e => e.target === e.currentTarget && setResizerVisible(false)}>
             <MainContainer>
                 <ImageContainer onMouseDown={handleMouseDown}
                     cursor={isDragging ? 'grabbing' : (isResizing ? `${resizeDirection}-resize` : 'default')}>

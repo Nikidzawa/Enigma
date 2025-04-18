@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import CalendarImg from "../../../../img/calendar.png";
+import CalendarImg from "../../../../../../img/calendar.png";
 
 const Container = styled.div`
     position: relative;

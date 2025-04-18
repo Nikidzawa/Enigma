@@ -5,10 +5,8 @@ import {useEffect, useRef, useState} from "react";
 import ClientController from "../../../store/ClientController";
 import {observer} from "mobx-react-lite";
 import PresenceResponse from "../../../network/response/PresenceResponse";
-import PresenceApi from "../../../api/internal/controllers/PresenceApi";
-import PresenceDto from "../../../api/internal/dto/PresenceDto";
 import TypingResponse from "../../../network/response/TypingResponse";
-import TypingAnimation from "./menu/TypingAnimation";
+import TypingAnimation from "./onlineStatus/TypingAnimation";
 import WhiteCheckMarkImg from "../../../img/two-ticks.png";
 import BlackCheckMark from "../../../img/two-ticks-black.png";
 import ActiveChatController from "../../../store/ActiveChatController";
@@ -167,7 +165,7 @@ export default observer(function ChatRoom({chatRoom}) {
 
     useEffect(() => {
         if (stompClient) {
-            // Подписка на получение статуса пользователя
+            // Подписка на получение онлайн статуса пользователя
             const presenceSubscription = stompClient.subscribe(`/client/${chatRoom.companion.id}/personal/presence`, (message) => {
                 const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
                 setIsOnline(presenceResponse.isOnline);
@@ -195,6 +193,9 @@ export default observer(function ChatRoom({chatRoom}) {
                 }
             })
 
+            // Отправка запроса на получение статуса пользователя
+            ClientController.checkPresence(chatRoom.companion.id);
+
             return () => {
                 presenceSubscription.unsubscribe();
                 typingSubscription.unsubscribe();
@@ -207,10 +208,6 @@ export default observer(function ChatRoom({chatRoom}) {
 
     useEffect(() => {
         setUser(chatRoom.companion);
-        PresenceApi.getActual(chatRoom.companion.id).then(response => {
-            const presenceData = PresenceDto.fromJSON(response.data);
-            setIsOnline(presenceData.isOnline);
-        });
     }, []);
 
     useEffect(() => {

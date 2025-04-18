@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import ru.nikidzawa.backend.services.MessagesService;
 import ru.nikidzawa.backend.store.client.dto.MessageDto;
-import ru.nikidzawa.backend.store.client.factory.MessageDtoFactory;
 import ru.nikidzawa.backend.store.entity.MessageEntity;
 
 import java.util.List;

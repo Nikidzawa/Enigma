@@ -2,6 +2,7 @@ package ru.nikidzawa.websocketserver.services;
 
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import ru.nikidzawa.kafka.KafkaLogoutTransferData;
 
 /**
  * @author Nikidzawa
@@ -9,17 +10,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class KafkaProducerService {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public KafkaProducerService(KafkaTemplate<String, String> kafkaTemplate) {
+    public KafkaProducerService(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void sendLogoutData(String userId) {
-        kafkaTemplate.send("logout-topic", userId);
+    public void sendLogoutData(KafkaLogoutTransferData data) {
+        kafkaTemplate.send("logout-topic", data);
     }
 
-    public void sendLoginData(String userId) {
-        kafkaTemplate.send("login-topic", userId);
-    }
 }

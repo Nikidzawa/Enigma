@@ -18,6 +18,6 @@ public class IndividualDtoShort {
     String surname;
     LocalDate birthdate;
     String aboutMe;
-    LocalDateTime lastOnline;
     String avatarHref;
+    LocalDateTime lastLogoutDate;
 }

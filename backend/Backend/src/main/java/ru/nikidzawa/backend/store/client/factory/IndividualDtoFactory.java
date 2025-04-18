@@ -1,13 +1,16 @@
 package ru.nikidzawa.backend.store.client.factory;
 
+import org.springframework.stereotype.Component;
 import ru.nikidzawa.backend.store.client.dto.IndividualDtoShort;
 import ru.nikidzawa.backend.store.entity.IndividualEntity;
 
 /**
  * @author Nikidzawa
  */
-public class IndividualDtoShortFactory {
-    public static IndividualDtoShort convert(IndividualEntity individualEntity) {
+@Component
+public class IndividualDtoFactory {
+
+    public IndividualDtoShort convert(IndividualEntity individualEntity) {
         return IndividualDtoShort.builder()
                 .id(individualEntity.getId())
                 .name(individualEntity.getName())
@@ -16,6 +19,7 @@ public class IndividualDtoShortFactory {
                 .birthdate(individualEntity.getBirthdate())
                 .aboutMe(individualEntity.getAboutMe())
                 .avatarHref(individualEntity.getAvatarHref())
+                .lastLogoutDate(individualEntity.getLastLogoutDate())
                 .build();
     }
 }

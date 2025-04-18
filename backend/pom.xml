@@ -12,6 +12,7 @@
     <modules>
         <module>Backend</module>
         <module>WebsocketServer</module>
+        <module>Kafka</module>
     </modules>
 
     <properties>

@@ -1,12 +1,8 @@
 import styled from "styled-components";
-import ChatRoomDto from "../../../api/internal/dto/ChatRoomDto";
-import UserDto from "../../../api/internal/dto/UserDto";
 import {useEffect, useState} from "react";
-import InfoProfile from "./menu/InfoProfile";
+import InfoProfile from "./menu/profile/InfoProfile";
 import ClientController from "../../../store/ClientController";
 import PresenceResponse from "../../../network/response/PresenceResponse";
-import PresenceApi from "../../../api/internal/controllers/PresenceApi";
-import PresenceDto from "../../../api/internal/dto/PresenceDto";
 
 const MainContainer = styled.div`
     :hover {
@@ -61,20 +57,20 @@ export default function UserProfile({userDto}) {
     const [lastOnlineDate, setLastOnlineDate] = useState(null);
 
     useEffect(() => {
-        PresenceApi.getActual(userDto.id).then(response => {
-            const presenceData = PresenceDto.fromJSON(response.data);
-            setIsOnline(presenceData.isOnline);
-            setLastOnlineDate(presenceData.lastOnlineDate);
-        });
-    }, [])
+        setLastOnlineDate(userDto.lastLogoutDate)
+    }, [userDto.companion]);
 
     useEffect(() => {
         if (stompClient) {
+
             const presenceSubscription = stompClient.subscribe(`/client/${userDto.id}/personal/presence`, (message) => {
                 const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
                 setIsOnline(presenceResponse.isOnline);
-                setLastOnlineDate(presenceResponse.lastOnlineDate);
+                presenceResponse.lastOnlineDate && setLastOnlineDate(presenceResponse.lastOnlineDate);
             });
+
+            // Отправка запроса на получение статуса пользователя
+            ClientController.checkPresence(userDto.id);
 
             return () => presenceSubscription.unsubscribe();
         }
@@ -92,7 +88,7 @@ export default function UserProfile({userDto}) {
                 </ChatRoomContainer>
             </MainContainer>
             {
-                profileVisible && <InfoProfile user={userDto} visible={profileVisible} setVisible={setProfileVisible}
+                <InfoProfile user={userDto} visible={profileVisible} setVisible={setProfileVisible}
                                         isOnline={isOnline} lastOnlineDate={lastOnlineDate}
                 />
             }

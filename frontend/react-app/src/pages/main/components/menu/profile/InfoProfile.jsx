@@ -1,12 +1,12 @@
 import styled, {keyframes} from "styled-components";
 import {useEffect, useState} from "react";
-import CloseImage from "../../../../img/close2.png";
-import DateField from "./DateField";
-import MailImage from "../../../../img/mail-blue.png";
-import NicknameField from "./NicknameField";
-import OnlineStatusComponent from "./OnlineStatusComponent";
-import ChatRoomsController from "../../../../store/ChatRoomsController";
-import ActiveChatController from "../../../../store/ActiveChatController";
+import CloseImage from "../../../../../img/close2.png";
+import MailImage from "../../../../../img/mail-blue.png";
+import OnlineStatusComponent from "../../onlineStatus/OnlineStatusComponent";
+import NicknameField from "./fields/NicknameField";
+import DateField from "./fields/DateField";
+import ActiveChatController from "../../../../../store/ActiveChatController";
+import ChatRoomsController from "../../../../../store/ChatRoomsController";
 
 const fadeIn = keyframes`
     from {
@@ -163,7 +163,9 @@ export default function InfoProfile({user, isOnline, lastOnlineDate, visible, se
 
     return (
         user && (
-            <ShadowMainContainer visible={visible} onClick={() => setVisible(false)} isFirstRender={isFirstRender}>
+            <ShadowMainContainer visible={visible}
+                                 isFirstRender={isFirstRender}
+                                 onMouseDown={e => e.target === e.currentTarget &&  setVisible(false)}>
                 <ModalContainer onClick={e => e.stopPropagation()}>
                     <UpperContainer>
                         <Name>Profile</Name>

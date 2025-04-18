@@ -25,6 +25,7 @@ public class ChatRoomRepository {
             companion.birthdate as birthdate,
             companion.about_me as about_me,
             companion.avatar_href as avatar_href,
+                    companion.last_logout_dt as last_logout_dt,
             last_message.id as last_message_id,
             last_message.text as last_message_text,
             last_message.created_at AS last_message_send_time,

@@ -3,6 +3,7 @@ import {Client} from "@stomp/stompjs";
 import TypingResponse from "../network/response/TypingResponse";
 import MessageReadResponse from "../network/response/MessageReadResponse";
 import UserController from "./UserController";
+import PresenceCheckResponse from "../network/response/PresenceCheckResponse";
 
 class ClientController {
 
@@ -66,6 +67,13 @@ class ClientController {
         this.client.publish({
             destination: '/server/message/read',
             body: JSON.stringify(new MessageReadResponse(UserController.getCurrentUser().id, messageId))
+        })
+    }
+
+    checkPresence(targetId) {
+        this.client.publish({
+            destination: '/server/presence/check',
+            body: JSON.stringify(new PresenceCheckResponse(targetId))
         })
     }
 

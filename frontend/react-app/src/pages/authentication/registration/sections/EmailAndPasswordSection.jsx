@@ -5,7 +5,7 @@ import styled from "styled-components";
 import Logo from "../../../../img/img.png";
 import {useNavigate} from "react-router-dom";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
-import UserDto from "../../../../api/internal/dto/UserDto";
+import IndividualDtoFull from "../../../../api/internal/dto/IndividualDtoFull";
 import UserController from "../../../../store/UserController";
 import StringUtils from "../../../../helpers/StringUtils";
 import EmailCodeController from "../store/EmailCodeController";
@@ -173,7 +173,7 @@ export default function EmailAndPasswordSection({nextSection}) {
 
     async function submit () {
         try {
-            const user = new UserDto();
+            const user = new IndividualDtoFull();
             user.email = StringUtils.replaceSpaces(email).toLowerCase();
             user.password = StringUtils.replaceSpaces(password);
             UserController.setUser(user);

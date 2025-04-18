@@ -52,8 +52,6 @@ const Dot = styled.div`
     }
 `
 
-
-
 export default function OnlineStatusComponent({isTyping, isOnline, lastOnlineDate}) {
     return (
         isTyping ?  <OnlineStatusText>Пишет<DotsContainer><Dot/> <Dot/> <Dot/></DotsContainer></OnlineStatusText> :

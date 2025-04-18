@@ -1,18 +1,19 @@
 import styled, {keyframes} from "styled-components";
-import {useEffect, useState} from "react";
-import UserController from "../../../../store/UserController";
-import CameraImg from "../../../../img/camera2.png"
-import Field from "./Field";
-import CloseImage from "../../../../img/close2.png";
-import FireBase from "../../../../api/external/FireBase";
-import UserApi from "../../../../api/internal/controllers/UserApi";
+import {useEffect, useRef, useState} from "react";
+import CameraImg from "../../../../../img/camera2.png"
+import CloseImage from "../../../../../img/close2.png";
 import {observer} from "mobx-react-lite";
-import UserDtoShort from "../../../../api/internal/dto/UserDtoShort";
-import DateField from "./DateField";
-import NicknameField from "./NicknameField";
 import ImageResizer from "./ImageResizer";
-import Loader from "../../../authentication/registration/components/Loader";
-import ClientController from "../../../../store/ClientController";
+import UserController from "../../../../../store/UserController";
+import IndividualDtoShort from "../../../../../api/internal/dto/IndividualDtoShort";
+import FireBase from "../../../../../api/external/FireBase";
+import UserApi from "../../../../../api/internal/controllers/UserApi";
+import ClientController from "../../../../../store/ClientController";
+import DateField from "./fields/DateField";
+import Field from "./fields/Field";
+import NicknameField from "./fields/NicknameField";
+import Loader from "../../../../authentication/registration/components/Loader";
+import ActiveChatController from "../../../../../store/ActiveChatController";
 
 const fadeIn = keyframes`
     from {
@@ -197,10 +198,15 @@ const Profile = observer(({ setVisible, visible }) => {
 
     const [loading, setLoading] = useState(false);
     const [isFirstRender, setIsFirstRender] = useState(true);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         visible && isFirstRender && setIsFirstRender(false);
     }, [visible]);
+
+    useEffect(() => {
+        fileInputRef.current.value = ''
+    }, [visible, resizerIsVisible]);
 
     useEffect(() => {
         setName(user.name);
@@ -234,7 +240,7 @@ const Profile = observer(({ setVisible, visible }) => {
     }
 
     async function saveUser() {
-        const newUserData = new UserDtoShort(user.id, nickname, name, surname, new Date(birthdate), aboutMe,
+        const newUserData = new IndividualDtoShort(user.id, nickname, name, surname, birthdate ? new Date(birthdate) : null, aboutMe,
             avatarChanged ? await FireBase.uploadAvatar(FireBase.base64ToFile(avatar, user.id), user.id) : avatar
         );
         UserApi.edit(newUserData).then(() => {
@@ -263,7 +269,9 @@ const Profile = observer(({ setVisible, visible }) => {
     return (
         user && (
             <>
-                <ShadowMainContainer visible={visible} onClick={() => setVisible(false)} isFirstRender={isFirstRender}>
+                <ShadowMainContainer visible={visible}
+                                     isFirstRender={isFirstRender}
+                                     onMouseDown={e => e.target === e.currentTarget && setVisible(false)}>
                     <ModalContainer onClick={e => e.stopPropagation()}>
                         <UpperContainer>
                             <Name>My Profile</Name>
@@ -274,7 +282,7 @@ const Profile = observer(({ setVisible, visible }) => {
                                 <ProfileImage src={avatar}/>
                                 <ChooseAvatarContainer>
                                     <ChooseAvatar src={CameraImg}/>
-                                    <ChooseAvatarTrigger type={"file"} onChange={handleSetAvatar} accept="image/*"/>
+                                    <ChooseAvatarTrigger ref={fileInputRef} type={"file"} onChange={handleSetAvatar} accept="image/*"/>
                                 </ChooseAvatarContainer>
                             </AvatarContainer>
                             <UserInfo>
@@ -302,7 +310,12 @@ const Profile = observer(({ setVisible, visible }) => {
                     </ModalContainer>
                 </ShadowMainContainer>
                 {
-                    resizerIsVisible && <ImageResizer src={selectedImage} visible={resizerIsVisible} setResizerVisible={setResizerVisible} setAvatar={setAvatar} setAvatarChanged={setAvatarChanged}/>
+                    <ImageResizer src={selectedImage}
+                                  visible={resizerIsVisible}
+                                  setResizerVisible={setResizerVisible}
+                                  setAvatar={setAvatar}
+                                  setAvatarChanged={setAvatarChanged}
+                    />
                 }
             </>
         )

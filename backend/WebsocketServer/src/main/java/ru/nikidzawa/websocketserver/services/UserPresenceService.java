@@ -17,4 +17,5 @@ public class UserPresenceService {
         return onlineUsers.remove(userId);
     }
 
+    public boolean userIsOnline(Long userId) {return onlineUsers.contains(userId);}
 }

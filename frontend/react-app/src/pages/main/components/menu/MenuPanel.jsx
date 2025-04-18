@@ -6,7 +6,7 @@ import LogoutImage from "../../../../img/log-out.png";
 import LogoImage from "../../../../img/img.png"
 import {useNavigate} from "react-router-dom";
 import {useState} from "react";
-import Profile from "./Profile";
+import Profile from "./profile/Profile";
 
 const fadeIn = keyframes`
     from {

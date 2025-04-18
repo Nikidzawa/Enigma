@@ -22,6 +22,7 @@ public class ChatRoomDtoFactory {
                         .birthdate(chatRoomDataModel.getBirthdate())
                         .aboutMe(chatRoomDataModel.getAboutMe())
                         .avatarHref(chatRoomDataModel.getAvatarHref())
+                        .lastLogoutDate(chatRoomDataModel.getLastLogoutDate())
                         .build()
                 ).messages(chatRoomDataModel.getLastMessageId() == 0 ? new ArrayList<>() : List.of(
                         MessageDto.builder()

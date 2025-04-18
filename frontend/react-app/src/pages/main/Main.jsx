@@ -1,22 +1,15 @@
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import styled, {keyframes} from "styled-components";
-import ChatApi from "../../api/internal/controllers/ChatApi";
 import UserController from "../../store/UserController";
-import ChatRoom from "./components/ChatRoom";
 import MenuImg from "../../img/menu.png";
 import SearchImg from "../../img/search.png";
 import CloseImg from "../../img/close.png"
 import MenuPanel from "./components/menu/MenuPanel";
 import UserApi from "../../api/internal/controllers/UserApi";
-import UserDtoShort from "../../api/internal/dto/UserDtoShort";
+import IndividualDtoShort from "../../api/internal/dto/IndividualDtoShort";
 import UserProfile from "./components/UserProfile";
-import ChatRoomDto from "../../api/internal/dto/ChatRoomDto";
 import ClientController from "../../store/ClientController";
-import MessageDto from "../../api/internal/dto/MessageDto";
-import UserDto from "../../api/internal/dto/UserDto";
-import ActiveChat from "./components/activeChat/ActiveChat";
 import ChatRooms from "./components/chatRooms/ChatRooms";
-import ChatRoomsController from "../../store/ChatRoomsController";
 import ActiveChatOrEmpty from "./components/activeChat/ActiveChatOrEmpty";
 import ActiveChatController from "../../store/ActiveChatController";
 
@@ -181,14 +174,14 @@ export default function Main() {
             }
         };
         window.addEventListener('keydown', handleKeyDown);
-        return () => {window.removeEventListener('keydown', handleKeyDown);};
+        return () => {window.removeEventListener('keydown', handleKeyDown)};
     }, [])
 
     useEffect(() => {
         const timer = setTimeout(() => {
             if (searchCategory === 'PEOPLES' && searchValue.trim()) {
                 UserApi.search(searchValue.trim(), UserController.getCurrentUser().id).then(response => {
-                    setSearchResults(response.data.map(userInfo => UserDtoShort.fromJSON(userInfo)))
+                    setSearchResults(response.data.map(userInfo => IndividualDtoShort.fromJSON(userInfo)))
                 });
             } else {
                 setSearchResults([]);

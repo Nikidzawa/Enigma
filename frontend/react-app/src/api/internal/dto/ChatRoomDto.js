@@ -1,9 +1,9 @@
-import UserDtoShort from "./UserDtoShort";
+import IndividualDtoShort from "./IndividualDtoShort";
 import MessageDto from "./MessageDto";
 
 export default class ChatRoomDto {
     constructor(companion, messages, chat, unreadCount) {
-        this.companion = UserDtoShort.fromJSON(companion);
+        this.companion = IndividualDtoShort.fromJSON(companion);
         this.messages = messages.map(message => MessageDto.fromJSON(message));
         this.chat = chat;
         this.unreadCount = unreadCount;

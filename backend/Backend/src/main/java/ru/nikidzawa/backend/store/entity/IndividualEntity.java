@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -42,4 +43,7 @@ public class IndividualEntity {
 
     @Column(name = "avatar_href", nullable = true)
     String avatarHref;
+
+    @Column(name = "last_logout_dt", nullable = false)
+    LocalDateTime lastLogoutDate;
 }

@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class PresenceStatus {
-    String userId;
+    Long userId;
     Boolean isOnline;
     LocalDateTime lastOnlineDate;
 
-    public PresenceStatus(String userId, Boolean isOnline, LocalDateTime lastOnlineDate) {
+    public PresenceStatus(Long userId, Boolean isOnline, LocalDateTime lastOnlineDate) {
         this.userId = userId;
         this.isOnline = isOnline;
         this.lastOnlineDate = lastOnlineDate;

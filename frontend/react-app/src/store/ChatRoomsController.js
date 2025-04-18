@@ -1,9 +1,10 @@
-import { makeAutoObservable } from "mobx";
+import {makeAutoObservable} from "mobx";
 import UserApi from "../api/internal/controllers/UserApi";
-import UserDto from "../api/internal/dto/UserDto";
 import MessageReadResponse from "../network/response/MessageReadResponse";
 import MessageDto from "../api/internal/dto/MessageDto";
 import ChatRoomDto from "../api/internal/dto/ChatRoomDto";
+import IndividualDtoShort from "../api/internal/dto/IndividualDtoShort";
+import PresenceResponse from "../network/response/PresenceResponse";
 
 class ChatRoomsController {
     chatRooms = [];
@@ -45,6 +46,12 @@ class ChatRoomsController {
     initChatRoomSubscriptions(chatRoom) {
         const companionId = chatRoom.companion.id;
 
+        // Подписка на получение онлайн статуса пользователя
+        const presenceSubscription = this.stompClient.subscribe(`/client/${companionId}/personal/presence`,
+            this.changeOnline
+        );
+        this.subscriptions.set(`presence-${companionId}`, presenceSubscription.unsubscribe);
+
         // Подписка на изменения профиля
         const profileSubscription = this.stompClient.subscribe(
             `/client/${companionId}/profile/changed`,
@@ -64,24 +71,34 @@ class ChatRoomsController {
         const messageDto = MessageDto.fromRequest(JSON.parse(message.body));
         try {
             const response = await UserApi.getUserById(messageDto.senderId);
-            const companion = UserDto.fromJSON(response.data);
+            const companion = IndividualDtoShort.fromJSON(response.data);
             this.updateLastMessageOrAddChat({
                 message: messageDto,
                 companion: companion,
             });
-            console.log(companion)
-            console.log(this.chatRooms)
+
             this.addNotification(companion.id)
         } catch (error) {
             console.error("Failed to handle incoming message:", error);
         }
     };
 
+    changeOnline = async (message) => {
+        const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
+        if (presenceResponse.lastOnlineDate) {
+            this.chatRooms = this.chatRooms.map((chat) =>
+                chat.companion.id === presenceResponse.userId ? {
+                    ...chat, companion: {...chat.companion, lastLogoutDate: presenceResponse.lastOnlineDate}
+                } : chat
+            );
+        }
+    }
+
     handleProfileChange = async (message) => {
         try {
             const { userId } = JSON.parse(message.body);
             const response = await UserApi.getUserById(userId);
-            const userDto = UserDto.fromJSON(response.data);
+            const userDto = IndividualDtoShort.fromJSON(response.data);
 
             this.updateChatRoomCompanion(userDto);
         } catch (error) {

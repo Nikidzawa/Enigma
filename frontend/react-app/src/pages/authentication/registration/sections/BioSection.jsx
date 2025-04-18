@@ -6,9 +6,9 @@ import {useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
 import EmailCodeController from "../store/EmailCodeController";
-import UserDto from "../../../../api/internal/dto/UserDto";
+import IndividualDtoFull from "../../../../api/internal/dto/IndividualDtoFull";
 import FireBase from "../../../../api/external/FireBase";
-import ImageResizer from "../../../main/components/menu/ImageResizer";
+import ImageResizer from "../../../main/components/menu/profile/ImageResizer";
 
 const MainContainer = styled.div`
     display: flex;
@@ -104,11 +104,12 @@ export default function BioSection ({goBack}) {
     const [selectedImage, setSelectedImage] = useState(null)
 
     async function register() {
-        const userDto = new UserDto();
+        const userDto = new IndividualDtoFull();
         userDto.name = name;
         userDto.surname = surname;
         userDto.email = localStorage.getItem("email") || EmailCodeController.getEmail();
         userDto.password = localStorage.getItem("password");
+        userDto.lastLogoutDate = new Date();
 
         if (userDto.name && userDto.email && userDto.password) {
             UserApi.save(userDto).then(

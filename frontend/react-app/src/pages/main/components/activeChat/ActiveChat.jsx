@@ -1,21 +1,19 @@
 import styled from "styled-components";
 import SendImage from "../../../../img/send.png"
-import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import MessagesSection from "./MessagesSection";
-import PresenceApi from "../../../../api/internal/controllers/PresenceApi";
-import PresenceDto from "../../../../api/internal/dto/PresenceDto";
 import ClientController from "../../../../store/ClientController";
 import PresenceResponse from "../../../../network/response/PresenceResponse";
-import UserDto from "../../../../api/internal/dto/UserDto";
 import TypingResponse from "../../../../network/response/TypingResponse";
 import UserController from "../../../../store/UserController";
 import MessageDto from "../../../../api/internal/dto/MessageDto";
 import MessagesApi from "../../../../api/internal/controllers/MessagesApi";
 import MessageRequest from "../../../../network/request/MessageRequest";
-import OnlineStatusComponent from "../menu/OnlineStatusComponent";
-import InfoProfile from "../menu/InfoProfile";
+import OnlineStatusComponent from "../onlineStatus/OnlineStatusComponent";
 import UserApi from "../../../../api/internal/controllers/UserApi";
 import ChatRoomsController from "../../../../store/ChatRoomsController";
+import IndividualDtoShort from "../../../../api/internal/dto/IndividualDtoShort";
+import InfoProfile from "../menu/profile/InfoProfile";
 
 const MainContainer = styled.div`
     flex: 1;
@@ -89,19 +87,20 @@ export default function ActiveChat ({activeChat}) {
 
     useEffect(() => {
         if (stompClient) {
-            // Подписка на получение статуса пользователя
+
+            // Подписка на получение онлайн статуса пользователя
             const presenceSubscription = stompClient.subscribe(`/client/${activeChat.companion.id}/personal/presence`, (message) => {
                 const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
                 if (activeChat?.companion.id === presenceResponse.userId) {
                     setIsOnline(presenceResponse.isOnline);
-                    setLastOnlineDate(presenceResponse.lastOnlineDate);
+                    presenceResponse.lastOnlineDate && setLastOnlineDate(presenceResponse.lastOnlineDate);
                 }
             });
 
             // Подписка на обновление профиля
             const profileSubscription = stompClient.subscribe(`/client/${activeChat.companion.id}/profile/changed`, (message) => {
                 UserApi.getUserById(JSON.parse(message.body).userId).then(response => {
-                    const userDto = UserDto.fromJSON(response.data);
+                    const userDto = IndividualDtoShort.fromJSON(response.data);
                     if (activeChat?.companion.id === userDto.id) {
                         setUser(userDto);
                     }
@@ -123,6 +122,9 @@ export default function ActiveChat ({activeChat}) {
                 }
             })
 
+            // Отправка запроса на получение статуса пользователя
+            ClientController.checkPresence(activeChat.companion.id);
+
             return () => {
                 typingSubscription.unsubscribe();
                 presenceSubscription.unsubscribe();
@@ -135,16 +137,11 @@ export default function ActiveChat ({activeChat}) {
         try {
             setUser(activeChat.companion);
             setChat(activeChat.chat);
-
-            PresenceApi.getActual(activeChat.companion.id).then(response => {
-                const presenceData = PresenceDto.fromJSON(response.data);
-                setIsOnline(presenceData.isOnline);
-                setLastOnlineDate(presenceData.lastOnlineDate);
-            });
+            setLastOnlineDate(activeChat.companion.lastLogoutDate)
         } finally {
             setLoading(false);
         }
-        }, []);
+    }, [activeChat]);
 
     function onInput(e) {
         setText(e.target.value);

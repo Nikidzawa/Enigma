@@ -1,4 +1,4 @@
-import UserDto from "./UserDto";
+import IndividualDtoShort from "./IndividualDtoShort";
 
 export default class JwtTokenAndUser {
     constructor(token, user) {
@@ -9,7 +9,7 @@ export default class JwtTokenAndUser {
     static fromJSON(data) {
         new JwtTokenAndUser(
             data.token,
-            UserDto.fromJSON(data.user)
+            IndividualDtoShort.fromJSON(data.user)
         )
     }
 }
