@@ -8,13 +8,12 @@ import FailFieldValidation from "../../components/fields/FailFieldValidation";
 import EmailCodeController from "../store/EmailCodeController";
 import IndividualDtoFull from "../../../../api/internal/dto/IndividualDtoFull";
 import FireBase from "../../../../api/external/FireBase";
-import ImageResizer from "../../../main/components/menu/profile/ImageResizer";
+import ImageResizer from "../../../common/ImageResizer";
 
 const MainContainer = styled.div`
     display: flex;
     justify-content: center;
 `
-
 
 const Image = styled.img`
     position: absolute;

@@ -6,7 +6,7 @@ import LogoutImage from "../../../../img/log-out.png";
 import LogoImage from "../../../../img/img.png"
 import {useNavigate} from "react-router-dom";
 import {useState} from "react";
-import Profile from "./profile/Profile";
+import MyProfile from "./profile/MyProfile";
 
 const fadeIn = keyframes`
     from {
@@ -169,7 +169,7 @@ export default function MenuPanel ({setMenuIsVisible, menuIsVisible}) {
                     </MessengerInfo>
                 </LeftPanel>
             </ShadowMainContainer>
-            <Profile visible={profileVisible} setVisible={setProfileVisible}/>
+            <MyProfile visible={profileVisible} setVisible={setProfileVisible}/>
         </>
     )
 }

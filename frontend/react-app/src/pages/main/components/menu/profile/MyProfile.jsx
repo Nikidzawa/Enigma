@@ -3,16 +3,17 @@ import {useEffect, useRef, useState} from "react";
 import CameraImg from "../../../../../img/camera2.png"
 import CloseImage from "../../../../../img/close2.png";
 import {observer} from "mobx-react-lite";
-import ImageResizer from "./ImageResizer";
+import ImageResizer from "../../../../common/ImageResizer";
 import UserController from "../../../../../store/UserController";
 import IndividualDtoShort from "../../../../../api/internal/dto/IndividualDtoShort";
 import FireBase from "../../../../../api/external/FireBase";
 import UserApi from "../../../../../api/internal/controllers/UserApi";
 import ClientController from "../../../../../store/ClientController";
 import DateField from "./fields/DateField";
-import Field from "./fields/Field";
+import TextField from "./fields/TextField";
 import NicknameField from "./fields/NicknameField";
 import Loader from "../../../../authentication/registration/components/Loader";
+import ModalController from "../../../../../store/ModalController";
 import ActiveChatController from "../../../../../store/ActiveChatController";
 
 const fadeIn = keyframes`
@@ -179,7 +180,7 @@ const Exception = styled.div`
     padding-left: 1px;
 `
 
-const Profile = observer(({ setVisible, visible }) => {
+const MyProfile = observer(({ setVisible, visible }) => {
     const user = UserController.getCurrentUser();
 
     const [name, setName] = useState("");
@@ -200,12 +201,30 @@ const Profile = observer(({ setVisible, visible }) => {
     const [isFirstRender, setIsFirstRender] = useState(true);
     const fileInputRef = useRef(null);
 
-    useEffect(() => {
-        visible && isFirstRender && setIsFirstRender(false);
-    }, [visible]);
+    const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            if (resizerIsVisible) {
+                setResizerVisible(false);
+            } else {
+                setVisible(false);
+            }
+        }
+    };
 
     useEffect(() => {
+        visible && isFirstRender && setIsFirstRender(false);
+
         fileInputRef.current.value = ''
+
+        ModalController.setVisible(visible)
+
+        if (visible) {
+            window.addEventListener('keydown', handleKeyDown);
+        } else {
+            window.removeEventListener('keydown', handleKeyDown)
+        }
+
+        return () => window.removeEventListener('keydown', handleKeyDown);
     }, [visible, resizerIsVisible]);
 
     useEffect(() => {
@@ -292,17 +311,17 @@ const Profile = observer(({ setVisible, visible }) => {
                         </AvatarSection>
                         <Fields>
                             <Bio>
-                                <Field placeholder={'Your name'} label={'First name'} value={name} setValue={setName}
-                                       maxLength={25}/>
-                                <Field placeholder={"Your surname"} label={'Last name'} value={surname}
-                                       setValue={setSurname} maxLength={25}/>
+                                <TextField placeholder={'Your name'} label={'First name'} value={name} setValue={setName}
+                                           maxLength={25}/>
+                                <TextField placeholder={"Your surname"} label={'Last name'} value={surname}
+                                           setValue={setSurname} maxLength={25}/>
                             </Bio>
                             {nameIsEmptyEx && <Exception>Имя не может быть пустым</Exception>}
                             <NicknameField value={nickname} setValue={setNickname}/>
                             {nicknameAlreadyUsed && <Exception>Никнейм уже используется</Exception>}
                             <DateField value={birthdate} setValue={setBirthdate}/>
-                            <Field placeholder={"Tell about you"} label={'About me'} value={aboutMe} setValue={setAboutMe}
-                                   maxLength={120}/>
+                            <TextField placeholder={"Tell about you"} label={'About me'} value={aboutMe} setValue={setAboutMe}
+                                       maxLength={120}/>
                         </Fields>
                         <ButtonContainer>
                             <Button onClick={validate}>{loading ? <Loader/> : "Edit"}</Button>
@@ -322,4 +341,4 @@ const Profile = observer(({ setVisible, visible }) => {
     )
 });
 
-export default Profile;
+export default MyProfile;

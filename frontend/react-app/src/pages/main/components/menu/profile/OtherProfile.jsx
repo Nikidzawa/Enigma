@@ -7,6 +7,7 @@ import NicknameField from "./fields/NicknameField";
 import DateField from "./fields/DateField";
 import ActiveChatController from "../../../../../store/ActiveChatController";
 import ChatRoomsController from "../../../../../store/ChatRoomsController";
+import ModalController from "../../../../../store/ModalController";
 
 const fadeIn = keyframes`
     from {
@@ -132,7 +133,7 @@ const OnlineStatusContainer = styled.div`
     padding-top: 2px;
 `
 
-export default function InfoProfile({user, isOnline, lastOnlineDate, visible, setVisible}) {
+export default function OtherProfile({user, isOnline, lastOnlineDate, visible, setVisible}) {
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
     const [nickname, setNickname] = useState("");
@@ -142,8 +143,24 @@ export default function InfoProfile({user, isOnline, lastOnlineDate, visible, se
 
     const [isFirstRender, setIsFirstRender] = useState(true);
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            setVisible(false)
+        }
+    };
+
     useEffect(() => {
         visible && isFirstRender && setIsFirstRender(false);
+
+        ModalController.setVisible(visible)
+
+        if (visible) {
+            window.addEventListener('keydown', handleKeyDown);
+        } else {
+            window.removeEventListener('keydown', handleKeyDown)
+        }
+
+        return () => window.removeEventListener('keydown', handleKeyDown);
     }, [visible]);
 
     useEffect(() => {

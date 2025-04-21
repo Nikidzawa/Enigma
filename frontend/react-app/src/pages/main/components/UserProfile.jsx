@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import {useEffect, useState} from "react";
-import InfoProfile from "./menu/profile/InfoProfile";
+import OtherProfile from "./menu/profile/OtherProfile";
 import ClientController from "../../../store/ClientController";
 import PresenceResponse from "../../../network/response/PresenceResponse";
 
@@ -88,8 +88,8 @@ export default function UserProfile({userDto}) {
                 </ChatRoomContainer>
             </MainContainer>
             {
-                <InfoProfile user={userDto} visible={profileVisible} setVisible={setProfileVisible}
-                                        isOnline={isOnline} lastOnlineDate={lastOnlineDate}
+                <OtherProfile user={userDto} visible={profileVisible} setVisible={setProfileVisible}
+                              isOnline={isOnline} lastOnlineDate={lastOnlineDate}
                 />
             }
         </>

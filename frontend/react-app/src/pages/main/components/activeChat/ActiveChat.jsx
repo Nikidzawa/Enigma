@@ -13,7 +13,9 @@ import OnlineStatusComponent from "../onlineStatus/OnlineStatusComponent";
 import UserApi from "../../../../api/internal/controllers/UserApi";
 import ChatRoomsController from "../../../../store/ChatRoomsController";
 import IndividualDtoShort from "../../../../api/internal/dto/IndividualDtoShort";
-import InfoProfile from "../menu/profile/InfoProfile";
+import OtherProfile from "../menu/profile/OtherProfile";
+import ModalController from "../../../../store/ModalController";
+import ActiveChatController from "../../../../store/ActiveChatController";
 
 const MainContainer = styled.div`
     flex: 1;
@@ -134,10 +136,14 @@ export default function ActiveChat ({activeChat}) {
     }, [stompClient]);
 
     useEffect(() => {
+        ModalController.setVisible(profileVisible)
+    }, [profileVisible]);
+
+    useEffect(() => {
         try {
             setUser(activeChat.companion);
             setChat(activeChat.chat);
-            setLastOnlineDate(activeChat.companion.lastLogoutDate)
+            setLastOnlineDate(activeChat.companion.lastLogoutDate);
         } finally {
             setLoading(false);
         }
@@ -187,8 +193,8 @@ export default function ActiveChat ({activeChat}) {
                     <SendButton onClick={sendMessage} src={SendImage}/>
                 </BottomSection>
             </MainContainer>
-            <InfoProfile user={user} isOnline={isOnline} lastOnlineDate={lastOnlineDate}
-                         visible={profileVisible} setVisible={setProfileVisible}
+            <OtherProfile user={user} isOnline={isOnline} lastOnlineDate={lastOnlineDate}
+                          visible={profileVisible} setVisible={setProfileVisible}
             />
         </>
     );

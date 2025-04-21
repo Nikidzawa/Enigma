@@ -35,7 +35,7 @@ const FieldContainer = styled.div`
     gap: 10px;
 `
 
-export default function Field ({placeholder, label, value, setValue, maxLength}) {
+export default function TextField ({placeholder, label, value, setValue, maxLength}) {
     return (
         <FieldContainer>
             <Container>

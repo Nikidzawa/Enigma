@@ -12,6 +12,7 @@ import ClientController from "../../store/ClientController";
 import ChatRooms from "./components/chatRooms/ChatRooms";
 import ActiveChatOrEmpty from "./components/activeChat/ActiveChatOrEmpty";
 import ActiveChatController from "../../store/ActiveChatController";
+import ModalController from "../../store/ModalController";
 
 const slideOutToBottom = keyframes`
     from {
@@ -169,7 +170,7 @@ export default function Main() {
         }
 
         const handleKeyDown = (e) => {
-            if (e.code === 'Escape') {
+            if (e.code === 'Escape' && !ModalController.isVisible()) {
                 ActiveChatController.setActiveChat(null);
             }
         };
