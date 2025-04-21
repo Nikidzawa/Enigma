@@ -1,13 +1,13 @@
 import {useEffect, useState} from "react";
 import styled from "styled-components";
-import MenuImg from "../../img/menu.png";
-import MenuPanel from "./components/menu/MenuPanel";
-import ActiveChatOrEmpty from "./components/activeChat/ActiveChatOrEmpty";
+import ActiveChatSection from "./sections/activeChat/ActiveChatSection";
 import ActiveChatController from "../../store/ActiveChatController";
 import ModalController from "../../store/ModalController";
 import SearchInput from "./sections/search/components/SearchInput";
 import SearchOrChatRoomsSection from "./sections/SearchOrChatRoomsSection";
 import SearchController from "../../store/SearchController";
+import MenuButton from "./sections/menu/components/MenuButton";
+import MenuSection from "./sections/menu/MenuSection";
 
 const MainContainer = styled.main`
     height: 100vh;
@@ -34,12 +34,6 @@ const TopMenuContainer = styled.div`
     gap: 12px;
 `
 
-const MenuButton = styled.img`
-    height: 22px;
-    width: 26px;
-    cursor: pointer;
-`
-
 const Resizer = styled.div`
     width: 2px;
     cursor: ew-resize;
@@ -53,8 +47,6 @@ const Resizer = styled.div`
 export default function Main() {
     const [chatListWidth, setChatListWidth] = useState(500);
     const [isResizing, setIsResizing] = useState(false);
-
-    const [menuIsVisible, setMenuIsVisible] = useState(false);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -80,20 +72,25 @@ export default function Main() {
         }
     };
 
+    const startResizing = (e) => {
+        e.preventDefault();
+        setIsResizing(true);
+    }
+
     return (
         <MainContainer onMouseMove={handleMouseMove}
                        onMouseUp={() => setIsResizing(false)}
                        onMouseLeave={() => setIsResizing(false)}>
             <LeftMenuContainer width={chatListWidth}>
                 <TopMenuContainer>
-                    <MenuButton src={MenuImg} onClick={() => setMenuIsVisible(true)}/>
+                    <MenuButton/>
                     <SearchInput/>
                 </TopMenuContainer>
                 <SearchOrChatRoomsSection/>
-                <Resizer onMouseDown={e => {e.preventDefault(); setIsResizing(true)}}/>
+                <Resizer onMouseDown={startResizing}/>
             </LeftMenuContainer>
-            <MenuPanel setMenuIsVisible={setMenuIsVisible} menuIsVisible={menuIsVisible}/>
-            <ActiveChatOrEmpty/>
+            <MenuSection/>
+            <ActiveChatSection/>
         </MainContainer>
     );
 }

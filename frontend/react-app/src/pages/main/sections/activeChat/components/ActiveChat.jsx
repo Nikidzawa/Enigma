@@ -1,21 +1,20 @@
 import styled from "styled-components";
-import SendImage from "../../../../img/send.png"
+import SendImage from "../../../../../img/send.png"
 import {useEffect, useRef, useState} from "react";
-import MessagesSection from "./MessagesSection";
-import ClientController from "../../../../store/ClientController";
-import PresenceResponse from "../../../../network/response/PresenceResponse";
-import TypingResponse from "../../../../network/response/TypingResponse";
-import UserController from "../../../../store/UserController";
-import MessageDto from "../../../../api/internal/dto/MessageDto";
-import MessagesApi from "../../../../api/internal/controllers/MessagesApi";
-import MessageRequest from "../../../../network/request/MessageRequest";
-import OnlineStatusComponent from "../onlineStatus/OnlineStatusComponent";
-import UserApi from "../../../../api/internal/controllers/UserApi";
-import ChatRoomsController from "../../../../store/ChatRoomsController";
-import IndividualDtoShort from "../../../../api/internal/dto/IndividualDtoShort";
-import OtherProfile from "../menu/profile/OtherProfile";
-import ModalController from "../../../../store/ModalController";
-import ActiveChatController from "../../../../store/ActiveChatController";
+import ActiveChatMessages from "./ActiveChatMessages";
+import ClientController from "../../../../../store/ClientController";
+import PresenceResponse from "../../../../../network/response/PresenceResponse";
+import TypingResponse from "../../../../../network/response/TypingResponse";
+import UserController from "../../../../../store/UserController";
+import MessageDto from "../../../../../api/internal/dto/MessageDto";
+import MessagesApi from "../../../../../api/internal/controllers/MessagesApi";
+import MessageRequest from "../../../../../network/request/MessageRequest";
+import OnlineStatusComponent from "../../../components/onlineStatus/OnlineStatusComponent";
+import UserApi from "../../../../../api/internal/controllers/UserApi";
+import ChatRoomsController from "../../../../../store/ChatRoomsController";
+import IndividualDtoShort from "../../../../../api/internal/dto/IndividualDtoShort";
+import OtherProfile from "../../../components/menu/profile/OtherProfile";
+import ModalController from "../../../../../store/ModalController";
 
 const MainContainer = styled.div`
     flex: 1;
@@ -185,7 +184,7 @@ export default function ActiveChat ({activeChat}) {
                     <Name onClick={() => setProfileVisible(true)}>{user.name}</Name>
                     <OnlineStatusComponent isTyping={isTyping} isOnline={isOnline} lastOnlineDate={lastOnlineDate}/>
                 </UpperSection>
-                <MessagesSection ref={messagesSectionRef} chat={chat} user={user}/>
+                <ActiveChatMessages ref={messagesSectionRef} chat={chat} user={user}/>
                 <BottomSection>
                     <Input value={text} onInput={onInput} placeholder={"Введите сообщение"}
                            onKeyDown={(e) => e.key === "Enter" && !sendingMessage && sendMessage()}

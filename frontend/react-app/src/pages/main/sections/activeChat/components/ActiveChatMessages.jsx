@@ -1,14 +1,14 @@
 import styled from "styled-components";
 import {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react";
-import MessagesApi from "../../../../api/internal/controllers/MessagesApi";
-import MessageDto from "../../../../api/internal/dto/MessageDto";
-import UserController from "../../../../store/UserController";
-import DateParser from "../../../../helpers/DateParser";
-import WhiteCheckMarkImg from "../../../../img/two-ticks.png"
-import BlackCheckMark from "../../../../img/two-ticks-black.png"
-import ClientController from "../../../../store/ClientController";
-import MessageReadResponse from "../../../../network/response/MessageReadResponse";
-import ChatRoomsController from "../../../../store/ChatRoomsController";
+import MessagesApi from "../../../../../api/internal/controllers/MessagesApi";
+import MessageDto from "../../../../../api/internal/dto/MessageDto";
+import UserController from "../../../../../store/UserController";
+import DateParser from "../../../../../helpers/DateParser";
+import WhiteCheckMarkImg from "../../../../../img/two-ticks.png"
+import BlackCheckMark from "../../../../../img/two-ticks-black.png"
+import ClientController from "../../../../../store/ClientController";
+import MessageReadResponse from "../../../../../network/response/MessageReadResponse";
+import ChatRoomsController from "../../../../../store/ChatRoomsController";
 
 const MessagesSectionMainComponent = styled.div`
     height: calc(100% - 110px);
@@ -103,7 +103,7 @@ const ReadMark = styled.img`
     height: 8px;
 `
 
-const MessagesSection = forwardRef(({chat, user}, ref) => {
+const ActiveChatMessages = forwardRef(({chat, user}, ref) => {
     const stompClient = ClientController.getClient();
     const [messages, setMessages] = useState([]);
 
@@ -297,4 +297,4 @@ const MessagesSection = forwardRef(({chat, user}, ref) => {
     )
 })
 
-export default MessagesSection;
+export default ActiveChatMessages;

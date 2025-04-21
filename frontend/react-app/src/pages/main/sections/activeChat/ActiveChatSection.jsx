@@ -1,4 +1,4 @@
-import ActiveChat from "./ActiveChat";
+import ActiveChat from "./components/ActiveChat";
 import ActiveChatController from "../../../../store/ActiveChatController";
 import {observer} from "mobx-react-lite";
 import styled from "styled-components";
@@ -19,7 +19,7 @@ const EmptyText = styled.div`
     text-align: center;
 `
 
-export default observer(function ActiveChatOrEmpty () {
+export default observer(function ActiveChatSection() {
     const activeChat = ActiveChatController.getActiveChat();
 
     return (
