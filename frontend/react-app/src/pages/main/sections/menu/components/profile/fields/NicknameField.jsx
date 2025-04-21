@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import SobachkaImage from "../../../../../../img/email.png";
+import SobachkaImage from "../../../../../../../img/email.png";
 
 const Container = styled.div`
     position: relative;

@@ -1,15 +1,15 @@
 import styled, {keyframes} from "styled-components";
 import UserProfile from "./components/UserProfile";
 import {useEffect, useState} from "react";
-import UserApi from "../../../../api/internal/controllers/UserApi";
-import UserController from "../../../../store/UserController";
-import IndividualDtoShort from "../../../../api/internal/dto/IndividualDtoShort";
+import UserApi from "../../../../../api/internal/controllers/UserApi";
+import UserController from "../../../../../store/UserController";
+import IndividualDtoShort from "../../../../../api/internal/dto/IndividualDtoShort";
 import {observer} from "mobx-react-lite";
-import SearchController from "../../../../store/SearchController";
+import SearchController from "../../../../../store/SearchController";
 
 const slideOutToBottom = keyframes`
     from {
-        transform: translateY(-35%);
+        transform: translateY(-50%);
         opacity: 0;
     }
     to {
@@ -26,7 +26,6 @@ const slideOutToUp = keyframes`
     to {
         transform: translateY(-35%);
         opacity: 0;
-        position: absolute;
     }
 `;
 
@@ -36,7 +35,7 @@ const SearchCategories = styled.div`
     height: 25px;
     display: flex;
     align-items: center;
-    animation: ${props => props.isActive ? slideOutToBottom : slideOutToUp} 0.25s forwards;
+    animation: ${props => props.isActive ? slideOutToBottom : slideOutToUp} 0.2s forwards;
 `
 
 const SearchCategory = styled.div`
@@ -59,6 +58,7 @@ const SearchLabel = styled.div`
     padding: 5px;
     margin-top: 5px;
     font-size: 15px;
+    animation: ${props => props.isActive ? slideOutToBottom : slideOutToUp} 0.2s forwards;
 `
 
 const EmptySearchResult = styled.div`
@@ -72,7 +72,15 @@ const EmptySearchResult = styled.div`
 const SearchPanel = styled.div`
     display: flex;
     flex-direction: column;
-    height: 40%;
+    height: 40vh;
+`
+
+const MainContainer = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 `
 
 export default observer(function SearchSection({isSearchMode}) {
@@ -96,7 +104,7 @@ export default observer(function SearchSection({isSearchMode}) {
     }, [searchCategory, searchValue]);
 
     return (
-        <>
+        <MainContainer>
             <SearchCategories isActive={isSearchMode}>
                 <SearchCategory className={searchCategory === 'MESSAGES' ? 'active' : ''}
                                 onClick={() => setSearchCategory('MESSAGES')}>Сообщения</SearchCategory>
@@ -104,17 +112,22 @@ export default observer(function SearchSection({isSearchMode}) {
                                 onClick={() => setSearchCategory('PEOPLES')}>Люди</SearchCategory>
             </SearchCategories>
             <SearchPanel>
-                <SearchLabel>Глобальный поиск</SearchLabel>
                 {
-                    searchCategory === 'PEOPLES' && searchResults.map(userDto => (
-                            <UserProfile key={userDto.id} userDto={userDto}/>
-                        )
-                    )
-                }
-                {
-                    searchResults.length === 0 && <EmptySearchResult>Ничего не найдено</EmptySearchResult>
+                    isSearchMode &&
+                    <>
+                        <SearchLabel isActive={isSearchMode}>Глобальный поиск</SearchLabel>
+                        {
+                            searchCategory === 'PEOPLES' && searchResults.map(userDto => (
+                                    <UserProfile key={userDto.id} userDto={userDto}/>
+                                )
+                            )
+                        }
+                        {
+                            searchResults.length === 0 && <EmptySearchResult>Ничего не найдено</EmptySearchResult>
+                        }
+                    </>
                 }
             </SearchPanel>
-        </>
+        </MainContainer>
     )
 })

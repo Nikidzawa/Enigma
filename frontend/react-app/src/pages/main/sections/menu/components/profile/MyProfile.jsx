@@ -1,20 +1,19 @@
 import styled, {keyframes} from "styled-components";
 import {useEffect, useRef, useState} from "react";
-import CameraImg from "../../../../../img/camera2.png"
-import CloseImage from "../../../../../img/close2.png";
+import CameraImg from "../../../../../../img/camera2.png"
+import CloseImage from "../../../../../../img/close2.png";
 import {observer} from "mobx-react-lite";
-import ImageResizer from "../../../../common/ImageResizer";
-import UserController from "../../../../../store/UserController";
-import IndividualDtoShort from "../../../../../api/internal/dto/IndividualDtoShort";
-import FireBase from "../../../../../api/external/FireBase";
-import UserApi from "../../../../../api/internal/controllers/UserApi";
-import ClientController from "../../../../../store/ClientController";
+import ImageResizer from "../../../../../components/ImageResizer";
+import UserController from "../../../../../../store/UserController";
+import IndividualDtoShort from "../../../../../../api/internal/dto/IndividualDtoShort";
+import FireBase from "../../../../../../api/external/FireBase";
+import UserApi from "../../../../../../api/internal/controllers/UserApi";
+import ClientController from "../../../../../../store/ClientController";
 import DateField from "./fields/DateField";
 import TextField from "./fields/TextField";
 import NicknameField from "./fields/NicknameField";
-import Loader from "../../../../authentication/registration/components/Loader";
-import ModalController from "../../../../../store/ModalController";
-import ActiveChatController from "../../../../../store/ActiveChatController";
+import Loader from "../../../../../authentication/registration/components/Loader";
+import ModalController from "../../../../../../store/ModalController";
 
 const fadeIn = keyframes`
     from {

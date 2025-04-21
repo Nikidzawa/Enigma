@@ -4,7 +4,8 @@ import MyProfileImage from "../../../../../img/account.png";
 import SettingsImage from "../../../../../img/setting.png";
 import LogoutImage from "../../../../../img/log-out.png";
 import LogoImage from "../../../../../img/img.png"
-import {useNavigate} from "react-router-dom";
+import ClientController from "../../../../../store/ClientController";
+import ChatRoomsController from "../../../../../store/ChatRoomsController";
 
 const LeftPanel = styled.div`
     position: fixed;
@@ -92,11 +93,12 @@ const MessengerInfo = styled.div`
 `
 
 export default function MenuPanel({menuIsVisible, openProfile}) {
-    const navigate = useNavigate();
 
     function logout () {
         localStorage.removeItem("TOKEN")
-        navigate("/login")
+        ClientController.disconnect();
+        ChatRoomsController.cleanupSubscriptions();
+        window.location.href = '/login';
     }
 
     return (

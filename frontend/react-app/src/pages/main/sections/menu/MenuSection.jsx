@@ -2,7 +2,7 @@ import styled, {keyframes} from "styled-components";
 import {observer} from "mobx-react-lite";
 import MenuController from "../../../../store/MenuController";
 import MenuPanel from "./components/MenuPanel";
-import MyProfile from "../../components/menu/profile/MyProfile";
+import MyProfile from "./components/profile/MyProfile";
 import {useState} from "react";
 
 const fadeIn = keyframes`

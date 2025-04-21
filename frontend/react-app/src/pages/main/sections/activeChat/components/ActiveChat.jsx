@@ -13,7 +13,7 @@ import OnlineStatusComponent from "../../../components/onlineStatus/OnlineStatus
 import UserApi from "../../../../../api/internal/controllers/UserApi";
 import ChatRoomsController from "../../../../../store/ChatRoomsController";
 import IndividualDtoShort from "../../../../../api/internal/dto/IndividualDtoShort";
-import OtherProfile from "../../../components/menu/profile/OtherProfile";
+import OtherProfile from "../../../components/OtherProfile";
 import ModalController from "../../../../../store/ModalController";
 
 const MainContainer = styled.div`

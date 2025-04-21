@@ -1,7 +1,7 @@
 import styled from "styled-components";
-import SearchImg from "../../../../../img/search.png";
-import CloseImg from "../../../../../img/close.png";
-import SearchController from "../../../../../store/SearchController";
+import SearchImg from "../../../../../../img/search.png";
+import CloseImg from "../../../../../../img/close.png";
+import SearchController from "../../../../../../store/SearchController";
 import {observer} from "mobx-react-lite";
 
 const SearchInputComponent = styled.input`
@@ -32,6 +32,13 @@ export default observer(function SearchInput() {
     const isSearching = SearchController.isSearching();
     const searchValue = SearchController.getSearchValue();
 
+    function setValue(e) {
+        if (!isSearching) {
+            SearchController.setIsSearching(true);
+        }
+        SearchController.setSearchValue(e.target.value)
+    }
+
     return (
         <>
             <SearchInputComponent
@@ -40,7 +47,7 @@ export default observer(function SearchInput() {
                     SearchController.setIsSearching(true)
                 }}
                 value={searchValue}
-                onInput={e => SearchController.setSearchValue(e.target.value)}
+                onInput={setValue}
                 placeholder={"Поиск"}
             />
             {

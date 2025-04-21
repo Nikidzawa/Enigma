@@ -1,13 +1,13 @@
 import styled, {keyframes} from "styled-components";
 import {useEffect, useState} from "react";
-import CloseImage from "../../../../../img/close2.png";
-import MailImage from "../../../../../img/mail-blue.png";
-import OnlineStatusComponent from "../../onlineStatus/OnlineStatusComponent";
-import NicknameField from "./fields/NicknameField";
-import DateField from "./fields/DateField";
-import ActiveChatController from "../../../../../store/ActiveChatController";
-import ChatRoomsController from "../../../../../store/ChatRoomsController";
-import ModalController from "../../../../../store/ModalController";
+import CloseImage from "../../../img/close2.png";
+import MailImage from "../../../img/mail-blue.png";
+import OnlineStatusComponent from "./onlineStatus/OnlineStatusComponent";
+import NicknameField from "../sections/menu/components/profile/fields/NicknameField";
+import DateField from "../sections/menu/components/profile/fields/DateField";
+import ActiveChatController from "../../../store/ActiveChatController";
+import ChatRoomsController from "../../../store/ChatRoomsController";
+import ModalController from "../../../store/ModalController";
 
 const fadeIn = keyframes`
     from {

@@ -75,7 +75,7 @@ export default observer(function InitMain() {
         );
     }
 
-    if (user && user.id && stompClient) {
+    if (user && user.id && stompClient && stompClient.connected) {
         return <Main/>;
     }
 })
