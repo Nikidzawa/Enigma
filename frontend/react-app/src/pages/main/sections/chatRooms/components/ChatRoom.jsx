@@ -1,15 +1,15 @@
 import styled from "styled-components";
-import DateParser from "../../../helpers/DateParser";
-import UserController from "../../../store/UserController";
+import DateParser from "../../../../../helpers/DateParser";
+import UserController from "../../../../../store/UserController";
 import {useEffect, useRef, useState} from "react";
-import ClientController from "../../../store/ClientController";
+import ClientController from "../../../../../store/ClientController";
 import {observer} from "mobx-react-lite";
-import PresenceResponse from "../../../network/response/PresenceResponse";
-import TypingResponse from "../../../network/response/TypingResponse";
-import TypingAnimation from "./onlineStatus/TypingAnimation";
-import WhiteCheckMarkImg from "../../../img/two-ticks.png";
-import BlackCheckMark from "../../../img/two-ticks-black.png";
-import ActiveChatController from "../../../store/ActiveChatController";
+import PresenceResponse from "../../../../../network/response/PresenceResponse";
+import TypingResponse from "../../../../../network/response/TypingResponse";
+import TypingAnimation from "../../../components/onlineStatus/TypingAnimation";
+import WhiteCheckMarkImg from "../../../../../img/two-ticks.png";
+import BlackCheckMark from "../../../../../img/two-ticks-black.png";
+import ActiveChatController from "../../../../../store/ActiveChatController";
 
 const MainContainer = styled.div`
     overflow: hidden;

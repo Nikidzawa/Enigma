@@ -1,7 +1,7 @@
 import {HashRouter, Navigate, Route, Routes} from "react-router-dom";
 import Login from "./pages/authentication/login/Login";
-import Main from "./pages/main/Main";
 import Registration from "./pages/authentication/registration/Registration";
+import InitMain from "./pages/main/InitMain";
 
 export default function App() {
     return (
@@ -9,7 +9,7 @@ export default function App() {
             <Routes>
                 <Route path="/registration" element={<Registration/>}/>
                 <Route path="/login" element={<Login/>}/>
-                <Route path="/main" element={<Main/>}/>
+                <Route path="/main" element={<InitMain/>}/>
                 <Route path="/*" element={<Navigate to="/login"/>}/>
             </Routes>
         </HashRouter>
