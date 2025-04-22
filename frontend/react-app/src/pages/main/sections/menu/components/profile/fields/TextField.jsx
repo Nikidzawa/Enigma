@@ -19,11 +19,12 @@ const Input = styled.input`
     background-color: #353535;
     border-radius: 5px;
     color: white;
-    height: 35px;
+    min-height: 35px;
     outline: none;
     font-size: 17px;
     padding-top: 20px;
     padding-left: 10px;
+    padding-right: 5px;
     width: 100%;
 `
 

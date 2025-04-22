@@ -8,6 +8,7 @@ import DateField from "../sections/menu/components/profile/fields/DateField";
 import ActiveChatController from "../../../store/ActiveChatController";
 import ChatRoomsController from "../../../store/ChatRoomsController";
 import ModalController from "../../../store/ModalController";
+import AboutMeField from "../sections/menu/components/profile/fields/AboutMeField";
 
 const fadeIn = keyframes`
     from {
@@ -37,7 +38,7 @@ const ShadowMainContainer = styled.div`
     z-index: 1000;
     opacity: ${props => props.visible ? "1" : "0"};
     pointer-events: ${props => props.visible ? "auto" : "none"};;
-    animation: ${props => props.visible ? fadeIn : props.isFirstRender ? 'none' : fadeOut} 0.2s ease;    
+    animation: ${props => props.visible ? fadeIn : props.isFirstRender ? 'none' : fadeOut} 0.2s ease;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -46,15 +47,14 @@ const ShadowMainContainer = styled.div`
 const ModalContainer = styled.div`
     border-radius: 20px;
     background-color: #1a1a1a;
-    padding: 20px 20px 20px 25px;
     position: relative;
     box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
-    width: 380px;
+    width: 400px;
 `
 
 const ProfileImage = styled.img`
-    width: 110px;
-    height: 110px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
 `
 
@@ -70,7 +70,6 @@ const AvatarSection  = styled.div`
     flex: 1;
     gap: 5px;
     padding-top: 30px;
-    padding-bottom: 15px;
 `
 
 const UserInfo = styled.div`
@@ -86,9 +85,10 @@ const Fio = styled.div`
     max-width: 400px;
 `
 
-const AboutMe = styled.div`
-    width: 350px;
-    cursor: default;
+const Fields = styled.div`
+    display: flex;
+    flex-direction: column;
+    padding: 10px 15px 25px 15px;
 `
 
 const UpperContainer = styled.div`
@@ -102,8 +102,8 @@ const Name = styled.div`
 `
 
 const Close = styled.img`
-    width: 18px;
-    height: 18px;
+    width: 17px;
+    height: 17px;
     cursor: pointer;
 `
 
@@ -130,7 +130,11 @@ const Button = styled.button`
 `
 
 const OnlineStatusContainer = styled.div`
-    padding-top: 2px;
+    padding-bottom: 5px;
+`
+
+const UserData = styled.div`
+    padding: 20px 20px 0 20px;
 `
 
 export default function OtherProfile({user, isOnline, lastOnlineDate, visible, setVisible}) {
@@ -184,31 +188,33 @@ export default function OtherProfile({user, isOnline, lastOnlineDate, visible, s
                                  isFirstRender={isFirstRender}
                                  onMouseDown={e => e.target === e.currentTarget &&  setVisible(false)}>
                 <ModalContainer onClick={e => e.stopPropagation()}>
-                    <UpperContainer>
-                        <Name>Profile</Name>
-                        <Close src={CloseImage} onClick={() => setVisible(false)}/>
-                    </UpperContainer>
-                    <AvatarSection>
-                        <AvatarContainer>
-                            <ProfileImage src={avatar}/>
-                        </AvatarContainer>
-                        <UserInfo>
-                            <Fio>{name} {surname}</Fio>
-                        </UserInfo>
-                        {aboutMe && <AboutMe>{aboutMe}</AboutMe>}
-                        <OnlineStatusContainer>
-                            <OnlineStatusComponent isTyping={false} isOnline={isOnline} lastOnlineDate={lastOnlineDate}/>
-                        </OnlineStatusContainer>
-                    </AvatarSection>
-                    <ButtonContainer>
-                        <Button onClick={openChat}>Написать</Button>
-                    </ButtonContainer>
-                    <div>
+                    <UserData>
+                        <UpperContainer>
+                            <Name>Profile</Name>
+                            <Close src={CloseImage} onClick={() => setVisible(false)}/>
+                        </UpperContainer>
+                        <AvatarSection>
+                            <AvatarContainer>
+                                <ProfileImage src={avatar}/>
+                            </AvatarContainer>
+                            <UserInfo>
+                                <Fio>{name} {surname}</Fio>
+                            </UserInfo>
+                            {aboutMe && <AboutMeField disabled={true} value={aboutMe}/>}
+                            <OnlineStatusContainer>
+                                <OnlineStatusComponent isTyping={false} isOnline={isOnline} lastOnlineDate={lastOnlineDate}/>
+                            </OnlineStatusContainer>
+                        </AvatarSection>
+                    </UserData>
+                    <Fields>
+                        <ButtonContainer>
+                            <Button onClick={openChat}>Написать</Button>
+                        </ButtonContainer>
                         <NicknameField value={nickname} disabled={true}/>
                         {
                             birthdate && <DateField value={birthdate} disabled={true}/>
                         }
-                    </div>
+                    </Fields>
                 </ModalContainer>
             </ShadowMainContainer>
         )

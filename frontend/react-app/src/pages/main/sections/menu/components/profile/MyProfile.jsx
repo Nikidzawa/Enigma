@@ -12,8 +12,12 @@ import ClientController from "../../../../../../store/ClientController";
 import DateField from "./fields/DateField";
 import TextField from "./fields/TextField";
 import NicknameField from "./fields/NicknameField";
-import Loader from "../../../../../authentication/registration/components/Loader";
 import ModalController from "../../../../../../store/ModalController";
+import PresenceResponse from "../../../../../../network/response/PresenceResponse";
+import OnlineStatusComponent from "../../../../components/onlineStatus/OnlineStatusComponent";
+import PenImage from "../../../../../../img/pen.png"
+import BookmarkImage from "../../../../../../img/bookmark.png"
+import AboutMeField from "./fields/AboutMeField";
 
 const fadeIn = keyframes`
     from {
@@ -52,10 +56,9 @@ const ShadowMainContainer = styled.div`
 const ModalContainer = styled.div`
     border-radius: 20px;
     background-color: #1a1a1a;
-    padding: 25px;
     position: relative;
     box-shadow: 1px 1px 6px 5px rgba(250, 250, 250, 0.5);
-    width: 420px;
+    width: 400px;
 `
 
 const ChooseAvatarContainer = styled.div`
@@ -86,8 +89,8 @@ const ChooseAvatarTrigger = styled.input`
 `;
 
 const ProfileImage = styled.img`
-    width: 110px;
-    height: 110px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
 `
 
@@ -95,28 +98,6 @@ const Bio = styled.div`
     display: flex;
     gap: 10px;
     flex: 1;
-`
-
-const Button = styled.button`
-    background-color: transparent;
-    border: 2px solid #d8d8d8;
-    color: #d8d8d8;
-    min-width: 130px;
-    min-height: 40px;
-    font-size: 19px;
-    border-radius: 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-`
-
-const ButtonContainer = styled.div`
-    display: flex;
-    flex: 1;
-    align-items: center;
-    justify-content: center;
-    margin: 30px 0 10px 0;
 `
 
 const AvatarContainer = styled.div`
@@ -129,7 +110,7 @@ const AvatarSection  = styled.div`
     align-items: center;
     text-align: center;
     flex: 1;
-    gap: 10px;
+    gap: 5px;
     padding-top: 30px;
 `
 
@@ -146,15 +127,10 @@ const Fio = styled.div`
     max-width: 400px;
 `
 
-const AboutMe = styled.div`
-    width: 350px;
-`
-
 const Fields = styled.div`
-    padding-top: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    padding: 10px 15px 25px 15px;
 `
 
 const UpperContainer = styled.div`
@@ -179,8 +155,52 @@ const Exception = styled.div`
     padding-left: 1px;
 `
 
+const OnlineStatusContainer = styled.div`
+    padding-bottom: 5px;
+`
+
+const Edit = styled.img`
+    width: 19px;
+    height: 19px;
+    cursor: pointer;
+`
+
+const EditAndCloseButton = styled.div`
+    display: flex;
+    gap: 25px;
+    align-items: center;
+`
+
+const UserData = styled.div`
+    padding: 20px 20px 0 20px;
+`
+
+const ButtonContainer2 = styled.div`
+    display: flex;
+    flex: 1;
+    gap: 10px;
+    width: 100%;
+`
+
+const Button2 = styled.button`
+    width: 100%;
+    height: 35px;
+    background-color: transparent;
+    color: #009398;
+    border: 2px solid #009398;
+    font-size: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    background-image: url("${BookmarkImage}");
+    background-position: 5px;
+    background-size: 25px;
+    background-repeat: no-repeat;
+`
+
 const MyProfile = observer(({ setVisible, visible }) => {
     const user = UserController.getCurrentUser();
+    const stompClient = ClientController.getClient();
 
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
@@ -192,12 +212,18 @@ const MyProfile = observer(({ setVisible, visible }) => {
     const [nicknameAlreadyUsed, setNicknameAlreadyUsed] = useState(false);
     const [nameIsEmptyEx, setNameIsEmptyEx] = useState(false);
 
+    const [isOnline, setIsOnline] = useState(false);
+    const [lastOnlineDate, setLastOnlineDate] = useState(null);
+
     const [resizerIsVisible, setResizerVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     const [avatarChanged, setAvatarChanged] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [isFirstRender, setIsFirstRender] = useState(true);
+
+    const [isEditMode, setIsEditMode] = useState(false);
+
     const fileInputRef = useRef(null);
 
     const handleKeyDown = (e) => {
@@ -213,7 +239,9 @@ const MyProfile = observer(({ setVisible, visible }) => {
     useEffect(() => {
         visible && isFirstRender && setIsFirstRender(false);
 
-        fileInputRef.current.value = ''
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+        }
 
         ModalController.setVisible(visible)
 
@@ -227,13 +255,41 @@ const MyProfile = observer(({ setVisible, visible }) => {
     }, [visible, resizerIsVisible]);
 
     useEffect(() => {
-        setName(user.name);
-        setSurname(user.surname);
-        setNickname(user.nickname);
-        setAboutMe(user.aboutMe)
-        setBirthdate(user.birthdate)
-        setAvatar(user.avatarHref)
+        if (user && stompClient) {
+            // Отправка запроса на получение статуса пользователя
+            ClientController.checkPresence(user.id);
+
+            // Подписка на получение онлайн статуса пользователя
+            const presenceSubscription = stompClient.subscribe(`/client/${user.id}/personal/presence`, (message) => {
+                const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
+                if (user.id === presenceResponse.userId) {
+                    setIsOnline(presenceResponse.isOnline);
+                    presenceResponse.lastOnlineDate && setLastOnlineDate(presenceResponse.lastOnlineDate);
+                }
+            });
+
+            return () => presenceSubscription.unsubscribe();
+        }
+    }, [user, stompClient]);
+
+    useEffect(() => {
+        if (visible) {
+            setName(user.name);
+            setSurname(user.surname);
+            setNickname(user.nickname);
+            setAboutMe(user.aboutMe)
+            setBirthdate(user.birthdate)
+            setAvatar(user.avatarHref)
+        }
     }, [user, visible])
+
+    useEffect(() => {
+        if (visible) {
+            setIsEditMode(false);
+        } else {
+            validate();
+        }
+    }, [visible]);
 
     async function validate() {
         setLoading(true)
@@ -291,40 +347,60 @@ const MyProfile = observer(({ setVisible, visible }) => {
                                      isFirstRender={isFirstRender}
                                      onMouseDown={e => e.target === e.currentTarget && setVisible(false)}>
                     <ModalContainer onClick={e => e.stopPropagation()}>
-                        <UpperContainer>
-                            <Name>My Profile</Name>
-                            <Close src={CloseImage} onClick={() => setVisible(false)}/>
-                        </UpperContainer>
-                        <AvatarSection>
-                            <AvatarContainer>
-                                <ProfileImage src={avatar}/>
-                                <ChooseAvatarContainer>
-                                    <ChooseAvatar src={CameraImg}/>
-                                    <ChooseAvatarTrigger ref={fileInputRef} type={"file"} onChange={handleSetAvatar} accept="image/*"/>
-                                </ChooseAvatarContainer>
-                            </AvatarContainer>
-                            <UserInfo>
-                                <Fio>{name} {surname}</Fio>
-                            </UserInfo>
-                            { aboutMe && <AboutMe>{aboutMe}</AboutMe> }
-                        </AvatarSection>
+                        <UserData>
+                            <UpperContainer>
+                                <Name>My Profile</Name>
+                                <EditAndCloseButton>
+                                    <Edit src={PenImage} onClick={() => setIsEditMode(!isEditMode)}/>
+                                    <Close src={CloseImage} onClick={() => setVisible(false)}/>
+                                </EditAndCloseButton>
+                            </UpperContainer>
+                            <AvatarSection>
+                                <AvatarContainer>
+                                    <ProfileImage src={avatar}/>
+                                    {
+                                        isEditMode &&
+                                        <ChooseAvatarContainer>
+                                            <ChooseAvatar src={CameraImg}/>
+                                            <ChooseAvatarTrigger ref={fileInputRef} type={"file"} onChange={handleSetAvatar} accept="image/*"/>
+                                        </ChooseAvatarContainer>
+                                    }
+                                </AvatarContainer>
+                                <UserInfo>
+                                    <Fio>{name} {surname}</Fio>
+                                </UserInfo>
+                                {
+                                    !(!isEditMode && !aboutMe) && <AboutMeField value={aboutMe} setValue={setAboutMe} disabled={!isEditMode}/>
+                                }
+                                {
+                                    !isEditMode &&
+                                    <OnlineStatusContainer>
+                                        <OnlineStatusComponent isTyping={false} isOnline={isOnline} lastOnlineDate={lastOnlineDate}/>
+                                    </OnlineStatusContainer>
+                                }
+                            </AvatarSection>
+                        </UserData>
                         <Fields>
-                            <Bio>
-                                <TextField placeholder={'Your name'} label={'First name'} value={name} setValue={setName}
-                                           maxLength={25}/>
-                                <TextField placeholder={"Your surname"} label={'Last name'} value={surname}
-                                           setValue={setSurname} maxLength={25}/>
-                            </Bio>
+                            {
+                                !isEditMode &&
+                                <ButtonContainer2>
+                                    <Button2>Избранные сообщения</Button2>
+                                </ButtonContainer2>
+                            }
+                            {
+                                isEditMode &&
+                                <Bio>
+                                    <TextField placeholder={'Your name'} label={'First name'} value={name} setValue={setName}
+                                               maxLength={25}/>
+                                    <TextField placeholder={"Your surname"} label={'Last name'} value={surname}
+                                               setValue={setSurname} maxLength={25}/>
+                                </Bio>
+                            }
                             {nameIsEmptyEx && <Exception>Имя не может быть пустым</Exception>}
-                            <NicknameField value={nickname} setValue={setNickname}/>
+                            <NicknameField value={nickname} setValue={setNickname} disabled={!isEditMode}/>
                             {nicknameAlreadyUsed && <Exception>Никнейм уже используется</Exception>}
-                            <DateField value={birthdate} setValue={setBirthdate}/>
-                            <TextField placeholder={"Tell about you"} label={'About me'} value={aboutMe} setValue={setAboutMe}
-                                       maxLength={120}/>
+                            <DateField value={birthdate} setValue={setBirthdate} disabled={!isEditMode}/>
                         </Fields>
-                        <ButtonContainer>
-                            <Button onClick={validate}>{loading ? <Loader/> : "Edit"}</Button>
-                        </ButtonContainer>
                     </ModalContainer>
                 </ShadowMainContainer>
                 {
