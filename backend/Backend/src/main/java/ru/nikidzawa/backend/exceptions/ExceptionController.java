@@ -23,4 +23,13 @@ public class ExceptionController {
                         .message(ex.getMessage())
                         .build());
     }
+
+    @ExceptionHandler(AlreadyUseException.class)
+    public ResponseEntity<ExceptionEntity> handleNotFoundException(AlreadyUseException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_FAILURE)
+                .body(ExceptionEntity.builder()
+                        .code(HttpStatus.METHOD_FAILURE.value())
+                        .message(ex.getMessage())
+                        .build());
+    }
 }

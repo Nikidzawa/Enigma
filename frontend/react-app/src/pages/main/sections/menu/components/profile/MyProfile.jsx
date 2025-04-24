@@ -112,7 +112,7 @@ const AvatarSection  = styled.div`
     align-items: center;
     text-align: center;
     flex: 1;
-    margin-top: 30px;
+    margin: 30px 0 15px 0;
 `
 
 const UserInfo = styled.div`
@@ -158,7 +158,7 @@ const Edit = styled.img`
 
 const EditAndCloseButton = styled.div`
     display: flex;
-    gap: 25px;
+    gap: 23px;
     align-items: center;
 `
 

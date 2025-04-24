@@ -9,6 +9,7 @@ import ActiveChatController from "../../../store/ActiveChatController";
 import ChatRoomsController from "../../../store/ChatRoomsController";
 import ModalController from "../../../store/ModalController";
 import AboutMeField from "../sections/menu/components/profile/fields/AboutMeField";
+import AddFriendImage from "../../../img/menu.png"
 
 const fadeIn = keyframes`
     from {
@@ -69,7 +70,7 @@ const AvatarSection  = styled.div`
     align-items: center;
     text-align: center;
     flex: 1;
-    margin-top: 30px;
+    margin: 30px 0 15px 0;
 `
 
 const UserInfo = styled.div`
@@ -105,6 +106,18 @@ const Close = styled.img`
     width: 17px;
     height: 17px;
     cursor: pointer;
+`
+
+const ActionMenu = styled.img`
+    width: 20px;
+    height: 17px;
+    cursor: pointer;
+`
+
+const ActionMenuAndCloseButtons = styled.div`
+    display: flex;
+    gap: 23px;
+    align-items: center;
 `
 
 const ButtonContainer = styled.div`
@@ -195,7 +208,10 @@ export default function OtherProfile({user, isOnline, lastOnlineDate, visible, s
                     <UserData>
                         <UpperContainer>
                             <Name>Profile</Name>
-                            <Close src={CloseImage} onClick={() => setVisible(false)}/>
+                            <ActionMenuAndCloseButtons>
+                                <ActionMenu src={AddFriendImage}/>
+                                <Close src={CloseImage} onClick={() => setVisible(false)}/>
+                            </ActionMenuAndCloseButtons>
                         </UpperContainer>
                         <AvatarSection>
                             <AvatarContainer>
