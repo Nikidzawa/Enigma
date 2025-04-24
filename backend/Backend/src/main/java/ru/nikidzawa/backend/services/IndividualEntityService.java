@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import ru.nikidzawa.backend.controllers.responses.JwtTokenResponse;
+import ru.nikidzawa.backend.exceptions.AlreadyUseException;
 import ru.nikidzawa.backend.exceptions.NotFoundException;
 import ru.nikidzawa.backend.exceptions.UnauthorizedException;
 import ru.nikidzawa.backend.store.client.dto.IndividualDtoShort;
@@ -12,6 +13,7 @@ import ru.nikidzawa.backend.store.client.factory.IndividualDtoFactory;
 import ru.nikidzawa.backend.store.entity.IndividualEntity;
 import ru.nikidzawa.backend.store.repository.IndividualEntityRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -51,16 +53,30 @@ public class IndividualEntityService {
                 .build();
     }
 
-    public void edit(IndividualDtoShort individualDtoShort) {
+    public IndividualEntity edit(IndividualDtoShort individualDtoShort) {
         IndividualEntity individualEntity = repository.findById(individualDtoShort.getId())
                 .orElseThrow(() -> new NotFoundException("Пользователя не существует"));
         individualEntity.setName(individualDtoShort.getName().trim());
         individualEntity.setSurname(individualDtoShort.getSurname().trim());
-        individualEntity.setNickname(individualDtoShort.getNickname().toLowerCase().replace(" ", ""));
         individualEntity.setBirthdate(individualDtoShort.getBirthdate());
         individualEntity.setAboutMe(individualDtoShort.getAboutMe() != null ? individualDtoShort.getAboutMe().trim() : null);
         individualEntity.setAvatarHref(individualDtoShort.getAvatarHref());
-        repository.saveAndFlush(individualEntity);
+        return repository.saveAndFlush(individualEntity);
+    }
+
+
+    public boolean editNickname(Long userId, String nickname) {
+        boolean isPresent = repository.findFirstByNicknameAndIdNot(nickname, userId).isPresent();
+
+        if (!isPresent) {
+            IndividualEntity individualEntity = repository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("Пользователя не существует"));
+            individualEntity.setNickname(nickname.replace(" ", ""));
+            repository.saveAndFlush(individualEntity);
+            return true;
+        } else {
+            throw new AlreadyUseException("Никнейм уже используется");
+        }
     }
 
     public void update(IndividualEntity individualEntity) {

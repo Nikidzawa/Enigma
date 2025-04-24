@@ -117,7 +117,7 @@ const ResizeHandle = styled.div`
     }
 `;
 
-export default function ImageResizer ({src, visible, setResizerVisible, setAvatar, setAvatarChanged}) {
+export default function ImageResizer ({src, visible, setResizerVisible, setAvatar}) {
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [size, setSize] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -134,25 +134,27 @@ export default function ImageResizer ({src, visible, setResizerVisible, setAvata
     }, [visible]);
 
     useEffect(() => {
-        const img = new Image();
-        img.onload = () => {
-            if (imageRef.current) {
-                imageRef.current.src = src;
-                const initialSize = Math.min(img.width, img.height) * 0.5;
-                setSize(initialSize);
-                setPosition({
-                    x: (imageRef.current.width / 2 - initialSize),
-                    y: (imageRef.current.width / 2 - initialSize)
-                });
-            }
-        };
-        img.onerror = () => {
-            console.error("Failed to load image");
-            if (imageRef.current) {
-                imageRef.current.src = src;
-            }
-        };
-        img.src = src;
+        if (src !== null) {
+            const img = new Image();
+            img.onload = () => {
+                if (imageRef.current) {
+                    imageRef.current.src = src;
+                    const initialSize = Math.min(img.width, img.height) * 0.5;
+                    setSize(initialSize);
+                    setPosition({
+                        x: (imageRef.current.width / 2 - initialSize),
+                        y: (imageRef.current.width / 2 - initialSize)
+                    });
+                }
+            };
+            img.onerror = () => {
+                console.error("Failed to load image");
+                if (imageRef.current) {
+                    imageRef.current.src = src;
+                }
+            };
+            img.src = src;
+        }
     }, [src]);
 
     const getMousePos = (e) => {
@@ -300,7 +302,6 @@ export default function ImageResizer ({src, visible, setResizerVisible, setAvata
 
             setAvatar(canvas.toDataURL());
             setResizerVisible(false);
-            setAvatarChanged(true);
         } catch (error) {
             console.error("Error cropping image:", error);
         }

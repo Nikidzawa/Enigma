@@ -12,11 +12,12 @@ const Label = styled.div`
     left: 10px;
     top: 6px;
     font-size: 15px;
+    pointer-events: none;
 `
 
 const Input = styled.input`
     border: none;
-    background-color: #353535;
+    background-color: #333333;
     border-radius: 5px;
     color: white;
     min-height: 35px;

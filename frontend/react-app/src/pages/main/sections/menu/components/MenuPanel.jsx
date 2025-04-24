@@ -6,6 +6,7 @@ import LogoutImage from "../../../../../img/log-out.png";
 import LogoImage from "../../../../../img/img.png"
 import ClientController from "../../../../../store/ClientController";
 import ChatRoomsController from "../../../../../store/ChatRoomsController";
+import {observer} from "mobx-react-lite";
 
 const LeftPanel = styled.div`
     position: fixed;
@@ -92,7 +93,8 @@ const MessengerInfo = styled.div`
     align-items: center;
 `
 
-export default function MenuPanel({menuIsVisible, openProfile}) {
+export default observer(function MenuPanel({menuIsVisible, openProfile}) {
+    const user = UserController.getCurrentUser();
 
     function logout () {
         localStorage.removeItem("TOKEN")
@@ -104,10 +106,10 @@ export default function MenuPanel({menuIsVisible, openProfile}) {
     return (
         <LeftPanel visible={menuIsVisible} onClick={e => e.stopPropagation()}>
             <ProfileInfo>
-                <ProfileImage src={UserController.getCurrentUser().avatarHref}/>
+                <ProfileImage src={user.avatarHref}/>
                 <InfoSection>
-                    <Name>{UserController.getCurrentUser().name} {UserController.getCurrentUser().surname}</Name>
-                    <Info>@{UserController.getCurrentUser().nickname}</Info>
+                    <Name>{user.name} {user.surname}</Name>
+                    <Info>@{user.nickname}</Info>
                 </InfoSection>
             </ProfileInfo>
             <Panels>
@@ -130,4 +132,4 @@ export default function MenuPanel({menuIsVisible, openProfile}) {
             </MessengerInfo>
         </LeftPanel>
     )
-}
+})

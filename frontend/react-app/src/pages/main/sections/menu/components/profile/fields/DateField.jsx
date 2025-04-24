@@ -16,6 +16,7 @@ const Label = styled.div`
     top: 5px;
     z-index: 1;
     font-size: 15px;
+    pointer-events: none;
 `;
 
 const DatePickerWrapper = styled.div`
@@ -29,7 +30,7 @@ const DatePickerWrapper = styled.div`
 const StyledDatePicker = styled(DatePicker)`
     width: 100%;
     border: none;
-    background-color: #353535;
+    background-color: #333333;
     border-radius: 5px;
     color: white;
     height: 35px;

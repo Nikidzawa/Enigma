@@ -60,6 +60,7 @@ const ProfileImage = styled.img`
 
 const AvatarContainer = styled.div`
     position: relative;
+    margin-bottom: 2px;
 `
 
 const AvatarSection  = styled.div`
@@ -68,8 +69,7 @@ const AvatarSection  = styled.div`
     align-items: center;
     text-align: center;
     flex: 1;
-    gap: 5px;
-    padding-top: 30px;
+    margin-top: 30px;
 `
 
 const UserInfo = styled.div`
@@ -111,10 +111,11 @@ const ButtonContainer = styled.div`
     display: flex;
     flex: 1;
     gap: 10px;
+    width: 100%;
 `
 
 const Button = styled.button`
-    width: 500px;
+    width: 100%;
     height: 35px;
     background-color: transparent;
     color: #009398;
@@ -130,11 +131,14 @@ const Button = styled.button`
 `
 
 const OnlineStatusContainer = styled.div`
-    padding-bottom: 5px;
 `
 
 const UserData = styled.div`
-    padding: 20px 20px 0 20px;
+    padding: 20px 20px 5px 20px;
+`
+
+const AboutMeContainer = styled.div`
+    margin-top: 3px;
 `
 
 export default function OtherProfile({user, isOnline, lastOnlineDate, visible, setVisible}) {
@@ -200,7 +204,9 @@ export default function OtherProfile({user, isOnline, lastOnlineDate, visible, s
                             <UserInfo>
                                 <Fio>{name} {surname}</Fio>
                             </UserInfo>
-                            {aboutMe && <AboutMeField disabled={true} value={aboutMe}/>}
+                            <AboutMeContainer>
+                                {aboutMe && <AboutMeField disabled={true} value={aboutMe}/>}
+                            </AboutMeContainer>
                             <OnlineStatusContainer>
                                 <OnlineStatusComponent isTyping={false} isOnline={isOnline} lastOnlineDate={lastOnlineDate}/>
                             </OnlineStatusContainer>

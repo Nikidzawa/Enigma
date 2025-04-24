@@ -8,7 +8,7 @@ const Animation= keyframes`
 `
 
 const LoaderComponent = styled.div`
-    width: 40px;
+    width: ${props => props.width ? `${props.width}` : `40px`};
     aspect-ratio: 4;
     --_g: no-repeat radial-gradient(circle closest-side, #fdfdfd 90%, #0000);
     background: var(--_g) 0% 50%,
@@ -18,6 +18,6 @@ const LoaderComponent = styled.div`
     animation: ${Animation} 1s infinite linear;
 `
 
-export default function Loader() {
-    return (<LoaderComponent/>)
+export default function Loader({width}) {
+    return (<LoaderComponent width={width}/>)
 }

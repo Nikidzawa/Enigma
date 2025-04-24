@@ -4,7 +4,7 @@ import styled from "styled-components";
 const Input = styled.textarea`
     border: none;
     background-color: transparent;
-    color: white;
+    color: #dfdfdf;
     height: auto;
     outline: none;
     font-size: 15px;
@@ -16,12 +16,15 @@ const Input = styled.textarea`
     text-align: center;
     overflow: hidden;
     cursor: ${(props) => props.isFocused ? "text" : !props.disabled && "pointer"};
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `;
 
 const MaxLengthIndicator = styled.div`
+    padding-top: 2px;
     font-size: 12px;
     color: #8e8e8e;
-    display: ${(props) => (props.visible ? "block" : "none")};
 `;
 
 export default function AboutMeField({ value, setValue, disabled }) {
@@ -40,6 +43,10 @@ export default function AboutMeField({ value, setValue, disabled }) {
         adjustHeight();
     }, [value]);
 
+    useEffect(() => {
+        adjustHeight();
+    }, []);
+
     const handleChange = (e) => {
         const text = e.target.value;
         const lineBreaks = (text.match(/\n/g) || []).length;
@@ -49,25 +56,37 @@ export default function AboutMeField({ value, setValue, disabled }) {
         }
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            textareaRef.current.blur();
+        }
+    }
+
     return (
         <div>
-            <Input
-                ref={textareaRef}
-                placeholder={"Tell about you"}
-                value={value}
-                onChange={handleChange}
-                maxLength={maxLength}
-                rows="1"
-                disabled={disabled}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                isFocused={isFocused}
-            />
-            {!disabled && (
-                <MaxLengthIndicator visible={isFocused}>
-                    {value ? value.length : '0'}/{maxLength}
-                </MaxLengthIndicator>
-            )}
+            <form noValidate>
+                <Input
+                    ref={textareaRef}
+                    placeholder={"Tell about you"}
+                    value={value}
+                    onChange={handleChange}
+                    maxLength={maxLength}
+                    rows="1"
+                    disabled={disabled}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    isFocused={isFocused}
+                    onKeyDownCapture={handleKeyDown}
+                    spellCheck={false}
+                />
+            </form>
+                {!disabled && (
+                    <MaxLengthIndicator>
+                        {value ? value.length : '0'}/{maxLength}
+                    </MaxLengthIndicator>
+                )}
         </div>
-    );
+);
 }

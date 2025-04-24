@@ -28,7 +28,7 @@ export default class FireBase {
         } catch (error) {
             console.error("Ошибка при удалении файлов:", error);
         }
-    }
+    };
     static base64ToFile = (base64String, fileName) => {
         const arr = base64String.split(',');
         const mime = arr[0].match(/:(.*?);/)[1];
@@ -42,4 +42,8 @@ export default class FireBase {
 
         return new File([u8arr], fileName, { type: mime });
     };
+    static async convertAndUpload(avatar, userId) {
+        const file = this.base64ToFile(avatar, userId)
+        return await this.uploadAvatar(file, userId);
+    }
 }

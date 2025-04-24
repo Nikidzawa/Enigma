@@ -11,13 +11,14 @@ import UserApi from "../../../../../../api/internal/controllers/UserApi";
 import ClientController from "../../../../../../store/ClientController";
 import DateField from "./fields/DateField";
 import TextField from "./fields/TextField";
-import NicknameField from "./fields/NicknameField";
 import ModalController from "../../../../../../store/ModalController";
 import PresenceResponse from "../../../../../../network/response/PresenceResponse";
 import OnlineStatusComponent from "../../../../components/onlineStatus/OnlineStatusComponent";
 import PenImage from "../../../../../../img/pen.png"
 import BookmarkImage from "../../../../../../img/bookmark.png"
 import AboutMeField from "./fields/AboutMeField";
+import NicknameChangeModal from "./NicknameChangeModal";
+import NicknameField from "./fields/NicknameField";
 
 const fadeIn = keyframes`
     from {
@@ -102,6 +103,7 @@ const Bio = styled.div`
 
 const AvatarContainer = styled.div`
     position: relative;
+    margin-bottom: 2px;
 `
 
 const AvatarSection  = styled.div`
@@ -110,8 +112,7 @@ const AvatarSection  = styled.div`
     align-items: center;
     text-align: center;
     flex: 1;
-    gap: 5px;
-    padding-top: 30px;
+    margin-top: 30px;
 `
 
 const UserInfo = styled.div`
@@ -149,16 +150,6 @@ const Close = styled.img`
     cursor: pointer;
 `
 
-const Exception = styled.div`
-    color: red;
-    font-size: 15px;
-    padding-left: 1px;
-`
-
-const OnlineStatusContainer = styled.div`
-    padding-bottom: 5px;
-`
-
 const Edit = styled.img`
     width: 19px;
     height: 19px;
@@ -171,18 +162,14 @@ const EditAndCloseButton = styled.div`
     align-items: center;
 `
 
-const UserData = styled.div`
-    padding: 20px 20px 0 20px;
-`
-
-const ButtonContainer2 = styled.div`
+const ButtonContainer = styled.div`
     display: flex;
     flex: 1;
     gap: 10px;
     width: 100%;
 `
 
-const Button2 = styled.button`
+const Button = styled.button`
     width: 100%;
     height: 35px;
     background-color: transparent;
@@ -198,7 +185,18 @@ const Button2 = styled.button`
     background-repeat: no-repeat;
 `
 
-const MyProfile = observer(({ setVisible, visible }) => {
+const OnlineStatusContainer = styled.div`
+`
+
+const UserData = styled.div`
+    padding: 20px 20px 5px 20px;
+`
+
+const AboutMeContainer = styled.div`
+    margin-top: 3px;
+`
+
+export default observer(function MyProfile({ setVisible, visible }) {
     const user = UserController.getCurrentUser();
     const stompClient = ClientController.getClient();
 
@@ -209,17 +207,13 @@ const MyProfile = observer(({ setVisible, visible }) => {
     const [aboutMe, setAboutMe] = useState("");
     const [avatar, setAvatar] = useState("");
 
-    const [nicknameAlreadyUsed, setNicknameAlreadyUsed] = useState(false);
-    const [nameIsEmptyEx, setNameIsEmptyEx] = useState(false);
-
     const [isOnline, setIsOnline] = useState(false);
     const [lastOnlineDate, setLastOnlineDate] = useState(null);
 
     const [resizerIsVisible, setResizerVisible] = useState(false);
+    const [changeNicknameModalIsVisible, setChangeNicknameModalIsVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
-    const [avatarChanged, setAvatarChanged] = useState(false);
 
-    const [loading, setLoading] = useState(false);
     const [isFirstRender, setIsFirstRender] = useState(true);
 
     const [isEditMode, setIsEditMode] = useState(false);
@@ -230,6 +224,8 @@ const MyProfile = observer(({ setVisible, visible }) => {
         if (e.key === 'Escape') {
             if (resizerIsVisible) {
                 setResizerVisible(false);
+            } else if (changeNicknameModalIsVisible) {
+                setChangeNicknameModalIsVisible(false);
             } else {
                 setVisible(false);
             }
@@ -255,22 +251,19 @@ const MyProfile = observer(({ setVisible, visible }) => {
     }, [visible, resizerIsVisible]);
 
     useEffect(() => {
-        if (user && stompClient) {
-            // Отправка запроса на получение статуса пользователя
-            ClientController.checkPresence(user.id);
+        // Подписка на получение онлайн статуса пользователя
+        const presenceSubscription = stompClient.subscribe(`/client/${user.id}/personal/presence`, (message) => {
+            const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
+            if (user.id === presenceResponse.userId) {
+                setIsOnline(presenceResponse.isOnline);
+                presenceResponse.lastOnlineDate && setLastOnlineDate(presenceResponse.lastOnlineDate);
+                console.log(presenceResponse.isOnline)
+            }
+        });
 
-            // Подписка на получение онлайн статуса пользователя
-            const presenceSubscription = stompClient.subscribe(`/client/${user.id}/personal/presence`, (message) => {
-                const presenceResponse = PresenceResponse.fromJSON(JSON.parse(message.body));
-                if (user.id === presenceResponse.userId) {
-                    setIsOnline(presenceResponse.isOnline);
-                    presenceResponse.lastOnlineDate && setLastOnlineDate(presenceResponse.lastOnlineDate);
-                }
-            });
-
-            return () => presenceSubscription.unsubscribe();
-        }
-    }, [user, stompClient]);
+        // Отправка запроса на получение статуса пользователя
+        ClientController.checkPresence(user.id);
+    }, []);
 
     useEffect(() => {
         if (visible) {
@@ -286,43 +279,29 @@ const MyProfile = observer(({ setVisible, visible }) => {
     useEffect(() => {
         if (visible) {
             setIsEditMode(false);
-        } else {
-            validate();
+        } else if (!isFirstRender) {
+            updateUser();
+        }
+
+        async function updateUser () {
+            if (user.aboutMe !== aboutMe || user.birthdate !== birthdate || user.name !== name || user.surname !== surname || user.avatarHref !== avatar) {
+                const newUserData = new IndividualDtoShort(
+                    user.id,
+                    null,
+                    name,
+                    surname,
+                    birthdate ? new Date(birthdate) : null, aboutMe,
+                    user.avatarHref !== avatar ? await FireBase.convertAndUpload(avatar, user.id) : avatar
+                );
+                UserApi.edit(newUserData).then(response => {
+                    const editedUser = IndividualDtoShort.fromJSON(response.data);
+                    UserController.setUser(editedUser);
+                    setVisible(false);
+                    ClientController.updateUserProfile(editedUser.id);
+                });
+            }
         }
     }, [visible]);
-
-    async function validate() {
-        setLoading(true)
-        setNicknameAlreadyUsed(false);
-        setNameIsEmptyEx(false);
-        try {
-            if (!name) {
-                setNameIsEmptyEx(true);
-                return;
-            }
-            await UserApi.nicknameIsUsed(nickname, user.id).then(async response => {
-                if (response.data === false) {
-                    await saveUser();
-                    setAvatarChanged(false);
-                } else {
-                    setNicknameAlreadyUsed(true);
-                }
-            })
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    async function saveUser() {
-        const newUserData = new IndividualDtoShort(user.id, nickname, name, surname, birthdate ? new Date(birthdate) : null, aboutMe,
-            avatarChanged ? await FireBase.uploadAvatar(FireBase.base64ToFile(avatar, user.id), user.id) : avatar
-        );
-        UserApi.edit(newUserData).then(() => {
-            UserController.setUser(newUserData);
-            setVisible(false);
-            ClientController.updateUserProfile(newUserData.id);
-        });
-    }
 
     const handleSetAvatar = async (e) => {
         const file = e.target.files[0];
@@ -369,23 +348,24 @@ const MyProfile = observer(({ setVisible, visible }) => {
                                 <UserInfo>
                                     <Fio>{name} {surname}</Fio>
                                 </UserInfo>
-                                {
-                                    !(!isEditMode && !aboutMe) && <AboutMeField value={aboutMe} setValue={setAboutMe} disabled={!isEditMode}/>
-                                }
-                                {
-                                    !isEditMode &&
-                                    <OnlineStatusContainer>
-                                        <OnlineStatusComponent isTyping={false} isOnline={isOnline} lastOnlineDate={lastOnlineDate}/>
-                                    </OnlineStatusContainer>
-                                }
+                                <AboutMeContainer>
+                                    {
+                                        !(!isEditMode && !aboutMe) && <AboutMeField value={aboutMe} setValue={setAboutMe} disabled={!isEditMode}/>
+                                    }
+                                </AboutMeContainer>
+                                <OnlineStatusContainer>
+                                    {
+                                        !isEditMode && <OnlineStatusComponent isTyping={false} isOnline={isOnline} lastOnlineDate={lastOnlineDate}/>
+                                    }
+                                </OnlineStatusContainer>
                             </AvatarSection>
                         </UserData>
                         <Fields>
                             {
                                 !isEditMode &&
-                                <ButtonContainer2>
-                                    <Button2>Избранные сообщения</Button2>
-                                </ButtonContainer2>
+                                <ButtonContainer>
+                                    <Button>Избранные сообщения</Button>
+                                </ButtonContainer>
                             }
                             {
                                 isEditMode &&
@@ -396,24 +376,20 @@ const MyProfile = observer(({ setVisible, visible }) => {
                                                setValue={setSurname} maxLength={25}/>
                                 </Bio>
                             }
-                            {nameIsEmptyEx && <Exception>Имя не может быть пустым</Exception>}
-                            <NicknameField value={nickname} setValue={setNickname} disabled={!isEditMode}/>
-                            {nicknameAlreadyUsed && <Exception>Никнейм уже используется</Exception>}
+                            <NicknameField value={nickname} disabled={true} onClick={() => isEditMode && setChangeNicknameModalIsVisible(true)}/>
                             <DateField value={birthdate} setValue={setBirthdate} disabled={!isEditMode}/>
                         </Fields>
                     </ModalContainer>
                 </ShadowMainContainer>
-                {
-                    <ImageResizer src={selectedImage}
-                                  visible={resizerIsVisible}
-                                  setResizerVisible={setResizerVisible}
-                                  setAvatar={setAvatar}
-                                  setAvatarChanged={setAvatarChanged}
-                    />
-                }
+                <ImageResizer src={selectedImage}
+                              visible={resizerIsVisible}
+                              setResizerVisible={setResizerVisible}
+                              setAvatar={setAvatar}
+                />
+                <NicknameChangeModal nickname={nickname} setNickname={setNickname}
+                                     isVisible={changeNicknameModalIsVisible}
+                                     setIsVisible={setChangeNicknameModalIsVisible}/>
             </>
         )
     )
 });
-
-export default MyProfile;

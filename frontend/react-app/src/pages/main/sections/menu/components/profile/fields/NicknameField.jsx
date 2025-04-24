@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import SobachkaImage from "../../../../../../../img/email.png";
+import {useEffect, useRef} from "react";
 
 const Container = styled.div`
     position: relative;
@@ -13,11 +14,12 @@ const Label = styled.div`
     left: 12px;
     top: 5px;
     font-size: 15px;
+    pointer-events: none;
 `
 
 const Input = styled.input`
     border: none;
-    background-color: #353535;
+    background-color: #333333;
     border-radius: 5px;
     color: white;
     height: 35px;
@@ -26,7 +28,7 @@ const Input = styled.input`
     padding-top: 20px;
     padding-left: 33px;
     width: 100%;
-
+    ${props => props.disabled && ("pointer-events: none;")};
     background-image: url(${SobachkaImage});
     background-size: 17px;
     background-repeat: no-repeat;
@@ -41,17 +43,18 @@ const FieldContainer = styled.div`
     gap: 10px;
 `
 
-export default function NicknameField ({value, setValue, disabled}) {
+export default function NicknameField ({value, setValue, disabled, onClick, onKeyDown}) {
     return (
-        <FieldContainer>
+        <FieldContainer onClick={onClick} style={{cursor: disabled && "pointer"}}>
             <Container>
-                <Label>{'Nickname'}</Label>
+                <Label>Nickname</Label>
                 <Input
                     placeholder={'Your nickname'}
                     value={value}
                     onChange={e => setValue(e.target.value.trim().toLowerCase())}
                     maxLength={30}
                     disabled={disabled}
+                    onKeyDown={onKeyDown}
                 />
             </Container>
         </FieldContainer>

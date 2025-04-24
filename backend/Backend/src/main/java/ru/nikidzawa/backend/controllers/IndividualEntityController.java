@@ -21,10 +21,10 @@ public class IndividualEntityController {
 
     private static final String SAVE = "/save";
     private static final String EDIT = "/edit";
+    private static final String EDIT_NICKNAME = "/{userId}/edit/nickname";
     private static final String LOGIN = "/login";
     private static final String SEARCH = "/search";
     private static final String EXISTS_BY_EMAIL = "/existsByEmail";
-    private static final String EXISTS_BY_NICKNAME = "/existsByNickname";
     private static final String FIND_BY_TOKEN = "/findByToken";
     private static final String GET_BY_ID = "/{userId}";
 
@@ -43,9 +43,9 @@ public class IndividualEntityController {
         return service.emailIsUsed(email);
     }
 
-    @GetMapping(EXISTS_BY_NICKNAME)
-    public Boolean nicknameIsUsed(@RequestParam String nickname, @RequestParam Long userId) {
-        return service.nicknameIsUsed(nickname, userId);
+    @PutMapping(EDIT_NICKNAME)
+    public Boolean editNickname(@PathVariable Long userId, @RequestParam String value) {
+        return service.editNickname(userId, value.replaceAll(" ", ""));
     }
 
     @GetMapping(FIND_BY_TOKEN)
@@ -60,8 +60,9 @@ public class IndividualEntityController {
     }
 
     @PutMapping(EDIT)
-    public void edit(@RequestBody IndividualDtoShort individualDtoShort) {
-        service.edit(individualDtoShort);
+    public IndividualDtoShort edit(@RequestBody IndividualDtoShort individualDtoShort) {
+        IndividualEntity individual = service.edit(individualDtoShort);
+        return factory.convert(individual);
     }
 
     @PostMapping(SAVE)

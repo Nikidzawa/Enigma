@@ -10,16 +10,16 @@ export default class UserApi {
         return api.put('/users/edit', userDto);
     }
 
+    static editNickname(userId, nickname) {
+        return api.put(`/users/${userId}/edit/nickname?value=${nickname}`);
+    }
+
     static authenticate(nicknameOrEmail, password) {
         return api.get(`/users/login?nicknameOrEmail=${nicknameOrEmail}&password=${password}`)
     }
 
     static emailIsUsed(email) {
         return api.get(`/users/existsByEmail?email=${email}`)
-    }
-
-    static nicknameIsUsed(nickname, userId) {
-        return api.get(`/users/existsByNickname?nickname=${nickname}&userId=${userId}`)
     }
 
     static getUserByToken(token) {
