@@ -31,7 +31,7 @@ export default observer(function ChatRoomsSection({isSearchMode}) {
 
     useEffect(() => {
         if (chats.length === 0 && stompClient.connected) {
-            ChatApi.getAllUserChatsByUserId(user.id).then(response => {
+            ChatApi.getAllByOwnerId(user.id).then(response => {
                 const chatsDto = response.data.map(room => ChatRoomDto.fromJSON(room))
                 ChatRoomsController.initAll(chatsDto, stompClient, user.id)
             });

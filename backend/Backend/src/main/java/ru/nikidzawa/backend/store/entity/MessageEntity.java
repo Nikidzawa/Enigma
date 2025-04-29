@@ -28,12 +28,23 @@ public class MessageEntity {
     @Column(name = "sender_id", nullable = false)
     Long senderId;
 
-    @Column(name = "created_at", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    LocalDateTime createdAt;
+    @Column(name = "chat_id", nullable = false)
+    Long chatId;
+
+    @Column(name = "sent_at", nullable = false)
+    LocalDateTime sentAt;
 
     @Column(name = "text", columnDefinition = "VARCHAR(2048)", nullable = false)
     String text;
+
+    @Column(name = "is_pinned")
+    Boolean isPinned = false;
+
+    @Column(name = "is_edited")
+    Boolean isEdited = false;
+
+    @Column(name = "edited_at")
+    LocalDateTime editedAt;
 
     @Column(name = "is_read")
     Boolean isRead = false;

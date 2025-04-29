@@ -12,8 +12,11 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MessageDto {
     Long id;
-    LocalDateTime createdAt;
-    String text;
     Long senderId;
+    LocalDateTime sentAt;
+    String text;
+    Boolean isPinned;
+    Boolean isEdited;
+    LocalDateTime editedAt;
     Boolean isRead;
 }

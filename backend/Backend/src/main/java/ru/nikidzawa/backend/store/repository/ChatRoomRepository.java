@@ -15,43 +15,40 @@ public class ChatRoomRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public List<ChatRoomDataModel> findAllChatRoomsByUserId(Long userId) {
+    public List<ChatRoomDataModel> getAllByOwner(Long ownerId) {
         String sql = """
-        SELECT
-            companion.id as user_id,
-            companion.nickname as user_nickname,
-            companion.name as user_name,
-            companion.surname as user_surname,
-            companion.birthdate as birthdate,
-            companion.about_me as about_me,
-            companion.avatar_href as avatar_href,
-                    companion.last_logout_dt as last_logout_dt,
-            last_message.id as last_message_id,
-            last_message.text as last_message_text,
-            last_message.created_at AS last_message_send_time,
-            last_message.sender_id AS last_message_sender_id,
-            last_message.is_read AS last_message_is_read,
-            chat.id as chat_id,
-            chat.owner_id as chat_owner_id,
-            chat.companion_id as chat_companion_id,
-            chat.created_at as chat_created_at,
-            unread_count.*
-        FROM indiv_chat chat
-            JOIN individual companion on companion.id = chat.companion_id
-            LEFT JOIN LATERAL (
-            select m.* from messages m
-            join indiv_chat_messages ichat on ichat.message_id = m.id and ichat.indiv_chat_id = chat.id
-            order by m.id desc
-            limit 1
-            ) as last_message on true
-            LEFT JOIN LATERAL (
-            select COUNT(*) as unread_count from messages m
-            join indiv_chat_messages ichat on ichat.message_id = m.id and ichat.indiv_chat_id = chat.id
-            where m.is_read is false and m.sender_id = chat.companion_id 
-            ) as unread_count on true
-        WHERE chat.owner_id = ?
+        SELECT 
+        pc.owner_id as owner_id,    
+        i.id as individual_id,
+        i.avatar_href,
+        i.name,
+        i.nickname,
+        i.surname,
+        i.about_me,
+        i.birth_date,
+        i.last_logout_dt,
+        c.id as chat_id,
+        c.type as chat_type,
+        lm.id as last_message_id,
+        lm.sender_id,
+        lm.sent_at,
+        lm.text,
+        lm.is_pinned,
+        lm.is_edited,
+        lm.edited_at,
+        lm.is_read,
+        unread_count.count as unread_count
+        from private_chat pc
+        join chat c on c.id = pc.chat_id
+        join individual i on i.id = pc.companion_id
+        left join messages lm on lm.id = c.last_message_id
+        left join lateral ( 
+            select count(m) from messages m
+            where m.chat_id = c.id and m.is_read = false
+        ) as unread_count on true
+        where pc.owner_id = ?
         """;
-        return jdbcTemplate.query(sql, new ChatRoomDataModel.ChatRoomRowMapper(), userId);
+        return jdbcTemplate.query(sql, new ChatRoomDataModel.ChatRoomRowMapper(), ownerId);
     }
 
 }

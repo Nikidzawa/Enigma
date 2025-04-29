@@ -2,44 +2,46 @@ package ru.nikidzawa.backend.store.client.factory;
 
 import org.springframework.stereotype.Component;
 import ru.nikidzawa.backend.store.client.dataModel.ChatRoomDataModel;
-import ru.nikidzawa.backend.store.client.dto.ChatRoomDto;
+import ru.nikidzawa.backend.store.client.dto.PrivateChatRoomDto;
 import ru.nikidzawa.backend.store.client.dto.IndividualDtoShort;
 import ru.nikidzawa.backend.store.client.dto.MessageDto;
-import ru.nikidzawa.backend.store.entity.IndividualChatEntity;
+import ru.nikidzawa.backend.store.entity.PrivateChatEntity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class ChatRoomDtoFactory {
-    public ChatRoomDto convert (ChatRoomDataModel chatRoomDataModel) {
-        return ChatRoomDto.builder()
+    public PrivateChatRoomDto convert (ChatRoomDataModel model) {
+        return PrivateChatRoomDto.builder()
                 .companion(IndividualDtoShort.builder()
-                        .id(chatRoomDataModel.getUserId())
-                        .nickname(chatRoomDataModel.getUserNickname())
-                        .name(chatRoomDataModel.getUserName())
-                        .surname(chatRoomDataModel.getUserSurname())
-                        .birthdate(chatRoomDataModel.getBirthdate())
-                        .aboutMe(chatRoomDataModel.getAboutMe())
-                        .avatarHref(chatRoomDataModel.getAvatarHref())
-                        .lastLogoutDate(chatRoomDataModel.getLastLogoutDate())
+                        .id(model.getIndividualId())
+                        .avatarHref(model.getAvatarHref())
+                        .name(model.getName())
+                        .nickname(model.getNickname())
+                        .surname(model.getSurname())
+                        .aboutMe(model.getAboutMe())
+                        .birthdate(model.getBirthDate())
+                        .lastLogoutDate(model.getLastLogoutDt())
                         .build()
-                ).messages(chatRoomDataModel.getLastMessageId() == 0 ? new ArrayList<>() : List.of(
+                ).messages(model.getLastMessageId() == 0 ? new ArrayList<>() : List.of(
                         MessageDto.builder()
-                                .id(chatRoomDataModel.getLastMessageId())
-                                .createdAt(chatRoomDataModel.getLastMessageSendTime())
-                                .text(chatRoomDataModel.getLastMessageText())
-                                .senderId(chatRoomDataModel.getLastMessageSenderId())
-                                .isRead(chatRoomDataModel.getLastMessageIsRead())
+                                .id(model.getLastMessageId())
+                                .senderId(model.getSenderId())
+                                .sentAt(model.getSentAt())
+                                .text(model.getText())
+                                .isPinned(model.getIsPinned())
+                                .isEdited(model.getIsEdited())
+                                .editedAt(model.getEditedAt())
+                                .isRead(model.getIsRead())
                                 .build()
                         )
-                ).chat(IndividualChatEntity.builder()
-                        .id(chatRoomDataModel.getChatId())
-                        .ownerId(chatRoomDataModel.getOwnerId())
-                        .companionId(chatRoomDataModel.getCompanionId())
-                        .createdAt(chatRoomDataModel.getCreatedAt())
+                ).chat(PrivateChatEntity.builder()
+                        .chatId(model.getChatId())
+                        .ownerId(model.getOwnerId())
+                        .companionId(model.getIndividualId())
                         .build())
-                .unreadCount(chatRoomDataModel.getUnreadCount())
+                .unreadCount(model.getUnreadCount())
                 .build();
     }
 }

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import ru.nikidzawa.backend.store.client.dataModel.ChatRoomDataModel;
-import ru.nikidzawa.backend.store.client.dto.ChatRoomDto;
+import ru.nikidzawa.backend.store.client.dto.PrivateChatRoomDto;
 import ru.nikidzawa.backend.store.client.factory.ChatRoomDtoFactory;
 import ru.nikidzawa.backend.store.repository.ChatRoomRepository;
 
@@ -21,8 +21,8 @@ public class IndividualChatEntityService {
 
     ChatRoomDtoFactory factory;
 
-    public List<ChatRoomDto> getAllChatsByUserId (Long currentUserId) {
-        List<ChatRoomDataModel> chatRoomData = chatRoomRepository.findAllChatRoomsByUserId(currentUserId);
+    public List<PrivateChatRoomDto> getAllByOwnerId(Long ownerId) {
+        List<ChatRoomDataModel> chatRoomData = chatRoomRepository.getAllByOwner(ownerId);
         return chatRoomData.stream().map(factory::convert).collect(Collectors.toList());
     }
 }

@@ -2,7 +2,7 @@ package ru.nikidzawa.backend.store.client.dto;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.nikidzawa.backend.store.entity.IndividualChatEntity;
+import ru.nikidzawa.backend.store.entity.PrivateChatEntity;
 
 import java.util.List;
 
@@ -11,9 +11,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ChatRoomDto {
+public class PrivateChatRoomDto {
     IndividualDtoShort companion;
     List<MessageDto> messages;
-    IndividualChatEntity chat;
+    PrivateChatEntity chat;
     Integer unreadCount;
 }

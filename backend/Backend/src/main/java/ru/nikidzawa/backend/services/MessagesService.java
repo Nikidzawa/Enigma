@@ -9,14 +9,15 @@ import ru.nikidzawa.backend.exceptions.NotFoundException;
 import ru.nikidzawa.backend.store.client.dataModel.MessageDataModel;
 import ru.nikidzawa.backend.store.client.dto.MessageDto;
 import ru.nikidzawa.backend.store.client.factory.MessageDtoFactory;
-import ru.nikidzawa.backend.store.entity.IndividualChatEntity;
+import ru.nikidzawa.backend.store.entity.ChatEntity;
+import ru.nikidzawa.backend.store.entity.PrivateChatEntity;
 import ru.nikidzawa.backend.store.entity.MessageEntity;
+import ru.nikidzawa.backend.store.repository.ChatRepository;
 import ru.nikidzawa.backend.store.repository.IndivChatMessagesRepository;
-import ru.nikidzawa.backend.store.repository.IndividualChatEntityRepository;
+import ru.nikidzawa.backend.store.repository.PrivateChatEntityRepository;
 import ru.nikidzawa.backend.store.repository.MessageEntityRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,7 +32,9 @@ public class MessagesService {
 
     IndivChatMessagesRepository chatMessagesRepository;
 
-    IndividualChatEntityRepository individualChatEntityRepository;
+    PrivateChatEntityRepository privateChatEntityRepository;
+
+    ChatRepository chatRepository;
 
     MessageDtoFactory factory;
 
@@ -48,41 +51,50 @@ public class MessagesService {
     }
 
     public List<MessageDto> getMessagesBySenderIdAndReceiverId(Long senderId, Long receiverId) {
-        Optional<IndividualChatEntity> senderIndividualChat = individualChatEntityRepository
+        Optional<PrivateChatEntity> senderIndividualChat = privateChatEntityRepository
                 .findByOwnerIdAndCompanionId(senderId, receiverId);
-        return senderIndividualChat.map(individualChatEntity ->
-                        chatMessagesRepository.getByChatId(individualChatEntity.getId()).stream()
-                                .map(factory::convert)
-                                .collect(Collectors.toList()))
-                .orElseGet(ArrayList::new);
+        return null;
     }
 
-    public MessageDto send(Long senderId, Long receiverId, MessageEntity messageEntity) {
+    public MessageDto save(Long receiverId, MessageEntity messageEntity) {
+        if (messageEntity.getChatId() == null) {
+            Long senderId = messageEntity.getSenderId();
+            PrivateChatEntity privateChat = privateChatEntityRepository
+                    .findByOwnerIdAndCompanionId(senderId, receiverId)
+                    .orElse(null);
+
+            if (privateChat == null) {
+                ChatEntity chat = chatRepository.saveAndFlush(ChatEntity
+                        .builder()
+                        .createdAt(LocalDateTime.now())
+                        .build()
+                );
+
+                messageEntity.setChatId(chat.getId());
+
+                new Thread(() -> {
+                    privateChatEntityRepository.saveAndFlush(
+                            PrivateChatEntity.builder()
+                                    .chatId(chat.getId())
+                                    .ownerId(senderId)
+                                    .companionId(receiverId)
+                                    .build()
+                    );
+                    privateChatEntityRepository.saveAndFlush(
+                            PrivateChatEntity.builder()
+                                    .chatId(chat.getId())
+                                    .ownerId(receiverId)
+                                    .companionId(senderId)
+                                    .build()
+                    );
+                }).start();
+            } else {
+                messageEntity.setChatId(privateChat.getChatId());
+            }
+        }
+
         MessageEntity message = messageRepository.saveAndFlush(messageEntity);
 
-        IndividualChatEntity senderIndividualChat = individualChatEntityRepository
-                .findByOwnerIdAndCompanionId(senderId, receiverId)
-                .orElseGet(() -> individualChatEntityRepository.saveAndFlush(
-                        IndividualChatEntity.builder()
-                                .createdAt(LocalDateTime.now())
-                                .ownerId(senderId)
-                                .companionId(receiverId)
-                                .build()
-                )
-        );
-        chatMessagesRepository.saveIndivChatMessage(senderIndividualChat.getId(), message.getId());
-
-        IndividualChatEntity receiverIndividualChat = individualChatEntityRepository
-                .findByOwnerIdAndCompanionId(receiverId, senderId)
-                .orElseGet(() -> individualChatEntityRepository.saveAndFlush(
-                        IndividualChatEntity.builder()
-                                .createdAt(LocalDateTime.now())
-                                .ownerId(receiverId)
-                                .companionId(senderId)
-                                .build()
-                )
-        );
-        chatMessagesRepository.saveIndivChatMessage(receiverIndividualChat.getId(), message.getId());
         return factory.convert(message);
     }
 

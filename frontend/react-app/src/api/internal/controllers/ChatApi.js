@@ -3,7 +3,7 @@ import protectedApi from "../ProtectedApi";
 
 export default class ChatApi {
 
-    static async getAllUserChatsByUserId(userId) {
-        return api.get(`/chats/getAllUserChats/${userId}`)
+    static async getAllByOwnerId(ownerId) {
+        return api.get(`/chats/${ownerId}/all`)
     }
 }

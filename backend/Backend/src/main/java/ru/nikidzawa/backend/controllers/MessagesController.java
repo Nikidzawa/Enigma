@@ -19,7 +19,7 @@ public class MessagesController {
 
     private static final String GET_MESSAGES_BY_CHAT_ID = "getByChatId/{chatId}";
     private static final String GET_MESSAGES_BY_SENDER_ID_AND_RECEIVER_ID = "get";
-    private static final String SEND_MESSAGE = "send";
+    private static final String SAVE_MESSAGE = "save";
     private static final String READ_MESSAGE = "read/{messageId}";
 
     MessagesService service;
@@ -31,13 +31,12 @@ public class MessagesController {
         return service.getByChatIdAndLastMessageId(chatId, lastMessageId);
     }
 
-    @PostMapping(SEND_MESSAGE)
-    public MessageDto send(
-            @RequestParam Long senderId,
+    @PostMapping(SAVE_MESSAGE)
+    public MessageDto save(
             @RequestParam Long receiverId,
             @RequestBody MessageEntity messageEntity
     ) {
-        return service.send(senderId, receiverId, messageEntity);
+        return service.save(receiverId, messageEntity);
     }
 
     @GetMapping(GET_MESSAGES_BY_SENDER_ID_AND_RECEIVER_ID)

@@ -1,18 +1,24 @@
 export default class MessageDto {
-    constructor(id, createdAt, text, senderId, isRead) {
+    constructor(id, senderId, sentAt, text, isPinned, isEdited, editedAt, isRead) {
         this.id = id;
-        this.createdAt = createdAt;
-        this.text = text;
         this.senderId = senderId;
+        this.sentAt = sentAt;
+        this.text = text;
+        this.isPinned = isPinned || false;
+        this.isEdited = isEdited || false;
+        this.editedAt = editedAt;
         this.isRead = isRead || false;
     }
 
     static fromJSON(data) {
         return new MessageDto(
             data.id,
-            new Date(`${data.createdAt}Z`),
-            data.text,
             data.senderId,
+            new Date(`${data.sentAt}Z`),
+            data.text,
+            data.isPinned || false,
+            data.isEdited || false,
+            new Date(`${data.createdAt}Z`),
             data.isRead || false
         );
     }

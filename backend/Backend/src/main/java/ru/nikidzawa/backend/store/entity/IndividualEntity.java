@@ -35,7 +35,7 @@ public class IndividualEntity {
     @Column(name = "surname", nullable = true, length = 25)
     String surname;
 
-    @Column(name = "birthdate", nullable = true)
+    @Column(name = "birth_date", nullable = true)
     LocalDate birthdate;
 
     @Column(name = "about_me", nullable = true, length = 120)

@@ -11,7 +11,7 @@ public class MessageDtoFactory {
         return MessageDto.builder()
                 .id(messageEntity.getId())
                 .text(messageEntity.getText())
-                .createdAt(messageEntity.getCreatedAt())
+                .sentAt(messageEntity.getSentAt())
                 .senderId(messageEntity.getSenderId())
                 .isRead(messageEntity.getIsRead())
                 .build();
@@ -21,7 +21,7 @@ public class MessageDtoFactory {
         return MessageDto.builder()
                 .id(messageDataModel.getId())
                 .senderId(messageDataModel.getSenderId())
-                .createdAt(messageDataModel.getCreatedAt())
+                .sentAt(messageDataModel.getCreatedAt())
                 .text(messageDataModel.getText())
                 .isRead(messageDataModel.getIsRead())
                 .build();
