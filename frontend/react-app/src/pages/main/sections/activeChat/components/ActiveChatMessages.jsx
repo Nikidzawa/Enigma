@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react";
+import {useEffect,  useMemo, useRef, useState} from "react";
 import MessagesApi from "../../../../../api/internal/controllers/MessagesApi";
 import MessageDto from "../../../../../api/internal/dto/MessageDto";
 import UserController from "../../../../../store/UserController";
@@ -9,6 +9,9 @@ import BlackCheckMark from "../../../../../img/two-ticks-black.png"
 import ClientController from "../../../../../store/ClientController";
 import MessageReadResponse from "../../../../../network/response/MessageReadResponse";
 import ChatRoomsController from "../../../../../store/ChatRoomsController";
+import SendImage from "../../../../../img/send.png";
+import MessageRequest from "../../../../../network/request/MessageRequest";
+import ChatApi from "../../../../../api/internal/controllers/ChatApi";
 
 const MessagesSectionMainComponent = styled.div`
     height: calc(100% - 110px);
@@ -39,6 +42,31 @@ const MessagesSectionMainComponent = styled.div`
     }
 
 `;
+
+const InputContainer = styled.div`
+    height: 50px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #707070;
+    gap: 10px;
+`
+
+const Input = styled.input`
+    background-color: unset;
+    border: none;
+    color: white;
+    width: 100%;
+    height: 25px;
+    outline: none;
+    font-family: Rubik;
+    padding-bottom: 5px;
+    font-size: 16px;
+`
+
+const SendButton = styled.img`
+    width: 30px;
+    cursor: pointer;
+`
 
 const MyMessage = styled.div`
     max-width: 500px;
@@ -103,7 +131,19 @@ const ReadMark = styled.img`
     height: 8px;
 `
 
-const ActiveChatMessages = forwardRef(({chat, user}, ref) => {
+const SystemMessage = styled.div`
+    max-width: 500px;
+    min-width: 80px;
+    background: transparent;
+    color: white;
+    border-radius: 10px;
+    padding: 3px 15px;
+    align-self: center;
+    text-align: center;
+    font-size: 14px;
+`
+
+export default function ActiveChatMessages ({setChat, chat, user}) {
     const stompClient = ClientController.getClient();
     const [messages, setMessages] = useState([]);
 
@@ -117,12 +157,9 @@ const ActiveChatMessages = forwardRef(({chat, user}, ref) => {
     const observerRefs = useRef({});
     const messageRefs = useRef(new Set());
 
-    useImperativeHandle(ref, () => ({
-        addMessageIntoChat: async (message) => {
-            setMessages(prev => [...prev, message]);
-            scrollToBottom();
-        }
-    }));
+    const [text, setText] = useState("");
+    const [lastTypingCall, setLastTypingCall] = useState(0);
+    const [sendingMessage, setSendingMessage] = useState(false);
 
     useEffect(() => {
         if (stompClient && stompClient.connected) {
@@ -183,24 +220,23 @@ const ActiveChatMessages = forwardRef(({chat, user}, ref) => {
     }, [unreadMessages]);
 
     useEffect(() => {
-        const loadMessages = async () => {
-            if (chat) {
-                await MessagesApi.getMessagesByChatId(chat.id, 0).then(response =>
-                    setMessages(defaultSort(response.data.map(message => MessageDto.fromJSON(message))))
-                );
-            } else if (user) {
-                await MessagesApi.getMessagesBySenderIdAndReceiverId(UserController.getCurrentUser().id, user.id).then(response =>
-                    setMessages(defaultSort(response.data.map(message => MessageDto.fromJSON(message))))
-                )
+        loadMessages().then(messages => {
+            if (messages) {
+                setMessages(defaultSort(messages));
+                setTimeout(() => {
+                    scrollToBottom();
+                }, 0);
             }
-        };
-
-        loadMessages().then(() => {
-            setTimeout(() => {
-                scrollToBottom();
-            }, 0);
         });
     }, []);
+
+    async function loadMessages (){
+        if (chat) {
+            return await MessagesApi.getMessagesByChatId(chat.chatId, messages[0]?.id).then(response => {
+                return response.data.map(message => MessageDto.fromJSON(message));
+            });
+        }
+    }
 
     const scrollToBottom = () => {
         if (ChatSectionRef.current) {
@@ -223,24 +259,15 @@ const ActiveChatMessages = forwardRef(({chat, user}, ref) => {
 
                 try {
                     if (!blockLoadMessages) {
-                        let latestMessages;
-                        if (chat) {
-                            await MessagesApi.getMessagesByChatId(chat.id, messages[0]?.id).then(response => {
-                                latestMessages = response.data.map(message => MessageDto.fromJSON(message))
-                            });
-                        } else {
-                            await MessagesApi.getMessagesBySenderIdAndReceiverId(UserController.getCurrentUser().id, user.id).then(response => {
-                                latestMessages = response.data.map(message => MessageDto.fromJSON(message))
-                            })
-                        }
-
-                        if (latestMessages.length > 0) {
-                            setMessages((prevMessages) => {
-                                return [...defaultSort(latestMessages), ...prevMessages];
-                            });
-                        } else {
-                            setBlockLoadMessages(true);
-                        }
+                        loadMessages().then(messages => {
+                            if (messages.length > 0) {
+                                setMessages((prev) => {
+                                    return [...defaultSort(messages), ...prev];
+                                });
+                            } else {
+                                setBlockLoadMessages(true);
+                            }
+                        });
                     }
                 } catch (error) {
                     console.error("Ошибка при загрузке сообщений: ", error);
@@ -267,34 +294,83 @@ const ActiveChatMessages = forwardRef(({chat, user}, ref) => {
         return array.sort((a, b) => a.id - b.id);
     }
 
-    return (
-        <MessagesSectionMainComponent ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
-            {
-                messages.map((message) => (
-                    message.senderId === UserController.getCurrentUser().id ? (
-                        <MyMessage key={message.id}>
-                            <MyMessageText>{message.text}</MyMessageText>
-                            <ButtonSection>
-                                {
-                                    <ReadMark src={message.isRead ? WhiteCheckMarkImg : BlackCheckMark}/>
-                                }
-                                <MyMessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</MyMessageSendDate>
-                            </ButtonSection>
-                        </MyMessage>
-                    ) : (
-                        <OtherMessage key={message.id}
-                                      id={`${message.id}`}
-                                      data-is-read={message.isRead}
-                                      ref={el => messageRefs.current[message.id] = el}
-                        >
-                            <OtherMessageText>{message.text}</OtherMessageText>
-                            <OtherMessageSendDate>{DateParser.parseToHourAndMinute(message.createdAt)}</OtherMessageSendDate>
-                        </OtherMessage>
-                    )
-                ))
-            }
-        </MessagesSectionMainComponent>
-    )
-})
+    function onInput(e) {
+        setText(e.target.value);
+        const now = Date.now();
+        if (now - lastTypingCall > 2000) {
+            ClientController.typing();
+            setLastTypingCall(now);
+        }
+    }
 
-export default ActiveChatMessages;
+    async function sendMessage() {
+        try {
+            if (text) {
+                setSendingMessage(true);
+                let newChat = chat;
+                if (!chat) {
+                    ChatApi.findOrCreateChat(UserController.getCurrentUser().id, user.id).then(response => {
+                        const responseChat = response.data;
+                        newChat = responseChat;
+                        setChat(responseChat);
+                    });
+                    ChatRoomsController.updateChat(user, chat);
+                }
+                const newMessage = new MessageDto(null, UserController.getCurrentUser().id, newChat.chatId, new Date(), text, false, false, null, false);
+                MessagesApi.save(newMessage).then(response => {
+                    const message = MessageDto.fromJSON(response.data);
+                    ChatRoomsController.updateLastMessageOrAddChat({message: message, companion: user});
+                    ClientController.sendMessage(new MessageRequest(message.id, message.sentAt, UserController.getCurrentUser().id, user.id, newChat.chatId, message.text));
+                    setMessages(prev => [...prev, message]);
+                    scrollToBottom();
+                    setText("");
+                    setLastTypingCall(2000);
+                });
+            }
+        } finally {
+            setSendingMessage(false);
+        }
+    }
+
+    return (
+        <>
+            <MessagesSectionMainComponent ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
+                {
+                    messages.map((message, index) => {
+                        return (
+                            <>
+                                <SystemMessage>{DateParser.parseMessageDate(messages[index - 1], message)}</SystemMessage>
+                                {message.senderId === UserController.getCurrentUser().id ? (
+                                    <MyMessage key={message.id}>
+                                        <MyMessageText>{message.text}</MyMessageText>
+                                        <ButtonSection>
+                                            {
+                                                <ReadMark src={message.isRead ? WhiteCheckMarkImg : BlackCheckMark}/>
+                                            }
+                                            <MyMessageSendDate>{DateParser.parseToHourAndMinute(message.sentAt)}</MyMessageSendDate>
+                                        </ButtonSection>
+                                    </MyMessage>
+                                ) : (
+                                    <OtherMessage key={message.id}
+                                                  id={`${message.id}`}
+                                                  data-is-read={message.isRead}
+                                                  ref={el => messageRefs.current[message.id] = el}
+                                    >
+                                        <OtherMessageText>{message.text}</OtherMessageText>
+                                        <OtherMessageSendDate>{DateParser.parseToHourAndMinute(message.sentAt)}</OtherMessageSendDate>
+                                    </OtherMessage>
+                                )}
+                            </>
+                        )
+                    })
+                }
+            </MessagesSectionMainComponent>
+            <InputContainer>
+                <Input value={text} onInput={onInput} placeholder={"Введите сообщение"}
+                       onKeyDown={(e) => e.key === "Enter" && !sendingMessage && sendMessage()}
+                />
+                <SendButton onClick={sendMessage} src={SendImage}/>
+            </InputContainer>
+        </>
+    )
+}

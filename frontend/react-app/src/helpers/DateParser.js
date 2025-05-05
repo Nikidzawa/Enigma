@@ -41,4 +41,33 @@ export default class DateParser {
             return `${lastOnlineStr} ${date.getFullYear()}.${this.pad(date.getMonth() + 1)}.${this.pad(date.getDate())} в ${this.parseToHourAndMinute(date)}`;
         }
     }
+
+    static parseMessageDate(prevMessage, currentMessage) {
+        if (currentMessage) {
+            const currentMessageDate = currentMessage.sentAt;
+            if (!prevMessage || prevMessage.sentAt.toDateString() !== currentMessageDate.toDateString()) {
+                return this.getDayAndMonth(currentMessageDate);
+            }
+        }
+    }
+
+    static getDayAndMonth (date) {
+        const day = date.getDate();
+        let dayAndMonth;
+        switch (date.getMonth()) {
+            case 0:  dayAndMonth =  `${day} Января`; break;
+            case 1: dayAndMonth =  `${day} Февраля`; break;
+            case 2: dayAndMonth =  `${day} Марта`; break;
+            case 3: dayAndMonth =  `${day} Апреля`; break;
+            case 4: dayAndMonth =  `${day} Мая`; break;
+            case 5: dayAndMonth =  `${day} Июня`; break;
+            case 6: dayAndMonth =  `${day} Июля`; break;
+            case 7: dayAndMonth =  `${day} Августа`; break;
+            case 8: dayAndMonth =  `${day} Сентября`; break;
+            case 9: dayAndMonth =  `${day} Октября`; break;
+            case 10: dayAndMonth =  `${day} Ноября`; break;
+            case 11: dayAndMonth =  `${day} Декабря`; break;
+        }
+        return dayAndMonth;
+    }
 }
