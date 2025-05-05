@@ -27,7 +27,7 @@ public class ChatEntity {
     ChatType type;
 
     @Column(name = "last_message_id")
-    Integer lastMessageId;
+    Long lastMessageId;
 
     @Column(name = "created_at")
     LocalDateTime createdAt;

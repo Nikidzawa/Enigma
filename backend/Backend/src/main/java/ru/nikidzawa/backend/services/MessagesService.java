@@ -6,21 +6,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import ru.nikidzawa.backend.exceptions.NotFoundException;
-import ru.nikidzawa.backend.store.client.dataModel.MessageDataModel;
-import ru.nikidzawa.backend.store.client.dto.MessageDto;
-import ru.nikidzawa.backend.store.client.factory.MessageDtoFactory;
-import ru.nikidzawa.backend.store.entity.ChatEntity;
-import ru.nikidzawa.backend.store.entity.PrivateChatEntity;
 import ru.nikidzawa.backend.store.entity.MessageEntity;
-import ru.nikidzawa.backend.store.repository.ChatRepository;
-import ru.nikidzawa.backend.store.repository.IndivChatMessagesRepository;
-import ru.nikidzawa.backend.store.repository.PrivateChatEntityRepository;
+import ru.nikidzawa.backend.store.entity.PrivateChatDeletedMessagesEntity;
 import ru.nikidzawa.backend.store.repository.MessageEntityRepository;
+import ru.nikidzawa.backend.store.repository.PrivateChatDeletedMessagesRepository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -30,72 +22,20 @@ public class MessagesService {
 
     MessageEntityRepository messageRepository;
 
-    IndivChatMessagesRepository chatMessagesRepository;
+    PrivateChatDeletedMessagesRepository deletedMessagesRepository;
 
-    PrivateChatEntityRepository privateChatEntityRepository;
-
-    ChatRepository chatRepository;
-
-    MessageDtoFactory factory;
-
-    public List<MessageDto> getByChatIdAndLastMessageId (Long chatId, Long lastMessageId) {
-        List<MessageDataModel> messageDataModels;
+    public List<MessageEntity> getByChatIdAndLastMessageId (Long chatId, Long lastMessageId) {
+        List<MessageEntity> messageEntities;
         if (lastMessageId == 0) {
-            messageDataModels = chatMessagesRepository.getByChatId(chatId);
+            messageEntities = messageRepository.getByChatId(chatId);
         } else {
-            messageDataModels = chatMessagesRepository.getByChatIdAndLastMessageId(chatId, lastMessageId);
+            messageEntities = messageRepository.getByChatIdAndLastMessageId(chatId, lastMessageId);
         }
-        return messageDataModels.stream()
-                .map(factory::convert)
-                .collect(Collectors.toList());
+        return messageEntities;
     }
 
-    public List<MessageDto> getMessagesBySenderIdAndReceiverId(Long senderId, Long receiverId) {
-        Optional<PrivateChatEntity> senderIndividualChat = privateChatEntityRepository
-                .findByOwnerIdAndCompanionId(senderId, receiverId);
-        return null;
-    }
-
-    public MessageDto save(Long receiverId, MessageEntity messageEntity) {
-        if (messageEntity.getChatId() == null) {
-            Long senderId = messageEntity.getSenderId();
-            PrivateChatEntity privateChat = privateChatEntityRepository
-                    .findByOwnerIdAndCompanionId(senderId, receiverId)
-                    .orElse(null);
-
-            if (privateChat == null) {
-                ChatEntity chat = chatRepository.saveAndFlush(ChatEntity
-                        .builder()
-                        .createdAt(LocalDateTime.now())
-                        .build()
-                );
-
-                messageEntity.setChatId(chat.getId());
-
-                new Thread(() -> {
-                    privateChatEntityRepository.saveAndFlush(
-                            PrivateChatEntity.builder()
-                                    .chatId(chat.getId())
-                                    .ownerId(senderId)
-                                    .companionId(receiverId)
-                                    .build()
-                    );
-                    privateChatEntityRepository.saveAndFlush(
-                            PrivateChatEntity.builder()
-                                    .chatId(chat.getId())
-                                    .ownerId(receiverId)
-                                    .companionId(senderId)
-                                    .build()
-                    );
-                }).start();
-            } else {
-                messageEntity.setChatId(privateChat.getChatId());
-            }
-        }
-
-        MessageEntity message = messageRepository.saveAndFlush(messageEntity);
-
-        return factory.convert(message);
+    public MessageEntity save(MessageEntity messageEntity) {
+        return messageRepository.saveAndFlush(messageEntity);
     }
 
     public void read (Long messageId) {
@@ -103,5 +43,23 @@ public class MessagesService {
                 .orElseThrow(() -> new NotFoundException("Сообщение не найдено"));
         message.setIsRead(true);
         messageRepository.saveAndFlush(message);
+    }
+
+    public boolean deleteFromPrivateChat(Long messageId, Long userId) {
+        Optional<PrivateChatDeletedMessagesEntity> deletedMessageEntity = deletedMessagesRepository.findById(messageId);
+        if (deletedMessageEntity.isPresent()) {
+            deletedMessagesRepository.deleteById(messageId);
+            messageRepository.deleteById(messageId);
+        } else {
+            deletedMessagesRepository.saveAndFlush(PrivateChatDeletedMessagesEntity.builder()
+                    .messageId(messageId)
+                    .userId(userId)
+                    .build());
+        }
+        return true;
+    }
+
+    public void deleteMessage (Long messageId) {
+        messageRepository.deleteById(messageId);
     }
 }

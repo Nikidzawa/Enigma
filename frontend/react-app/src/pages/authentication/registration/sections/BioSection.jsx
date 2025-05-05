@@ -9,6 +9,7 @@ import EmailCodeController from "../store/EmailCodeController";
 import IndividualDtoFull from "../../../../api/internal/dto/IndividualDtoFull";
 import FireBase from "../../../../api/external/FireBase";
 import ImageResizer from "../../../components/ImageResizer";
+import Loader from "../components/Loader";
 
 const MainContainer = styled.div`
     display: flex;
@@ -100,9 +101,11 @@ export default function BioSection ({goBack}) {
     const [nameEx, setNameEx] = useState(false);
 
     const [resizerVisible, setResizerVisible] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null)
+    const [selectedImage, setSelectedImage] = useState(null);
 
-    async function register() {
+    const [loading, setLoading] = useState(false);
+
+    function register() {
         const userDto = new IndividualDtoFull();
         userDto.name = name;
         userDto.surname = surname;
@@ -149,11 +152,18 @@ export default function BioSection ({goBack}) {
     };
 
     function validate () {
-        if (!name) {
-            setNameEx(true);
-        } else {
-            setNameEx(false);
-            register();
+        try {
+            if (!name) {
+                setNameEx(true);
+            } else {
+                setNameEx(false);
+                setLoading(true);
+                register();
+            }
+        } catch (e) {
+            console.error('error: ' + e)
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -178,7 +188,7 @@ export default function BioSection ({goBack}) {
                            ref={surnameRef}
                     />
                 </FieldsContainer>
-                <Button onClick={validate}>Register</Button>
+                <Button disabled={loading} onClick={validate}>{loading ? <Loader/> : 'Register'}</Button>
                 <BackPageLink onClick={goBack}>Go Back</BackPageLink>
             </MainContainer>
             {

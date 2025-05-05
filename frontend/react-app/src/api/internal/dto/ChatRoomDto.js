@@ -6,7 +6,7 @@ export default class ChatRoomDto {
     constructor(companion, messages, chat, unreadCount) {
         this.companion = IndividualDtoShort.fromJSON(companion);
         this.messages = messages.map(message => MessageDto.fromJSON(message));
-        this.chat = PrivateChatDto.fromJSON(chat);
+        this.chat = chat && PrivateChatDto.fromJSON(chat);
         this.unreadCount = unreadCount;
     }
 

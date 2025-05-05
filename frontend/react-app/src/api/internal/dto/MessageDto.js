@@ -1,7 +1,8 @@
 export default class MessageDto {
-    constructor(id, senderId, sentAt, text, isPinned, isEdited, editedAt, isRead) {
+    constructor(id, senderId, chatId, sentAt, text, isPinned, isEdited, editedAt, isRead) {
         this.id = id;
         this.senderId = senderId;
+        this.chatId = chatId;
         this.sentAt = sentAt;
         this.text = text;
         this.isPinned = isPinned || false;
@@ -14,6 +15,7 @@ export default class MessageDto {
         return new MessageDto(
             data.id,
             data.senderId,
+            data.chatId,
             new Date(`${data.sentAt}Z`),
             data.text,
             data.isPinned || false,
@@ -26,9 +28,10 @@ export default class MessageDto {
     static fromRequest(data) {
         return new MessageDto(
             Number.parseInt(data.id),
+            Number.parseInt(data.senderId),
+            Number.parseInt(data.chatId),
             new Date(`${data.createdAt}`),
             data.message,
-            Number.parseInt(data.senderId)
         )
     }
 }

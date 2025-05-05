@@ -238,7 +238,7 @@ export default observer(function ChatRoom({chatRoom}) {
                                         {
                                             isMyMessage() && <ReadMark src={lastMessage.isRead ? WhiteCheckMarkImg : BlackCheckMark}/>
                                         }
-                                        <DateComponent>{lastMessage ? DateParser.parseDate(lastMessage.createdAt) : ""}</DateComponent>
+                                        <DateComponent>{lastMessage ? DateParser.parseDate(lastMessage.sentAt) : ""}</DateComponent>
                                     </ReadStatusAndMessageDate>
                                 )
                             }

@@ -3,19 +3,14 @@ import api from "../Api";
 export default class MessagesApi {
 
     static async getMessagesByChatId(chatId, lastMessageId) {
-        return api.get(`messages/getByChatId/${chatId}?lastMessageId=${lastMessageId}`)
+        return api.get(`messages/getByChatId/${chatId}?lastMessageId=${lastMessageId || 0}`)
     }
 
-    static async getMessagesBySenderIdAndReceiverId(senderId, receiverId) {
-        return api.get(`messages/get?senderId=${senderId}&receiverId=${receiverId}`)
-
+    static async save(message) {
+        return api.post(`/messages/save`, message);
     }
 
-    static save(senderId, receiverId, message) {
-        return api.post(`/messages/send?senderId=${senderId}&receiverId=${receiverId}`, message);
-    }
-
-    static async read(messageId) {
+    static read(messageId) {
         api.put(`/messages/read/${messageId}`);
     }
 }

@@ -16,5 +16,6 @@ public class ChatMessage {
     String createdAt;
     String senderId;
     String receiverId;
+    String chatId;
     String message;
 }

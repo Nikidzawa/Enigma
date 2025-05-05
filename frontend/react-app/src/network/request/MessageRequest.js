@@ -1,9 +1,10 @@
 export default class MessageRequest {
-    constructor(id, createdAt, senderId, receiverId, message) {
+    constructor(id, createdAt, senderId, receiverId, chatId, message) {
         this.id = Number.parseInt(id);
         this.createdAt = createdAt;
         this.senderId = Number.parseInt(senderId);
         this.receiverId = Number.parseInt(receiverId);
+        this.chatId = Number.parseInt(chatId);
         this.message = message;
     }
 

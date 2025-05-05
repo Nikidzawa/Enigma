@@ -16,8 +16,7 @@ import java.time.LocalDateTime;
 @Entity(name = "messages")
 @Table(indexes = {
         @Index(name = "idx_message_sender", columnList = "sender_id"),
-        @Index(name = "idx_message_created", columnList = "created_at"),
-        @Index(name = "idx_message_read", columnList = "is_read")
+        @Index(name = "idx_message_chat", columnList = "chat_id")
 })
 public class MessageEntity {
     @Id

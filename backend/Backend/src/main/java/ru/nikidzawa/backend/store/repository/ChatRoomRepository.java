@@ -44,11 +44,11 @@ public class ChatRoomRepository {
         left join messages lm on lm.id = c.last_message_id
         left join lateral ( 
             select count(m) from messages m
-            where m.chat_id = c.id and m.is_read = false
+            where m.chat_id = c.id and m.is_read = false and m.sender_id != ?
         ) as unread_count on true
         where pc.owner_id = ?
         """;
-        return jdbcTemplate.query(sql, new ChatRoomDataModel.ChatRoomRowMapper(), ownerId);
+        return jdbcTemplate.query(sql, new ChatRoomDataModel.ChatRoomRowMapper(), ownerId, ownerId);
     }
 
 }

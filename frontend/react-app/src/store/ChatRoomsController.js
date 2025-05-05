@@ -117,6 +117,12 @@ class ChatRoomsController {
         );
     }
 
+    updateChat(user, chat) {
+        this.chatRooms = this.chatRooms.map((chatRoom) =>
+            chatRoom.companion.id === user.id ? { ...chatRoom, chat: chat } : chatRoom
+        )
+    }
+
     updateMessageReadStatus(messageId) {
         this.chatRooms = this.chatRooms.map((chat) => {
             const lastMessage = chat.messages[chat.messages.length - 1];
@@ -145,7 +151,7 @@ class ChatRoomsController {
             };
             this.chatRooms = updatedChats;
         } else {
-            const newChatRoom = new ChatRoomDto(companion, [message], null, 0);
+            const newChatRoom = new ChatRoomDto(companion, [message], {chatId: message.chatId}, 0);
             this.chatRooms = [...this.chatRooms, newChatRoom];
             this.initChatRoomSubscriptions(newChatRoom)
         }
@@ -154,7 +160,7 @@ class ChatRoomsController {
     findChatByUserDtoOrGetNew(userDto) {
         return (
             this.chatRooms.find((chat) => chat.companion.id === userDto.id) ||
-            new ChatRoomDto(userDto, [], null)
+            new ChatRoomDto(userDto, [], null, 0)
         );
     }
 

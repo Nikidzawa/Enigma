@@ -61,7 +61,7 @@ const ProfileImage = styled.img`
 
 const AvatarContainer = styled.div`
     position: relative;
-    margin-bottom: 2px;
+    margin-bottom: 5px;
 `
 
 const AvatarSection  = styled.div`

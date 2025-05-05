@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class MessageDto {
     Long id;
     Long senderId;
+    Long chatId;
     LocalDateTime sentAt;
     String text;
     Boolean isPinned;

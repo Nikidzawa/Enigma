@@ -24,6 +24,7 @@ const MessagesSectionMainComponent = styled.div`
     padding: 10px 6px 10px 6px;
     -webkit-background-clip: text;
     transition: background-color 1s ease;
+    opacity: ${props => props.readyMessages ? "1" : "0"};
 
     &::-webkit-scrollbar {
         max-width: 5px;
@@ -137,15 +138,18 @@ const SystemMessage = styled.div`
     background: transparent;
     color: white;
     border-radius: 10px;
-    padding: 3px 15px;
+    padding: 5px 15px;
     align-self: center;
     text-align: center;
     font-size: 14px;
+    cursor: default;
 `
 
 export default function ActiveChatMessages ({setChat, chat, user}) {
     const stompClient = ClientController.getClient();
     const [messages, setMessages] = useState([]);
+    const [isFirstRender, setIsFirstRender] = useState(true);
+    const [readyMessages, setReadyMessages] = useState(false);
 
     const [isLoadMessages, setLoadMessages] = useState(false);
     const [blockLoadMessages, setBlockLoadMessages] = useState(false);
@@ -160,6 +164,8 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
     const [text, setText] = useState("");
     const [lastTypingCall, setLastTypingCall] = useState(0);
     const [sendingMessage, setSendingMessage] = useState(false);
+
+    const [firstUnreadMessage, setFirstUnreadMessage] = useState(null);
 
     useEffect(() => {
         if (stompClient && stompClient.connected) {
@@ -189,10 +195,16 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
         }
     }, [stompClient]);
 
-    const unreadMessages = useMemo(() =>
-            messages.filter(m => !m.isRead && m.senderId !== UserController.getCurrentUser().id),
-        [messages]
-    );
+    useEffect(() => {
+        if (messages.length > 0 && isFirstRender) {
+            setIsFirstRender(false);
+            setFirstUnreadMessage(messages.find(m => !m.isRead && m.senderId !== UserController.getCurrentUser().id));
+        }
+    }, [messages]);
+
+    const unreadMessages = useMemo(() => {
+            return messages.filter(m => !m.isRead && m.senderId !== UserController.getCurrentUser().id)
+    }, [messages]);
 
     useEffect(() => {
         unreadMessages.forEach(message => {
@@ -223,11 +235,12 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
         loadMessages().then(messages => {
             if (messages) {
                 setMessages(defaultSort(messages));
-                setTimeout(() => {
-                    scrollToBottom();
-                }, 0);
+                scrollToBottom().then(() =>
+                    setTimeout(() => {
+                        setReadyMessages(true)
+                    }, 30));
             }
-        });
+        })
     }, []);
 
     async function loadMessages (){
@@ -238,14 +251,14 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
         }
     }
 
-    const scrollToBottom = () => {
+    const scrollToBottom = async () => {
         if (ChatSectionRef.current) {
             setTimeout(() => {
                 ChatSectionRef.current.scrollTo({
                     top: ChatSectionRef.current.scrollHeight,
                     behavior: "instant",
                 });
-            }, 100);
+            }, 0);
         }
     };
 
@@ -256,18 +269,25 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
 
             if (scrollTop <= threshold) {
                 setLoadMessages(true);
-
                 try {
                     if (!blockLoadMessages) {
-                        loadMessages().then(messages => {
-                            if (messages.length > 0) {
-                                setMessages((prev) => {
-                                    return [...defaultSort(messages), ...prev];
-                                });
-                            } else {
-                                setBlockLoadMessages(true);
-                            }
-                        });
+                        const prevScrollHeight = ChatSectionRef.current.scrollHeight;
+                        const prevScrollTop = ChatSectionRef.current.scrollTop;
+
+                        const messages = await loadMessages();
+                        if (messages.length > 0) {
+                            setMessages((prev) => {
+                                const newMessages = messages.filter(msg => !prev.some(existing => existing.id === msg.id));
+                                return [...defaultSort(newMessages), ...prev];
+                            });
+
+                            await new Promise(resolve => setTimeout(resolve, 0));
+
+                            const newScrollHeight = ChatSectionRef.current.scrollHeight;
+                            ChatSectionRef.current.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
+                        } else {
+                            setBlockLoadMessages(true);
+                        }
                     }
                 } catch (error) {
                     console.error("Ошибка при загрузке сообщений: ", error);
@@ -276,7 +296,6 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
                 }
             }
         }
-
         scrollVisibleController();
 
         function scrollVisibleController() {
@@ -334,12 +353,14 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
 
     return (
         <>
-            <MessagesSectionMainComponent ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
+            <MessagesSectionMainComponent readyMessages={readyMessages} ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
                 {
                     messages.map((message, index) => {
+                        const messageDayAndMonth = DateParser.getDayAndMonth(messages[index - 1], message);
                         return (
                             <>
-                                <SystemMessage>{DateParser.parseMessageDate(messages[index - 1], message)}</SystemMessage>
+                                {firstUnreadMessage && firstUnreadMessage.id === message.id && <SystemMessage>Непрочитанные сообщения</SystemMessage>}
+                                {messageDayAndMonth && <SystemMessage>{messageDayAndMonth}</SystemMessage>}
                                 {message.senderId === UserController.getCurrentUser().id ? (
                                     <MyMessage key={message.id}>
                                         <MyMessageText>{message.text}</MyMessageText>
