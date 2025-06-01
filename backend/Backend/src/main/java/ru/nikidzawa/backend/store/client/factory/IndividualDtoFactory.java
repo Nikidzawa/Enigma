@@ -1,6 +1,7 @@
 package ru.nikidzawa.backend.store.client.factory;
 
 import org.springframework.stereotype.Component;
+import ru.nikidzawa.backend.store.client.dataModel.ChatRoomDataModel;
 import ru.nikidzawa.backend.store.client.dto.IndividualDtoShort;
 import ru.nikidzawa.backend.store.entity.IndividualEntity;
 
@@ -20,6 +21,19 @@ public class IndividualDtoFactory {
                 .aboutMe(individualEntity.getAboutMe())
                 .avatarHref(individualEntity.getAvatarHref())
                 .lastLogoutDate(individualEntity.getLastLogoutDate())
+                .build();
+    }
+
+    public IndividualDtoShort convertFromDataModel(ChatRoomDataModel m) {
+        return IndividualDtoShort.builder()
+                .id(m.getIndividualId())
+                .avatarHref(m.getAvatarHref())
+                .name(m.getName())
+                .nickname(m.getNickname())
+                .surname(m.getSurname())
+                .aboutMe(m.getAboutMe())
+                .birthdate(m.getBirthDate())
+                .lastLogoutDate(m.getLastLogoutDt())
                 .build();
     }
 }

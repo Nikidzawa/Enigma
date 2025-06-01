@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import SobachkaImage from "../../../../../../../img/email.png";
-import {useEffect, useRef} from "react";
 
 const Container = styled.div`
     position: relative;

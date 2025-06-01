@@ -9,7 +9,9 @@ import TypingResponse from "../../../../../../network/response/TypingResponse";
 import TypingAnimation from "../../../../components/onlineStatus/TypingAnimation";
 import WhiteCheckMarkImg from "../../../../../../img/two-ticks.png";
 import BlackCheckMark from "../../../../../../img/two-ticks-black.png";
-import ActiveChatController from "../../../../../../store/ActiveChatController";
+import ChatRoomsController from "../../../../../../store/ChatRoomsController";
+import MessagesApi from "../../../../../../api/internal/controllers/MessagesApi";
+import MessageDto from "../../../../../../api/internal/dto/MessageDto";
 
 const MainContainer = styled.div`
     overflow: hidden;
@@ -148,9 +150,7 @@ const NewMessagesCount = styled.div`
 `
 
 export default observer(function ChatRoom({chatRoom}) {
-    const [user, setUser] = useState({});
     const [lastMessage, setLastMessage] = useState(null);
-    const [unreadCount, setUnreadCount] = useState(0);
 
     const [isOnline, setIsOnline] = useState(null);
 
@@ -177,7 +177,7 @@ export default observer(function ChatRoom({chatRoom}) {
             });
 
             // Подписка на отслеживание статуса "Печатает"
-            const typingSubscription = stompClient.subscribe(`/client/${chatRoom.companion.id}/queue/typing`, (message) => {
+            const typingSubscription = stompClient.subscribe(ClientController.getTypingSubscription(UserController.getCurrentUser().id, chatRoom.companion.id), (message) => {
                 const typingResponse = TypingResponse.fromJSON(JSON.parse(message.body))
                 if (typingTimeoutRef.current) {
                     clearTimeout(typingTimeoutRef.current);
@@ -207,50 +207,48 @@ export default observer(function ChatRoom({chatRoom}) {
     }, [stompClient]);
 
     useEffect(() => {
-        setUser(chatRoom.companion);
-    }, []);
-
-    useEffect(() => {
-        setLastMessage(chatRoom.messages ? chatRoom.messages[chatRoom.messages.length - 1] : null);
+        const lastMessage = chatRoom.messages[chatRoom.messages.length - 1];
+        if (lastMessage) {
+            setLastMessage(lastMessage);
+        } else {
+            MessagesApi.getMessagesByChatId(chatRoom.chat.chatId).then(response => {
+                let newMessages = response.data.map(message => MessageDto.fromJSON(message));
+                if (newMessages.length > 0) {
+                    ChatRoomsController.addMessagesInStart(chatRoom.companion.id, newMessages)
+                } else {
+                    ChatRoomsController.removeChatRoom(chatRoom.companion.id);
+                }
+            })
+        }
     }, [chatRoom.messages]);
 
-    useEffect(() => {
-        setUser(chatRoom.companion);
-    }, [chatRoom.companion]);
-
-    useEffect(() => {
-        setUnreadCount(chatRoom.unreadCount);
-    }, [chatRoom.unreadCount]);
-
-    return (
-            <MainContainer onClick={() => ActiveChatController.setActiveChat(chatRoom)}>
+    return lastMessage && (
+            <MainContainer onClick={() => ChatRoomsController.setActiveChat(chatRoom.companion)}>
                 <ChatRoomContainer>
                     <AvatarContainer>
-                        <UserAvatar src={user.avatarHref}/>
+                        <UserAvatar src={chatRoom.companion.avatarHref}/>
                         <OnlineCircle isOnline={isOnline}/>
                     </AvatarContainer>
                     <UserData>
                         <UpperLine>
-                            <Name>{`${user.name} ${user.surname}`}</Name>
+                            <Name>{`${chatRoom.companion.name} ${chatRoom.companion.surname}`}</Name>
                             {
-                                lastMessage && (
-                                    <ReadStatusAndMessageDate>
-                                        {
-                                            isMyMessage() && <ReadMark src={lastMessage.isRead ? WhiteCheckMarkImg : BlackCheckMark}/>
-                                        }
-                                        <DateComponent>{lastMessage ? DateParser.parseDate(lastMessage.sentAt) : ""}</DateComponent>
-                                    </ReadStatusAndMessageDate>
-                                )
+                                <ReadStatusAndMessageDate>
+                                    {
+                                        isMyMessage() && <ReadMark src={lastMessage.isRead ? WhiteCheckMarkImg : BlackCheckMark}/>
+                                    }
+                                    <DateComponent>{DateParser.parseDate(lastMessage.sentAt)}</DateComponent>
+                                </ReadStatusAndMessageDate>
                             }
                         </UpperLine>
                         <MiddleLine>
                             <LastMessageOrTypingContainer>
                                 {isTyping ? <Typing>Пишет<TypingAnimation/></Typing>
-                                    : <LastMessage>{lastMessage ? ((isMyMessage() ? "Вы: " : "") + lastMessage.text) : "Сообщений нет"}</LastMessage>}
+                                    : <LastMessage>{(isMyMessage() ? "Вы: " : "") + lastMessage.text}</LastMessage>}
                             </LastMessageOrTypingContainer>
                             <NewMessagesCountContainer>
                                 {
-                                    unreadCount > 0 && <NewMessagesCount>{unreadCount}</NewMessagesCount>
+                                    chatRoom.unreadCount > 0 && <NewMessagesCount>{chatRoom.unreadCount}</NewMessagesCount>
                                 }
                             </NewMessagesCountContainer>
                         </MiddleLine>

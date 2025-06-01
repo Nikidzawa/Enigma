@@ -103,7 +103,7 @@ const Bio = styled.div`
 
 const AvatarContainer = styled.div`
     position: relative;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 `
 
 const AvatarSection  = styled.div`
@@ -131,7 +131,7 @@ const Fio = styled.div`
 const Fields = styled.div`
     display: flex;
     flex-direction: column;
-    padding: 10px 15px 25px 15px;
+    padding: 5px 15px 25px 15px;
 `
 
 const UpperContainer = styled.div`
@@ -186,14 +186,16 @@ const Button = styled.button`
 `
 
 const OnlineStatusContainer = styled.div`
+    margin-top: 3px;
 `
 
 const UserData = styled.div`
-    padding: 20px 20px 5px 20px;
+    padding: 20px 20px 3px 20px;
 `
 
 const AboutMeContainer = styled.div`
-    margin-top: 3px;
+    margin-top: 5px;
+    width: 90%;
 `
 
 export default observer(function MyProfile({ setVisible, visible }) {
@@ -257,7 +259,6 @@ export default observer(function MyProfile({ setVisible, visible }) {
             if (user.id === presenceResponse.userId) {
                 setIsOnline(presenceResponse.isOnline);
                 presenceResponse.lastOnlineDate && setLastOnlineDate(presenceResponse.lastOnlineDate);
-                console.log(presenceResponse.isOnline)
             }
         });
 
@@ -377,7 +378,7 @@ export default observer(function MyProfile({ setVisible, visible }) {
                                 </Bio>
                             }
                             <NicknameField value={nickname} disabled={true} onClick={() => isEditMode && setChangeNicknameModalIsVisible(true)}/>
-                            <DateField value={birthdate} setValue={setBirthdate} disabled={!isEditMode}/>
+                            {(birthdate || isEditMode) && <DateField value={birthdate} setValue={setBirthdate} disabled={!isEditMode}/>}
                         </Fields>
                     </ModalContainer>
                 </ShadowMainContainer>

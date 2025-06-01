@@ -1,5 +1,7 @@
 package ru.nikidzawa.backend.controllers;
 
+import jakarta.transaction.Transactional;
+import jakarta.websocket.server.PathParam;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,20 +23,29 @@ import java.util.List;
 @RequestMapping("/messages")
 public class MessagesController {
 
-    private static final String GET_MESSAGES_BY_CHAT_ID = "/getByChatId/{chatId}";
+    private static final String GET_MESSAGES_BY_CHAT_ID_AND_LAST_MESSAGE_ID = "/chatId/{chatId}/lastMessageId/{lastMessageId}";
+    private static final String GET_MESSAGES_BY_CHAT_ID = "/chatId/{chatId}";
     private static final String SAVE_MESSAGE = "/save";
     private static final String READ_MESSAGE = "/read/{messageId}";
+    private static final String EDIT_MESSAGE = "/edit/{messageId}";
+    private static final String DELETE_MESSAGE = "/delete/{messageId}";
 
     MessagesService service;
 
-    ChatRepository chatRepository;
-
     MessageDtoFactory factory;
 
-    @GetMapping(GET_MESSAGES_BY_CHAT_ID)
+    @GetMapping(GET_MESSAGES_BY_CHAT_ID_AND_LAST_MESSAGE_ID)
     public List<MessageDto> getByChatIdAndLastMessageId (@PathVariable Long chatId,
-                                                         @RequestParam Long lastMessageId) {
+                                                         @PathVariable Long lastMessageId) {
         List<MessageEntity> messageEntities = service.getByChatIdAndLastMessageId(chatId, lastMessageId);
+        return messageEntities.stream()
+                .map(factory::convert)
+                .toList();
+    }
+
+    @GetMapping(GET_MESSAGES_BY_CHAT_ID)
+    public List<MessageDto> getByChatId (@PathVariable Long chatId) {
+        List<MessageEntity> messageEntities = service.getByChatId(chatId);
         return messageEntities.stream()
                 .map(factory::convert)
                 .toList();
@@ -42,16 +53,21 @@ public class MessagesController {
 
     @PostMapping(SAVE_MESSAGE)
     public MessageDto save(@RequestBody MessageEntity messageEntity) {
-        MessageEntity savedMessage = service.save(messageEntity);
-        chatRepository.findById(savedMessage.getChatId()).ifPresent(chat -> {
-            chat.setLastMessageId(savedMessage.getId());
-            chatRepository.saveAndFlush(chat);
-        });
-        return factory.convert(savedMessage);
+        return factory.convert(service.save(messageEntity));
     }
 
     @PutMapping(READ_MESSAGE)
     public void read(@PathVariable Long messageId) {
         service.read(messageId);
+    }
+
+    @PutMapping(EDIT_MESSAGE)
+    public void edit(@PathVariable Long messageId, @RequestParam String text) {
+        service.edit(messageId, text);
+    }
+
+    @DeleteMapping(DELETE_MESSAGE)
+    public boolean delete(@PathVariable Long messageId) {
+        return service.delete(messageId);
     }
 }

@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import {useEffect,  useMemo, useRef, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import MessagesApi from "../../../../../api/internal/controllers/MessagesApi";
 import MessageDto from "../../../../../api/internal/dto/MessageDto";
 import UserController from "../../../../../store/UserController";
@@ -7,21 +7,37 @@ import DateParser from "../../../../../helpers/DateParser";
 import WhiteCheckMarkImg from "../../../../../img/two-ticks.png"
 import BlackCheckMark from "../../../../../img/two-ticks-black.png"
 import ClientController from "../../../../../store/ClientController";
-import MessageReadResponse from "../../../../../network/response/MessageReadResponse";
 import ChatRoomsController from "../../../../../store/ChatRoomsController";
 import SendImage from "../../../../../img/send.png";
+import AcceptImage from "../../../../../img/accept.png";
 import MessageRequest from "../../../../../network/request/MessageRequest";
 import ChatApi from "../../../../../api/internal/controllers/ChatApi";
+import {observer} from "mobx-react-lite";
+import PrivateChatDto from "../../../../../api/internal/dto/PrivateChatDto";
+import MessageOptionsModal from "./MessageOptionsModal";
+import ReplyMessageComponent from "./ActionMessageComponent";
+import ActionMessageComponent from "./ActionMessageComponent";
+import MessageOptionsModalController from "../../../../../store/MessageOptionsModalController";
+import ActiveChatInput from "./ActiveChatInput";
 
-const MessagesSectionMainComponent = styled.div`
-    height: calc(100% - 110px);
+const MainContainer = styled.div`
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+`
+
+const MessagesContainer = styled.div`
+    margin-right: 5px;
+    flex: 1; 
     overflow-y: auto;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 10px;
     font-size: 16px;
-    padding: 10px 6px 10px 6px;
+    padding: 10px 4px 10px 6px;
     -webkit-background-clip: text;
     transition: background-color 1s ease;
     opacity: ${props => props.readyMessages ? "1" : "0"};
@@ -43,31 +59,6 @@ const MessagesSectionMainComponent = styled.div`
     }
 
 `;
-
-const InputContainer = styled.div`
-    height: 50px;
-    display: flex;
-    align-items: center;
-    border-top: 1px solid #707070;
-    gap: 10px;
-`
-
-const Input = styled.input`
-    background-color: unset;
-    border: none;
-    color: white;
-    width: 100%;
-    height: 25px;
-    outline: none;
-    font-family: Rubik;
-    padding-bottom: 5px;
-    font-size: 16px;
-`
-
-const SendButton = styled.img`
-    width: 30px;
-    cursor: pointer;
-`
 
 const MyMessage = styled.div`
     max-width: 500px;
@@ -145,12 +136,12 @@ const SystemMessage = styled.div`
     cursor: default;
 `
 
-export default function ActiveChatMessages ({setChat, chat, user}) {
-    const stompClient = ClientController.getClient();
-    const [messages, setMessages] = useState([]);
-    const [isFirstRender, setIsFirstRender] = useState(true);
-    const [readyMessages, setReadyMessages] = useState(false);
+export default observer(function ActiveChatMessages () {
+    const activeChat = ChatRoomsController.getActiveChat();
 
+    const [isEditMode, setEditMode] = useState(false);
+
+    const [readyMessages, setReadyMessages] = useState(false);
     const [isLoadMessages, setLoadMessages] = useState(false);
     const [blockLoadMessages, setBlockLoadMessages] = useState(false);
     const [scrollIsVisible, setScrollIsVisible] = useState(true);
@@ -161,50 +152,24 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
     const observerRefs = useRef({});
     const messageRefs = useRef(new Set());
 
-    const [text, setText] = useState("");
-    const [lastTypingCall, setLastTypingCall] = useState(0);
     const [sendingMessage, setSendingMessage] = useState(false);
 
     const [firstUnreadMessage, setFirstUnreadMessage] = useState(null);
 
     useEffect(() => {
-        if (stompClient && stompClient.connected) {
-
-            //Подписка на получение сообщений
-            const messagesSubscription = stompClient.subscribe(`/client/${UserController.getCurrentUser().id}/queue/messages`, (message) => {
-                const parsedMessage = JSON.parse(message.body);
-                if (Number.parseInt(parsedMessage.senderId) === user.id) {
-                    const messageDto = MessageDto.fromRequest(parsedMessage);
-                    setMessages(prev => [...prev, messageDto]);
-                    scrollToBottom();
-                }
-            });
-
-            // Подписка на обновление статуса сообщений
-            const messageReadStatusSubscription = stompClient.subscribe(`/client/${user.id}/queue/read`, (message) => {
-                const messageReadResponse = MessageReadResponse.fromJSON(JSON.parse(message.body));
-                setMessages(prev => prev.map(msg =>
-                    msg.id === messageReadResponse.messageId ? {...msg, isRead: true} : msg
-                ));
-            });
-
-            return () => {
-                messagesSubscription.unsubscribe();
-                messageReadStatusSubscription.unsubscribe();
-            };
+        // Загрузка сообщений если чат создан, затем прокручиваем в самый низ
+        if (activeChat.chat && activeChat.messages.length < 30) {
+            loadMessages().then(() => scrollToBottom());
         }
-    }, [stompClient]);
-
-    useEffect(() => {
-        if (messages.length > 0 && isFirstRender) {
-            setIsFirstRender(false);
-            setFirstUnreadMessage(messages.find(m => !m.isRead && m.senderId !== UserController.getCurrentUser().id));
-        }
-    }, [messages]);
+        // устанавливаем флаг первого не прочитанного сообщения
+        setFirstUnreadMessage(activeChat.messages.find(m => !m.isRead && m.senderId !== UserController.getCurrentUser().id));
+        scrollToBottom();
+        setReadyMessages(true);
+    }, []);
 
     const unreadMessages = useMemo(() => {
-            return messages.filter(m => !m.isRead && m.senderId !== UserController.getCurrentUser().id)
-    }, [messages]);
+            return activeChat.messages.filter(m => !m.isRead && m.senderId !== UserController.getCurrentUser().id)
+    }, [activeChat.messages]);
 
     useEffect(() => {
         unreadMessages.forEach(message => {
@@ -213,12 +178,10 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
                     (entries) => {
                         entries.forEach(entry => {
                             if (entry.isIntersecting) {
-                                ClientController.read(message.id)
+                                ClientController.read(activeChat.companion.id, message.id)
                                 MessagesApi.read(message.id)
-                                setMessages(prev => prev.map(msg =>
-                                    msg.id === message.id ? {...msg, isRead: true} : msg
-                                ));
-                                ChatRoomsController.removeNotification(user.id)
+                                ChatRoomsController.handleMessageReadStatus(message.id, activeChat.companion.id)
+                                ChatRoomsController.removeNotification(activeChat.companion.id)
                                 observer.unobserve(entry.target)
                                 delete observerRefs.current[message.id];
                             }
@@ -231,138 +194,154 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
         });
     }, [unreadMessages]);
 
-    useEffect(() => {
-        loadMessages().then(messages => {
-            if (messages) {
-                setMessages(defaultSort(messages));
-                scrollToBottom().then(() =>
-                    setTimeout(() => {
-                        setReadyMessages(true)
-                    }, 30));
-            }
-        })
-    }, []);
-
-    async function loadMessages (){
-        if (chat) {
-            return await MessagesApi.getMessagesByChatId(chat.chatId, messages[0]?.id).then(response => {
-                return response.data.map(message => MessageDto.fromJSON(message));
-            });
-        }
-    }
-
     const scrollToBottom = async () => {
         if (ChatSectionRef.current) {
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 ChatSectionRef.current.scrollTo({
                     top: ChatSectionRef.current.scrollHeight,
                     behavior: "instant",
                 });
-            }, 0);
+            });
         }
     };
 
-    async function scrolling() {
-        if (ChatSectionRef.current && !isLoadMessages) {
-            const scrollTop = ChatSectionRef.current.scrollTop;
-            const threshold = 250;
-
-            if (scrollTop <= threshold) {
-                setLoadMessages(true);
-                try {
-                    if (!blockLoadMessages) {
-                        const prevScrollHeight = ChatSectionRef.current.scrollHeight;
-                        const prevScrollTop = ChatSectionRef.current.scrollTop;
-
-                        const messages = await loadMessages();
-                        if (messages.length > 0) {
-                            setMessages((prev) => {
-                                const newMessages = messages.filter(msg => !prev.some(existing => existing.id === msg.id));
-                                return [...defaultSort(newMessages), ...prev];
-                            });
-
-                            await new Promise(resolve => setTimeout(resolve, 0));
-
-                            const newScrollHeight = ChatSectionRef.current.scrollHeight;
-                            ChatSectionRef.current.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
-                        } else {
-                            setBlockLoadMessages(true);
-                        }
-                    }
-                } catch (error) {
-                    console.error("Ошибка при загрузке сообщений: ", error);
-                } finally {
-                    setLoadMessages(false);
-                }
-            }
-        }
-        scrollVisibleController();
-
-        function scrollVisibleController() {
-            setScrollIsVisible(true);
-            if (scrollTimeout.current) {
-                clearTimeout(scrollTimeout.current);
-            }
-            scrollTimeout.current = setTimeout(() => {
-                setScrollIsVisible(false);
-            }, 3000);
-        }
-    }
-
-    function defaultSort(array) {
-        return array.sort((a, b) => a.id - b.id);
-    }
-
-    function onInput(e) {
-        setText(e.target.value);
-        const now = Date.now();
-        if (now - lastTypingCall > 2000) {
-            ClientController.typing();
-            setLastTypingCall(now);
-        }
-    }
-
-    async function sendMessage() {
+    async function loadMessages() {
         try {
-            if (text) {
-                setSendingMessage(true);
-                let newChat = chat;
-                if (!chat) {
-                    ChatApi.findOrCreateChat(UserController.getCurrentUser().id, user.id).then(response => {
-                        const responseChat = response.data;
-                        newChat = responseChat;
-                        setChat(responseChat);
-                    });
-                    ChatRoomsController.updateChat(user, chat);
+            if (!isLoadMessages && !blockLoadMessages) {
+                // Блокируем загрузку новых сообщений до тех пор, пока не завершится загрузка текущих
+                setLoadMessages(true);
+
+                // Загрузка сообщений с бека, преобразование в DTO
+                const prevMessages = await MessagesApi.getMessagesByChatIdAndLastMessageId(
+                    activeChat.chat.chatId,
+                    activeChat.messages[0].id
+                ).then(response => response.data.map(message => MessageDto.fromJSON(message)));
+
+                // Фильтруем дубли (не должны быть, но на всякий случай)
+                const newMessages = prevMessages.filter(msg => !activeChat.messages.some(existing => existing.id === msg.id));
+                ChatRoomsController.addMessagesInStart(activeChat.companion.id, newMessages);
+
+                // Если сообщений меньше лимита, то старых сообщений больше быть не должно. Блокируем загрузку для избежания бесполезных запросов к беку
+                if (prevMessages.length < 30) {
+                    setBlockLoadMessages(true);
+                } else {
+                    setBlockLoadMessages(false);
                 }
-                const newMessage = new MessageDto(null, UserController.getCurrentUser().id, newChat.chatId, new Date(), text, false, false, null, false);
-                MessagesApi.save(newMessage).then(response => {
-                    const message = MessageDto.fromJSON(response.data);
-                    ChatRoomsController.updateLastMessageOrAddChat({message: message, companion: user});
-                    ClientController.sendMessage(new MessageRequest(message.id, message.sentAt, UserController.getCurrentUser().id, user.id, newChat.chatId, message.text));
-                    setMessages(prev => [...prev, message]);
-                    scrollToBottom();
-                    setText("");
-                    setLastTypingCall(2000);
-                });
+
+                // Ждём пока сообщения добавятся
+                await new Promise(resolve => requestAnimationFrame(resolve));
             }
+        } catch (error) {
+            console.error('Error loading messages', error);
+        } finally {
+            setLoadMessages(false);
+        }
+    }
+
+    async function scrolling() {
+        const scrollTop = ChatSectionRef.current.scrollTop;
+        const threshold = 250;
+
+        // Если текущая позиция ползунка прокрутки находится на расстоянии 250 пикселей до верхней границы, то начинаем загружать новые сообщения
+        if (scrollTop <= threshold) {
+            // Получаем текущие координаты ползунка прокрутки
+            const prevScrollHeight = ChatSectionRef.current.scrollHeight;
+            const prevScrollTop = ChatSectionRef.current.scrollTop;
+
+            // Загружаем новые сообщения в чат
+            await loadMessages();
+
+            // обновляем позицию ползунка прокрутки
+            const newScrollHeight = ChatSectionRef.current.scrollHeight;
+            const scrollDiff = newScrollHeight - prevScrollHeight;
+            ChatSectionRef.current.scrollTop = scrollDiff + prevScrollTop;
+        }
+
+        // Если 3 секунды не было никаких действий, то ползунок прокрутки исчезает
+        setScrollIsVisible(true);
+        if (scrollTimeout.current) {
+            clearTimeout(scrollTimeout.current);
+        }
+        scrollTimeout.current = setTimeout(() => setScrollIsVisible(false), 3000);
+    }
+
+    async function sendMessage(text) {
+        try {
+            if (!sendingMessage) {
+                const trimmedText = text.trim();
+                if (!trimmedText) return;
+
+                setFirstUnreadMessage(null);
+                setSendingMessage(true);
+
+                let chat = activeChat.chat;
+                if (!chat) {
+                    const response = await ChatApi.findOrCreateChat(UserController.getCurrentUser().id, activeChat.companion.id);
+                    chat = PrivateChatDto.fromJSON(response.data);
+                }
+
+                const newMessage = new MessageDto(
+                    null,
+                    UserController.getCurrentUser().id,
+                    chat.chatId,
+                    new Date(),
+                    trimmedText,
+                    false,
+                    false,
+                    null,
+                    false
+                );
+
+                const response = await MessagesApi.save(newMessage);
+                const savedMessage = MessageDto.fromJSON(response.data);
+
+                ClientController.sendMessage(
+                    new MessageRequest(
+                        savedMessage.id,
+                        savedMessage.sentAt,
+                        UserController.getCurrentUser().id,
+                        activeChat.companion.id,
+                        chat.chatId,
+                        savedMessage.text
+                    )
+                );
+
+                ChatRoomsController.updateLastMessageOrAddChat({message: savedMessage, companion: activeChat.companion});
+
+                await scrollToBottom();
+            }
+        } catch (error) {
+            console.error("Error sending message:", error);
         } finally {
             setSendingMessage(false);
         }
     }
 
+    function openMessageOptions (e, entity) {
+        if (e.button === 2) {
+            MessageOptionsModalController.setIsOpen(true)
+            MessageOptionsModalController.setSelectedMessageEntity(entity)
+            MessageOptionsModalController.setSelectedMessageCoordinates({x: e.clientX, y: e.clientY})
+        }
+    }
+
     return (
-        <>
-            <MessagesSectionMainComponent readyMessages={readyMessages} ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
+        <MainContainer>
+            <MessagesContainer readyMessages={readyMessages} ref={ChatSectionRef} onScroll={scrolling} scrollIsVisible={scrollIsVisible}>
                 {
-                    messages.map((message, index) => {
-                        const messageDayAndMonth = DateParser.getDayAndMonth(messages[index - 1], message);
+                    activeChat.messages.map((message, index) => {
+                        const prevMessage = activeChat.messages[index - 1];
+                        let messageDayAndMonth;
+                        if (message && (!prevMessage || prevMessage.sentAt.toDateString() !== message.sentAt.toDateString())) {
+                            messageDayAndMonth = DateParser.getDayAndMonth(message.sentAt);
+                        }
                         return (
                             <>
                                 {firstUnreadMessage && firstUnreadMessage.id === message.id && <SystemMessage>Непрочитанные сообщения</SystemMessage>}
                                 {messageDayAndMonth && <SystemMessage>{messageDayAndMonth}</SystemMessage>}
                                 {message.senderId === UserController.getCurrentUser().id ? (
-                                    <MyMessage key={message.id}>
+                                    <MyMessage key={message.id}
+                                               onMouseUp={e => openMessageOptions(e, message)}>
                                         <MyMessageText>{message.text}</MyMessageText>
                                         <ButtonSection>
                                             {
@@ -372,11 +351,9 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
                                         </ButtonSection>
                                     </MyMessage>
                                 ) : (
-                                    <OtherMessage key={message.id}
-                                                  id={`${message.id}`}
-                                                  data-is-read={message.isRead}
-                                                  ref={el => messageRefs.current[message.id] = el}
-                                    >
+                                    <OtherMessage key={message.id} id={`${message.id}`} data-is-read={message.isRead}
+                                                  onMouseUp={e => openMessageOptions(e, message)}
+                                                  ref={el => messageRefs.current[message.id] = el}>
                                         <OtherMessageText>{message.text}</OtherMessageText>
                                         <OtherMessageSendDate>{DateParser.parseToHourAndMinute(message.sentAt)}</OtherMessageSendDate>
                                     </OtherMessage>
@@ -385,13 +362,9 @@ export default function ActiveChatMessages ({setChat, chat, user}) {
                         )
                     })
                 }
-            </MessagesSectionMainComponent>
-            <InputContainer>
-                <Input value={text} onInput={onInput} placeholder={"Введите сообщение"}
-                       onKeyDown={(e) => e.key === "Enter" && !sendingMessage && sendMessage()}
-                />
-                <SendButton onClick={sendMessage} src={SendImage}/>
-            </InputContainer>
-        </>
+            </MessagesContainer>
+            <MessageOptionsModal/>
+            <ActiveChatInput sendMessage={sendMessage}/>
+        </MainContainer>
     )
-}
+})

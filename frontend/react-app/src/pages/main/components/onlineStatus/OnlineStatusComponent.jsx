@@ -1,5 +1,6 @@
 import DateParser from "../../../../helpers/DateParser";
 import styled from "styled-components";
+import {observer} from "mobx-react-lite";
 
 const OfflineStatusText = styled.div`
     font-size: 15px;
@@ -52,10 +53,10 @@ const Dot = styled.div`
     }
 `
 
-export default function OnlineStatusComponent({isTyping, isOnline, lastOnlineDate}) {
+export default observer(function OnlineStatusComponent({isTyping, isOnline, lastOnlineDate}) {
     return (
         isTyping ?  <OnlineStatusText>Пишет<DotsContainer><Dot/> <Dot/> <Dot/></DotsContainer></OnlineStatusText> :
             isOnline ? <OnlineStatusText>В сети</OnlineStatusText> :
                 lastOnlineDate && <OfflineStatusText>{DateParser.parseOnlineDate(lastOnlineDate)}</OfflineStatusText>
     )
-}
+})

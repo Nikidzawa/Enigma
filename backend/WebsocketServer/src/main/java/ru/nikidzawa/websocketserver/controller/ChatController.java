@@ -7,8 +7,9 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import ru.nikidzawa.websocketserver.services.UserPresenceService;
-import ru.nikidzawa.websocketserver.store.*;
+import ru.nikidzawa.websocketserver.store.message.*;
+import ru.nikidzawa.websocketserver.store.typing.TypingRequest;
+import ru.nikidzawa.websocketserver.store.typing.TypingResponse;
 
 /**
  * @author Nikidzawa
@@ -20,45 +21,57 @@ public class ChatController {
 
     SimpMessagingTemplate messagingTemplate;
 
-    UserPresenceService userPresenceService;
-
     private static final String sendMessageDestination = "/queue/messages";
-    private static final String typingDestination = "/queue/typing";
-    private static final String readMessageDestination = "/queue/read";
-    private static final String changedProfileDestination = "/profile/changed";
-    private static final String presenceDestination = "/personal/presence";
+    private static final String typingDestination = "/queue/chat/private/%s/typing";
+    private static final String deleteMessageDestination = "/queue/chat/private/%s/delete";
+    private static final String readMessageDestination = "/queue/chat/private/%s/read";
 
+    /**
+     * @Subscription: /client/{id подписчика}/queue/messages
+     * @Description: Отправка сообщения
+     */
     @MessageMapping("/message/send")
-    public void processMessage(@Payload ChatMessage chatMessage) {
-        messagingTemplate.convertAndSendToUser(chatMessage.getReceiverId(),sendMessageDestination, chatMessage);
-        messagingTemplate.convertAndSendToUser(chatMessage.getSenderId(), typingDestination, new Typing(chatMessage.getSenderId(), false));
+    public void sendMessage(@Payload ChatMessageNewResponse chatMessageNew) {
+        messagingTemplate.convertAndSendToUser(chatMessageNew.getReceiverId(),sendMessageDestination, chatMessageNew);
+        messagingTemplate.convertAndSendToUser(chatMessageNew.getReceiverId(), String.format(typingDestination, chatMessageNew.getSenderId()), new TypingResponse(false));
     }
 
-    @MessageMapping("/chat/typing")
-    public void isTyping(@Payload Typing typing) {
-        messagingTemplate.convertAndSendToUser(typing.getUserId(), typingDestination, typing);
-    }
-
+    /**
+     * @Subscription: /client/{id подписчика}/queue/chat/private/{id собеседника}/read
+     * @Description: Статус "Прочитано" у сообщений.
+     */
     @MessageMapping("/message/read")
-    public void readMessage(@Payload MessageRead messageRead) {
-        messagingTemplate.convertAndSendToUser(messageRead.getUserId(), readMessageDestination, messageRead);
-    }
-
-    @MessageMapping("/profile/changed")
-    public void processMessage(@Payload User user) {
-        messagingTemplate.convertAndSendToUser(user.getUserId(), changedProfileDestination, user);
-    }
-
-    @MessageMapping("/presence/check")
-    public void checkPresence(@Payload PresenceCheck presenceCheck) {
+    public void readMessage(@Payload ChatMessageReadRequest chatMessageReadRequest) {
         messagingTemplate.convertAndSendToUser(
-                presenceCheck.getUserTargetId().toString(),
-                presenceDestination,
-                new PresenceStatus(
-                        presenceCheck.getUserTargetId(),
-                        userPresenceService.userIsOnline(presenceCheck.getUserTargetId()),
-                        null
-                )
+                chatMessageReadRequest.getSubscriberId(),
+                String.format(readMessageDestination, chatMessageReadRequest.getChatId()),
+                new ChatMessageReadResponse(chatMessageReadRequest.getMessageId())
+        );
+    }
+
+    /**
+     * @Subscription: /client/{id подписчика}/queue/chat/private/{id собеседника}/typing
+     * @Description: Статус "Печатает"
+     */
+    @MessageMapping("/chat/private/typing")
+    public void isTyping(@Payload TypingRequest typingRequest) {
+        messagingTemplate.convertAndSendToUser(
+                typingRequest.getTargetId(),
+                String.format(typingDestination, typingRequest.getWriterId()),
+                new TypingResponse(typingRequest.getIsTyping())
+        );
+    }
+
+    /**
+     * @Subscription: /client/{id подписчика}/queue/chat/private/{id собеседника}/delete
+     * @Description: Удаление сообщения
+     */
+    @MessageMapping("/message/delete")
+    public void deleteMessage(@Payload ChatMessageDeleteRequest deleteRequest) {
+        messagingTemplate.convertAndSendToUser(
+                deleteRequest.getSubscriberId(),
+                String.format(deleteMessageDestination, deleteRequest.getChatId()),
+                new ChatMessageDeleteResponse(deleteRequest.getMessageId())
         );
     }
 }

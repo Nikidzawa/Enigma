@@ -1,4 +1,4 @@
-package ru.nikidzawa.websocketserver.store;
+package ru.nikidzawa.websocketserver.store.presence;
 
 import lombok.Getter;
 import lombok.Setter;

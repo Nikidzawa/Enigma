@@ -1,6 +1,6 @@
 import styled, {keyframes} from "styled-components";
 import NicknameField from "./fields/NicknameField";
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import UserApi from "../../../../../../api/internal/controllers/UserApi";
 import UserController from "../../../../../../store/UserController";
 
@@ -37,6 +37,7 @@ const ShadowMainContainer = styled.div`
     justify-content: center;
     align-items: center;
 `
+
 const Description = styled.div`
     font-size: 14px;
     border-radius: 5px;
@@ -108,7 +109,7 @@ const Exception = styled.div`
 
 export default function NicknameChangeModal ({isVisible, setIsVisible, nickname, setNickname}) {
     const [value, setValue] = useState(nickname);
-    const [isFirstRender, setIsFirstRender] = useState(false);
+    const [isFirstRender, setIsFirstRender] = useState(true);
 
     const [nicknameAlreadyUsedEx, setNicknameAlreadyUsedEx] = useState(false);
     const [nicknameIsEmptyEx, setNicknameIsEmptyEx] = useState(false);

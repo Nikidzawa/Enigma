@@ -1,12 +1,10 @@
 export default class MessageReadResponse {
-    constructor(userId, messageId) {
-        this.userId = userId;
+    constructor(messageId) {
         this.messageId = messageId
     }
 
-    static fromJSON(data) {
+    static fromRequest(data) {
         return new MessageReadResponse (
-            Number.parseInt(data.userId),
             Number.parseInt(data.messageId)
         )
     }

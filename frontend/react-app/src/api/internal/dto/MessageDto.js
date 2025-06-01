@@ -20,7 +20,7 @@ export default class MessageDto {
             data.text,
             data.isPinned || false,
             data.isEdited || false,
-            new Date(`${data.createdAt}Z`),
+            data.editedAt ? new Date(`${data.editedAt}Z`) : null,
             data.isRead || false
         );
     }

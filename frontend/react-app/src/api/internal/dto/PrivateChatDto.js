@@ -1,6 +1,7 @@
 export default class PrivateChatDto {
-    constructor(chatId, ownerId, companionId) {
+    constructor(chatId, chatType, ownerId, companionId) {
         this.chatId = chatId;
+        this.chatType = chatType;
         this.ownerId = ownerId;
         this.companionId = companionId;
     }
@@ -8,6 +9,7 @@ export default class PrivateChatDto {
     static fromJSON(data) {
         return new PrivateChatDto(
             data.chatId,
+            data.chatType,
             data.ownerId,
             data.companionId
         )

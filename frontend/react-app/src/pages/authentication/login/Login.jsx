@@ -91,7 +91,6 @@ const Fields = styled.div`
 
 const ExceptionContainer = styled.div`
     display: flex;
-    top: ${props => props.position ? props.position : '0px'};
 `
 
 export default function Login() {
@@ -99,12 +98,14 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [nicknameOrEmail, setNicknameOrEmail] = useState("");
 
+    const [unknownError, setUnknownError] = useState(false);
     const [failLoginEx, setFailLoginEx] = useState(false);
     const [fieldEmptyEx, setFieldEmptyEx] = useState(false);
 
     async function authResponse() {
         setFieldEmptyEx(false);
         setFailLoginEx(false);
+        setUnknownError(false);
 
         if (!nicknameOrEmail || !password) {
             setFieldEmptyEx(true);
@@ -121,8 +122,11 @@ export default function Login() {
                 navigate("/main");
             }
         ).catch(error => {
+            console.error(error);
             if (error.status === 401) {
                 setFailLoginEx(true);
+            } else {
+                setUnknownError(true);
             }
         });
     }
@@ -144,7 +148,13 @@ export default function Login() {
                 <LoginAndRegister>
                     <ExceptionContainer>
                         {failLoginEx && (<FailFieldValidation>Не верное имя пользователя или пароль</FailFieldValidation>)}
-                        {fieldEmptyEx && (<FailFieldValidation>Для продолжения, необходимо заполнить поля</FailFieldValidation>)}
+                        {fieldEmptyEx && (<FailFieldValidation>Для продолжения, необходимо заполнить все поля</FailFieldValidation>)}
+                        {unknownError && (
+                            <FailFieldValidation>
+                                <div>Сервисы Enigma временно недоступны</div>
+                                <div>Попробуйте позже</div>
+                            </FailFieldValidation>
+                        )}
                     </ExceptionContainer>
                     <LoginButton onClick={authResponse}>Log in</LoginButton>
                     <RegistrationPageLink onClick={() => navigate("/registration")}>Registration</RegistrationPageLink>

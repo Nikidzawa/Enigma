@@ -1,6 +1,7 @@
 package ru.nikidzawa.backend.store.client.factory;
 
 import org.springframework.stereotype.Component;
+import ru.nikidzawa.backend.store.client.dataModel.ChatRoomDataModel;
 import ru.nikidzawa.backend.store.client.dto.MessageDto;
 import ru.nikidzawa.backend.store.entity.MessageEntity;
 
@@ -17,6 +18,19 @@ public class MessageDtoFactory {
                 .isEdited(messageEntity.getIsEdited())
                 .editedAt(messageEntity.getEditedAt())
                 .isRead(messageEntity.getIsRead())
+                .build();
+    }
+
+    public MessageDto convertFromDataModel (ChatRoomDataModel m) {
+        return MessageDto.builder()
+                .id(m.getLastMessageId())
+                .senderId(m.getSenderId())
+                .sentAt(m.getSentAt())
+                .text(m.getText())
+                .isPinned(m.getIsPinned())
+                .isEdited(m.getIsEdited())
+                .editedAt(m.getEditedAt())
+                .isRead(m.getIsRead())
                 .build();
     }
 }

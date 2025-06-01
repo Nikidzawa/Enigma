@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import ru.nikidzawa.backend.services.IndividualChatEntityService;
+import ru.nikidzawa.backend.store.client.dto.ChatDto;
 import ru.nikidzawa.backend.store.client.dto.PrivateChatRoomDto;
 import ru.nikidzawa.backend.store.entity.ChatEntity;
 import ru.nikidzawa.backend.store.entity.PrivateChatEntity;
@@ -29,7 +30,7 @@ public class PrivateChatEntityController {
     }
 
     @GetMapping(FIND_OR_CREATE_CHAT)
-    public ChatEntity findOrCreateChat(@RequestParam Long ownerId, @RequestParam Long companionId) {
+    public ChatDto findOrCreateChat(@RequestParam Long ownerId, @RequestParam Long companionId) {
         return individualChatEntityService.findChatOrCreate(ownerId, companionId);
     }
 }

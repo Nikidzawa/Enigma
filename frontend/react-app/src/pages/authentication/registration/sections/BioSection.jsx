@@ -1,22 +1,22 @@
 import styled from "styled-components";
 import CameraImg from "../../../../img/camera.png"
-import UserController from "../../../../store/UserController";
-import UserApi from "../../../../api/internal/controllers/UserApi";
 import {useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import FailFieldValidation from "../../components/fields/FailFieldValidation";
 import EmailCodeController from "../store/EmailCodeController";
 import IndividualDtoFull from "../../../../api/internal/dto/IndividualDtoFull";
-import FireBase from "../../../../api/external/FireBase";
 import ImageResizer from "../../../components/ImageResizer";
 import Loader from "../components/Loader";
+import UserApi from "../../../../api/internal/controllers/UserApi";
+import FireBase from "../../../../api/external/FireBase";
+import UserController from "../../../../store/UserController";
 
 const MainContainer = styled.div`
     display: flex;
     justify-content: center;
 `
 
-const Image = styled.img`
+const ImageContainer = styled.div`
     position: absolute;
     top: 12%;
     border-radius: 50%;
@@ -24,6 +24,10 @@ const Image = styled.img`
     height: 150px;
     cursor: pointer;
     border: 2px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden
 `
 
 const ChooseImage = styled.input`
@@ -70,11 +74,14 @@ const Button = styled.button`
     color: white;
     padding: 8px;
     min-width: calc(140px + 1vh);
-    min-height: calc(28px + 1vh);
-    font-size: 20px;
+    min-height: 45px;
+    font-size: 18px;
     border-radius: 15px;
     cursor: pointer;
     font-family: Rubik;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `
 
 const BackPageLink = styled.a`
@@ -105,33 +112,39 @@ export default function BioSection ({goBack}) {
 
     const [loading, setLoading] = useState(false);
 
-    function register() {
-        const userDto = new IndividualDtoFull();
-        userDto.name = name;
-        userDto.surname = surname;
-        userDto.email = localStorage.getItem("email") || EmailCodeController.getEmail();
-        userDto.password = localStorage.getItem("password");
-        userDto.lastLogoutDate = new Date();
+    async function register() {
+        setLoading(true);
+        try {
+            const userDto = new IndividualDtoFull();
+            userDto.name = name;
+            userDto.surname = surname;
+            userDto.email = localStorage.getItem("email") || EmailCodeController.getEmail();
+            userDto.password = localStorage.getItem("password");
+            userDto.lastLogoutDate = new Date();
+            if (userDto.name && userDto.email && userDto.password) {
+                await UserApi.save(userDto).then(
+                    async result => {
+                        const user = result.data.user;
+                        user.avatarHref = await FireBase.uploadAvatar(FireBase.base64ToFile(avatar, `${user.id}`), user.id);
+                        await UserApi.save(user).then(result => {
+                            UserController.setUser(result.data.user);
+                            localStorage.setItem("TOKEN", result.data.token)
 
-        if (userDto.name && userDto.email && userDto.password) {
-            UserApi.save(userDto).then(
-                async result => {
-                    const user = result.data.user;
-                    user.avatarHref = await FireBase.uploadAvatar(FireBase.base64ToFile(avatar, `${user.id}`), user.id);
-                    await UserApi.save(user).then(result => {
-                        UserController.setUser(result.data.user);
-                        localStorage.setItem("TOKEN", result.data.token)
+                            localStorage.removeItem("email");
+                            localStorage.removeItem("password");
 
-                        localStorage.removeItem("email");
-                        localStorage.removeItem("password");
-
-                        navigate("/main");
-                    });
-                }
-            ).catch(error => {
-                navigate("/login");
-                console.error("Произошла ошибка, попробуйте зарегистрироваться снова. " + error)
-            })
+                            navigate("/main");
+                        });
+                    }
+                ).catch(error => {
+                    navigate("/login");
+                    console.error("Произошла ошибка, попробуйте зарегистрироваться снова. " + error)
+                })
+            }
+        } catch (ex) {
+            console.error(ex);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -157,20 +170,22 @@ export default function BioSection ({goBack}) {
                 setNameEx(true);
             } else {
                 setNameEx(false);
-                setLoading(true);
                 register();
             }
         } catch (e) {
-            console.error('error: ' + e)
-        } finally {
-            setLoading(false);
+            console.error(e)
         }
     }
 
     return (
         <>
             <MainContainer>
-                <Image src={avatar || CameraImg} />
+                <ImageContainer>
+                    {
+                        avatar ? <img src={avatar} width={'100%'} height={'100%'}/>
+                               : <img src={CameraImg} width={'90px'} height={'90px'}/>
+                    }
+                </ImageContainer>
                 <ChooseImage type={"file"} onChange={handleSetAvatar} accept="image/*"/>
                 <FieldsContainer>
                     <Input value={name}
@@ -188,7 +203,7 @@ export default function BioSection ({goBack}) {
                            ref={surnameRef}
                     />
                 </FieldsContainer>
-                <Button disabled={loading} onClick={validate}>{loading ? <Loader/> : 'Register'}</Button>
+                <Button disabled={loading} onClick={validate}>{loading ? <Loader/> : 'Registration'}</Button>
                 <BackPageLink onClick={goBack}>Go Back</BackPageLink>
             </MainContainer>
             {

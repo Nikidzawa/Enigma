@@ -1,4 +1,4 @@
-package ru.nikidzawa.websocketserver.store;
+package ru.nikidzawa.websocketserver.store.message;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -11,7 +11,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MessageRead {
-    String userId;
+public class ChatMessageDeleteRequest {
+    String subscriberId;
+    String chatId;
     String messageId;
 }

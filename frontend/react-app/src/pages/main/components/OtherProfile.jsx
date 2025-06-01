@@ -5,11 +5,11 @@ import MailImage from "../../../img/mail-blue.png";
 import OnlineStatusComponent from "./onlineStatus/OnlineStatusComponent";
 import NicknameField from "../sections/menu/components/profile/fields/NicknameField";
 import DateField from "../sections/menu/components/profile/fields/DateField";
-import ActiveChatController from "../../../store/ActiveChatController";
 import ChatRoomsController from "../../../store/ChatRoomsController";
 import ModalController from "../../../store/ModalController";
 import AboutMeField from "../sections/menu/components/profile/fields/AboutMeField";
 import AddFriendImage from "../../../img/menu.png"
+import SearchController from "../../../store/SearchController";
 
 const fadeIn = keyframes`
     from {
@@ -61,7 +61,7 @@ const ProfileImage = styled.img`
 
 const AvatarContainer = styled.div`
     position: relative;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 `
 
 const AvatarSection  = styled.div`
@@ -144,14 +144,16 @@ const Button = styled.button`
 `
 
 const OnlineStatusContainer = styled.div`
+    margin-top: 3px;
 `
 
 const UserData = styled.div`
-    padding: 20px 20px 5px 20px;
+    padding: 20px 20px 3px 20px;
 `
 
 const AboutMeContainer = styled.div`
-    margin-top: 3px;
+    margin-top: 5px;
+    width: 90%;
 `
 
 export default function OtherProfile({user, isOnline, lastOnlineDate, visible, setVisible}) {
@@ -194,8 +196,8 @@ export default function OtherProfile({user, isOnline, lastOnlineDate, visible, s
     }, [user])
 
     function openChat() {
-        const chat = ChatRoomsController.findChatByUserDtoOrGetNew(user);
-        ActiveChatController.setActiveChat(chat);
+        ChatRoomsController.setActiveChat(user);
+        SearchController.setIsSearching(false);
         setVisible(false)
     }
 

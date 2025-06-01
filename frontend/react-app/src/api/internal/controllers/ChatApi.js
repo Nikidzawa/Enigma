@@ -1,5 +1,4 @@
 import api from "../Api";
-import protectedApi from "../ProtectedApi";
 
 export default class ChatApi {
 

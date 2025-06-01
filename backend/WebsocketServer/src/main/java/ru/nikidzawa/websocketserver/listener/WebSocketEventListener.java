@@ -12,7 +12,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import ru.nikidzawa.kafka.KafkaLogoutTransferData;
 import ru.nikidzawa.websocketserver.services.KafkaProducerService;
 import ru.nikidzawa.websocketserver.services.UserPresenceService;
-import ru.nikidzawa.websocketserver.store.PresenceStatus;
+import ru.nikidzawa.websocketserver.store.presence.PresenceStatus;
 
 import java.time.LocalDateTime;
 

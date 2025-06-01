@@ -1,13 +1,13 @@
 import {useEffect, useState} from "react";
 import styled from "styled-components";
 import ActiveChatSection from "./sections/activeChat/ActiveChatSection";
-import ActiveChatController from "../../store/ActiveChatController";
 import ModalController from "../../store/ModalController";
 import SearchInput from "./sections/searchOrChatRooms/search/components/SearchInput";
 import SearchOrChatRoomsSection from "./sections/searchOrChatRooms/SearchOrChatRoomsSection";
 import SearchController from "../../store/SearchController";
 import MenuButton from "./sections/menu/components/MenuButton";
 import MenuSection from "./sections/menu/MenuSection";
+import ChatRoomsController from "../../store/ChatRoomsController";
 
 const MainContainer = styled.main`
     height: 100vh;
@@ -18,7 +18,7 @@ const MainContainer = styled.main`
 `;
 
 const LeftMenuContainer = styled.div`
-    height: 100vh;
+    height: 100%;
     display: flex;
     flex-direction: column;
     width: ${({width}) => width}px;
@@ -55,7 +55,7 @@ export default function Main() {
                     if (SearchController.isSearching()) {
                         SearchController.stopSearch();
                     } else {
-                        ActiveChatController.setActiveChat(null);
+                        ChatRoomsController.clearActiveChat();
                     }
                 }
             }

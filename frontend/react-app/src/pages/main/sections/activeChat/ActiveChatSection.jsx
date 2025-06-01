@@ -1,7 +1,8 @@
 import ActiveChat from "./components/ActiveChat";
-import ActiveChatController from "../../../../store/ActiveChatController";
 import {observer} from "mobx-react-lite";
 import styled from "styled-components";
+import {useEffect} from "react";
+import ChatRoomsController from "../../../../store/ChatRoomsController";
 
 const EmptySection = styled.div`
     display: flex;
@@ -20,11 +21,27 @@ const EmptyText = styled.div`
 `
 
 export default observer(function ActiveChatSection() {
-    const activeChat = ActiveChatController.getActiveChat();
+    const activeChat = ChatRoomsController.getActiveChat();
+
+    useEffect(() => {
+        const handleContextMenu = (e) => {
+            e.preventDefault();
+        };
+
+        if (activeChat != null) {
+            document.addEventListener('contextmenu', handleContextMenu);
+        } else {
+            document.removeEventListener('contextmenu', handleContextMenu);
+        }
+
+        return () => {
+            document.removeEventListener('contextmenu', handleContextMenu);
+        };
+    }, [activeChat]);
 
     return (
         activeChat ?
-            <ActiveChat activeChat={activeChat}/>
+            <ActiveChat key={activeChat.companion.id}/>
             :
             <EmptySection>
                 <EmptyText>Выберите, кому хотели бы написать</EmptyText>

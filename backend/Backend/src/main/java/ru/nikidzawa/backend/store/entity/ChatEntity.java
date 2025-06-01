@@ -13,9 +13,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "chat")
-@Table(indexes = {
-        @Index(name = "idx_chat_last_message_id", columnList = "last_message_id"),
-})
 public class ChatEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,  generator = "chat_seq")
@@ -25,9 +22,6 @@ public class ChatEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     ChatType type;
-
-    @Column(name = "last_message_id")
-    Long lastMessageId;
 
     @Column(name = "created_at")
     LocalDateTime createdAt;

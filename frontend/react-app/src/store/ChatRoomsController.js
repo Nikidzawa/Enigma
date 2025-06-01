@@ -1,13 +1,16 @@
-import {makeAutoObservable} from "mobx";
+import {makeAutoObservable, runInAction} from "mobx";
 import UserApi from "../api/internal/controllers/UserApi";
 import MessageReadResponse from "../network/response/MessageReadResponse";
 import MessageDto from "../api/internal/dto/MessageDto";
 import ChatRoomDto from "../api/internal/dto/ChatRoomDto";
 import IndividualDtoShort from "../api/internal/dto/IndividualDtoShort";
 import PresenceResponse from "../network/response/PresenceResponse";
+import UserController from "./UserController";
+import MessageDeleteResponse from "../network/response/MessageDeleteResponse";
 
 class ChatRoomsController {
     chatRooms = [];
+    activeChat = null;
     stompClient = null;
     subscriptions = new Map();
 
@@ -26,7 +29,7 @@ class ChatRoomsController {
 
         this.initReceiveMessages(userId);
         this.chatRooms.forEach((chatRoom) => {
-            this.initChatRoomSubscriptions(chatRoom);
+            this.initChatRoomSubscriptions(userId, chatRoom);
         });
     }
 
@@ -36,14 +39,13 @@ class ChatRoomsController {
     }
 
     initReceiveMessages(userId) {
-        const subscription = this.stompClient.subscribe(
-            `/client/${userId}/queue/messages`,
+        const subscription = this.stompClient.subscribe(`/client/${userId}/queue/messages`,
             this.handleIncomingMessage
         );
         this.subscriptions.set(`messages-${userId}`, subscription.unsubscribe);
     }
 
-    initChatRoomSubscriptions(chatRoom) {
+    initChatRoomSubscriptions(userId, chatRoom) {
         const companionId = chatRoom.companion.id;
 
         // Подписка на получение онлайн статуса пользователя
@@ -53,19 +55,51 @@ class ChatRoomsController {
         this.subscriptions.set(`presence-${companionId}`, presenceSubscription.unsubscribe);
 
         // Подписка на изменения профиля
-        const profileSubscription = this.stompClient.subscribe(
-            `/client/${companionId}/profile/changed`,
+        const profileSubscription = this.stompClient.subscribe(`/client/${companionId}/profile/changed`,
             this.handleProfileChange
         );
         this.subscriptions.set(`profile-${companionId}`, profileSubscription.unsubscribe);
 
         // Подписка на статус прочтения сообщений
-        const readStatusSubscription = this.stompClient.subscribe(
-            `/client/${companionId}/queue/read`,
-            this.handleMessageReadStatus
-        );
+        const readStatusSubscription = this.stompClient.subscribe(`/client/${userId}/queue/chat/private/${companionId}/read`, (message) => {
+            const messageReadResponse = MessageReadResponse.fromRequest(JSON.parse(message.body));
+            this.handleMessageReadStatus(messageReadResponse.messageId, chatRoom.companion.id);
+        });
         this.subscriptions.set(`read-status-${companionId}`, readStatusSubscription.unsubscribe);
+
+        // Подписка на удаление сообщения
+        const deleteMessageSubscription = this.stompClient.subscribe(`/client/${userId}/queue/chat/private/${companionId}/delete`, (message) => {
+            const messageDeleteResponse = MessageDeleteResponse.fromRequest(JSON.parse(message.body));
+            this.handleDeleteMessage(messageDeleteResponse.messageId, chatRoom.companion.id);
+        });
+        this.subscriptions.set(`delete-message-${companionId}`, deleteMessageSubscription.unsubscribe);
     }
+
+    setActiveChat(companion) {
+        this.activeChat = () => this.chatRooms.find(chat => chat.companion.id === companion.id) || new ChatRoomDto(companion, [], null, 0);
+    }
+
+    clearActiveChat() {
+        this.activeChat = null;
+    }
+
+    getActiveChat() {
+        return this.activeChat?.();
+    }
+
+    handleDeleteMessage = (messageId, companionId) => {
+        this.chatRooms = this.chatRooms.map(chatRoom =>
+            chatRoom.companion.id === companionId
+                ? {
+                    ...chatRoom,
+                    messages: chatRoom.messages.filter(msg => msg.id !== messageId),
+                    unreadCount: chatRoom.messages.some(msg => msg.id === messageId && !msg.isRead)
+                        ? chatRoom.unreadCount - 1
+                        : chatRoom.unreadCount
+                }
+                : chatRoom
+        );
+    };
 
     handleIncomingMessage = async (message) => {
         const messageDto = MessageDto.fromRequest(JSON.parse(message.body));
@@ -95,20 +129,18 @@ class ChatRoomsController {
     }
 
     handleProfileChange = async (message) => {
-        try {
-            const { userId } = JSON.parse(message.body);
-            const response = await UserApi.getUserById(userId);
-            const userDto = IndividualDtoShort.fromJSON(response.data);
-
-            this.updateChatRoomCompanion(userDto);
-        } catch (error) {
-            console.error("Failed to handle profile change:", error);
-        }
+        const { userId } = JSON.parse(message.body);
+        const response = await UserApi.getUserById(userId);
+        const userDto = IndividualDtoShort.fromJSON(response.data);
+        this.updateChatRoomCompanion(userDto);
     };
 
-    handleMessageReadStatus = (message) => {
-        const messageReadResponse = MessageReadResponse.fromJSON(JSON.parse(message.body));
-        this.updateMessageReadStatus(messageReadResponse.messageId);
+    handleMessageReadStatus = (messageId, companionId) => {
+        this.chatRooms = this.chatRooms.map(chatRoom =>
+            chatRoom.companion.id === companionId
+                ? {...chatRoom, messages: chatRoom.messages.map(message => message.id === messageId ? { ...message, isRead: true } : message)}
+                : chatRoom
+        );
     };
 
     updateChatRoomCompanion(userDto) {
@@ -117,25 +149,21 @@ class ChatRoomsController {
         );
     }
 
-    updateChat(user, chat) {
-        this.chatRooms = this.chatRooms.map((chatRoom) =>
-            chatRoom.companion.id === user.id ? { ...chatRoom, chat: chat } : chatRoom
-        )
+    addMessagesInStart(companionId, newMessages) {
+        const existingChatIndex = this.chatRooms.findIndex(
+            (chat) => chat.companion.id === companionId
+        );
+
+        if (existingChatIndex !== -1) {
+                this.chatRooms[existingChatIndex].messages =[
+                    ...this.defaultSort(newMessages),
+                    ...this.chatRooms[existingChatIndex].messages
+                ];
+        }
     }
 
-    updateMessageReadStatus(messageId) {
-        this.chatRooms = this.chatRooms.map((chat) => {
-            const lastMessage = chat.messages[chat.messages.length - 1];
-            if (lastMessage?.id === messageId) {
-                return {
-                    ...chat,
-                    messages: chat.messages.map((msg, idx) =>
-                        idx === chat.messages.length - 1 ? { ...msg, isRead: true } : msg
-                    ),
-                };
-            }
-            return chat;
-        });
+    defaultSort(array) {
+        return array.sort((a, b) => a.id - b.id);
     }
 
     updateLastMessageOrAddChat({ message, companion }) {
@@ -153,15 +181,22 @@ class ChatRoomsController {
         } else {
             const newChatRoom = new ChatRoomDto(companion, [message], {chatId: message.chatId}, 0);
             this.chatRooms = [...this.chatRooms, newChatRoom];
-            this.initChatRoomSubscriptions(newChatRoom)
+            this.initChatRoomSubscriptions(UserController.getCurrentUser().id, newChatRoom)
         }
     }
 
-    findChatByUserDtoOrGetNew(userDto) {
-        return (
-            this.chatRooms.find((chat) => chat.companion.id === userDto.id) ||
-            new ChatRoomDto(userDto, [], null, 0)
-        );
+    async removeMessage(messageId, companionId) {
+        const existingChatIndex = this.chatRooms.findIndex((chat) => chat.companion.id === companionId);
+
+        if (existingChatIndex !== -1) {
+            this.chatRooms = this.chatRooms.map((chat) => {
+                return {...chat, messages: chat.messages.filter(msg => msg.id !== messageId)};
+            });
+        }
+    }
+
+    removeChatRoom(companionId) {
+        this.chatRooms = this.chatRooms.filter(chat => chat.companion.id !== companionId);
     }
 
     removeNotification(companionId) {
@@ -173,6 +208,14 @@ class ChatRoomsController {
     addNotification(companionId) {
         this.chatRooms = this.chatRooms.map(chat =>
             chat.companion.id === companionId ? {...chat, unreadCount: chat.unreadCount += 1} : chat
+        );
+    }
+
+    changeMessage(companionId, messageId, newMessageText) {
+        this.chatRooms = this.chatRooms.map(chatRoom =>
+            chatRoom.companion.id === companionId
+                ? {...chatRoom, messages: chatRoom.messages.map(message => message.id === messageId ? { ...message, text: newMessageText } : message)}
+                : chatRoom
         );
     }
 }

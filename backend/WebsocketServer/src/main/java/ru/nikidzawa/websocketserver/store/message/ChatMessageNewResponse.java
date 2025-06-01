@@ -1,4 +1,4 @@
-package ru.nikidzawa.websocketserver.store;
+package ru.nikidzawa.websocketserver.store.message;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ChatMessage {
+public class ChatMessageNewResponse {
     String id;
     String createdAt;
     String senderId;

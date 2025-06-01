@@ -1,12 +1,10 @@
 export default class TypingResponse {
-    constructor(userId, isTyping) {
-        this.userId = Number.parseInt(userId);
+    constructor(isTyping) {
         this.isTyping = isTyping;
     }
 
     static fromJSON(data) {
         return new TypingResponse (
-            data.userId,
             data.isTyping,
         )
     }

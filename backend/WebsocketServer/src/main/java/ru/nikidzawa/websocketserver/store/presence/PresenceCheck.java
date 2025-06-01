@@ -1,4 +1,4 @@
-package ru.nikidzawa.websocketserver.store;
+package ru.nikidzawa.websocketserver.store.presence;
 
 /**
  * @author Nikidzawa

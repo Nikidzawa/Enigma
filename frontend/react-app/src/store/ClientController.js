@@ -1,9 +1,10 @@
 import {makeAutoObservable} from "mobx";
 import {Client} from "@stomp/stompjs";
-import TypingResponse from "../network/response/TypingResponse";
-import MessageReadResponse from "../network/response/MessageReadResponse";
 import UserController from "./UserController";
 import PresenceCheckResponse from "../network/response/PresenceCheckResponse";
+import TypingRequest from "../network/request/TypingRequest";
+import MessageDeleteRequest from "../network/request/MessageDeleteRequest";
+import MessageReadRequest from "../network/request/MessageReadRequest";
 
 class ClientController {
 
@@ -40,6 +41,14 @@ class ClientController {
         }
     }
 
+    getTypingSubscription(currentUserId, companionId) {
+        return `/client/${currentUserId}/queue/chat/private/${companionId}/typing`;
+    }
+
+    getDeleteMessageSubscription(currentUserId, companionId) {
+        return `/client/${currentUserId}/queue/chat/private/${companionId}/typing`
+    }
+
     async sendMessage(message) {
         if (this.client.connected) {
             this.client.publish({
@@ -49,6 +58,13 @@ class ClientController {
         }
     }
 
+    async deleteMessage(messageId, companionId) {
+        this.client.publish({
+            destination: '/server/message/delete',
+            body: JSON.stringify(new MessageDeleteRequest(companionId, UserController.getCurrentUser().id, messageId))
+        })
+    }
+
     async updateUserProfile(userId) {
         this.client.publish({
             destination: '/server/profile/changed',
@@ -56,17 +72,17 @@ class ClientController {
         })
     }
 
-    async typing() {
+    async privateChatTyping(companionId) {
         this.client.publish({
-            destination: '/server/chat/typing',
-            body: JSON.stringify(new TypingResponse(UserController.getCurrentUser().id, true))
+            destination: '/server/chat/private/typing',
+            body: JSON.stringify(new TypingRequest(UserController.getCurrentUser().id, companionId, true))
         })
     }
 
-    async read(messageId) {
+    async read(companionId, messageId) {
         this.client.publish({
             destination: '/server/message/read',
-            body: JSON.stringify(new MessageReadResponse(UserController.getCurrentUser().id, messageId))
+            body: JSON.stringify(new MessageReadRequest(companionId, UserController.getCurrentUser().id, messageId))
         })
     }
 

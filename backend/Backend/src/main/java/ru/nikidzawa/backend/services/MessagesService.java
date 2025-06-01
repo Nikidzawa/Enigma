@@ -7,12 +7,9 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import ru.nikidzawa.backend.exceptions.NotFoundException;
 import ru.nikidzawa.backend.store.entity.MessageEntity;
-import ru.nikidzawa.backend.store.entity.PrivateChatDeletedMessagesEntity;
 import ru.nikidzawa.backend.store.repository.MessageEntityRepository;
-import ru.nikidzawa.backend.store.repository.PrivateChatDeletedMessagesRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -22,16 +19,12 @@ public class MessagesService {
 
     MessageEntityRepository messageRepository;
 
-    PrivateChatDeletedMessagesRepository deletedMessagesRepository;
-
     public List<MessageEntity> getByChatIdAndLastMessageId (Long chatId, Long lastMessageId) {
-        List<MessageEntity> messageEntities;
-        if (lastMessageId == 0) {
-            messageEntities = messageRepository.getByChatId(chatId);
-        } else {
-            messageEntities = messageRepository.getByChatIdAndLastMessageId(chatId, lastMessageId);
-        }
-        return messageEntities;
+        return messageRepository.getByChatIdAndLastMessageId(chatId, lastMessageId);
+    }
+
+    public List<MessageEntity> getByChatId (Long chatId) {
+        return messageRepository.getByChatId(chatId);
     }
 
     public MessageEntity save(MessageEntity messageEntity) {
@@ -45,21 +38,14 @@ public class MessagesService {
         messageRepository.saveAndFlush(message);
     }
 
-    public boolean deleteFromPrivateChat(Long messageId, Long userId) {
-        Optional<PrivateChatDeletedMessagesEntity> deletedMessageEntity = deletedMessagesRepository.findById(messageId);
-        if (deletedMessageEntity.isPresent()) {
-            deletedMessagesRepository.deleteById(messageId);
-            messageRepository.deleteById(messageId);
-        } else {
-            deletedMessagesRepository.saveAndFlush(PrivateChatDeletedMessagesEntity.builder()
-                    .messageId(messageId)
-                    .userId(userId)
-                    .build());
-        }
-        return true;
+    public void edit (Long messageId, String text) {
+        MessageEntity message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("Cообщение не найдено"));
+        message.setText(text);
     }
 
-    public void deleteMessage (Long messageId) {
+    public boolean delete (Long messageId) {
         messageRepository.deleteById(messageId);
+        return true;
     }
 }

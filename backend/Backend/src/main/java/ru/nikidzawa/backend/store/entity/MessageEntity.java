@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "messages")
 @Table(indexes = {
+        @Index(name = "idx_message_id", columnList = "id"),
         @Index(name = "idx_message_sender", columnList = "sender_id"),
         @Index(name = "idx_message_chat", columnList = "chat_id")
 })
