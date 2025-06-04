@@ -12,7 +12,7 @@ import ClientController from "../../../../../../store/ClientController";
 import DateField from "./fields/DateField";
 import TextField from "./fields/TextField";
 import ModalController from "../../../../../../store/ModalController";
-import PresenceResponse from "../../../../../../network/response/PresenceResponse";
+import PresenceResponse from "../../../../../../network/chat/user/PresenceResponse";
 import OnlineStatusComponent from "../../../../components/onlineStatus/OnlineStatusComponent";
 import PenImage from "../../../../../../img/pen.png"
 import BookmarkImage from "../../../../../../img/bookmark.png"

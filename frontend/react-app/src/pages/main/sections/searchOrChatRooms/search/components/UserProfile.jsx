@@ -2,7 +2,7 @@ import styled from "styled-components";
 import {useEffect, useState} from "react";
 import OtherProfile from "../../../../components/OtherProfile";
 import ClientController from "../../../../../../store/ClientController";
-import PresenceResponse from "../../../../../../network/response/PresenceResponse";
+import PresenceResponse from "../../../../../../network/chat/user/PresenceResponse";
 
 const MainContainer = styled.div`
     :hover {

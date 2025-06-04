@@ -49,6 +49,7 @@ class MessageOptionsModalController {
     }
 
     stopEdit() {
+        this.isOpen = false;
         this.isEditMode = false;
         this.selectedMessageEntity = new MessageDto();
         this.selectedMessageCoordinates = {x: 0, y: 0};

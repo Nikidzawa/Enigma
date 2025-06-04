@@ -9,6 +9,7 @@ import ActionMessageComponent from "./ActionMessageComponent";
 import {observer} from "mobx-react-lite";
 import MessagesApi from "../../../../../api/internal/controllers/MessagesApi";
 import ActiveChatInputController from "../../../../../store/ActiveChatInputController";
+import MessageDto from "../../../../../api/internal/dto/MessageDto";
 
 const InputContainer = styled.div`
     height: 50px;
@@ -63,7 +64,15 @@ export default observer(function ActiveChatInput({sendMessage}) {
     async function handleEditMessage() {
         const trimmedText = text.trim();
         if (trimmedText) {
-            ChatRoomsController.changeMessage(activeChat.companion.id, selectedMessage.id, trimmedText);
+            MessagesApi.edit(selectedMessage.id, trimmedText).then(response => {
+                if (response.status === 200) {
+                    const updatedMessage = MessageDto.fromJSON(response.data);
+                    ChatRoomsController.editMessage(activeChat.companion.id, updatedMessage.id, updatedMessage.editedAt, updatedMessage.text);
+                    ClientController.editMessage(activeChat.companion.id, updatedMessage);
+                } else {
+                    console.error('Failed update message', response);
+                }
+            })
         } else {
             handleDeleteMessage();
         }
@@ -75,9 +84,11 @@ export default observer(function ActiveChatInput({sendMessage}) {
         const selectedMessageId = selectedMessage.id;
         const activeChatCompanionId = ChatRoomsController.getActiveChat().companion.id
         MessagesApi.del(selectedMessageId).then(response => {
-            if (response.data) {
+            if (response.status === 200) {
                 ClientController.deleteMessage(selectedMessageId, activeChatCompanionId);
                 ChatRoomsController.removeMessage(selectedMessageId, activeChatCompanionId);
+            } else {
+                console.error('Failed delete message', response);
             }
         });
     }
@@ -87,7 +98,7 @@ export default observer(function ActiveChatInput({sendMessage}) {
             <>
                 <ActionMessageComponent/>
                 <InputContainer>
-                    <Input value={text} onInput={onInput} placeholder={"Введите сообщение"}
+                    <Input value={text} onInput={e => ActiveChatInputController.setText(e.target.value)} placeholder={"Введите сообщение"}
                            onKeyDown={(e) => e.key === "Enter" && handleEditMessage()}/>
                     <SendButton onClick={handleEditMessage} src={AcceptImage}/>
                 </InputContainer>

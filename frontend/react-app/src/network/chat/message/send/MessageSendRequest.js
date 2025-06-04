@@ -1,4 +1,4 @@
-export default class MessageRequest {
+export default class MessageSendRequest {
     constructor(id, createdAt, senderId, receiverId, chatId, message) {
         this.id = Number.parseInt(id);
         this.createdAt = createdAt;
@@ -9,7 +9,7 @@ export default class MessageRequest {
     }
 
     static fromJSON(data) {
-        return new MessageRequest(
+        return new MessageSendRequest(
             data.id,
             data.createdAt,
             data.senderId,

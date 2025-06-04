@@ -15,6 +15,10 @@ export default class MessagesApi {
         return api.post(`/messages/save`, message);
     }
 
+    static async edit(messageId, text) {
+        return api.put(`/messages/edit/${messageId}?text=${text}`)
+    }
+
     static async read(messageId) {
         api.put(`/messages/read/${messageId}`);
     }

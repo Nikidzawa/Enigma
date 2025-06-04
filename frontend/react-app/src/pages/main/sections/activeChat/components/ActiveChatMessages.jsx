@@ -10,7 +10,7 @@ import ClientController from "../../../../../store/ClientController";
 import ChatRoomsController from "../../../../../store/ChatRoomsController";
 import SendImage from "../../../../../img/send.png";
 import AcceptImage from "../../../../../img/accept.png";
-import MessageRequest from "../../../../../network/request/MessageRequest";
+import MessageSendRequest from "../../../../../network/chat/message/send/MessageSendRequest";
 import ChatApi from "../../../../../api/internal/controllers/ChatApi";
 import {observer} from "mobx-react-lite";
 import PrivateChatDto from "../../../../../api/internal/dto/PrivateChatDto";
@@ -123,6 +123,11 @@ const ReadMark = styled.img`
     height: 8px;
 `
 
+const EditMark = styled.div`
+    font-size: 12px;
+    color: #cacaca;
+`
+
 const SystemMessage = styled.div`
     max-width: 500px;
     min-width: 80px;
@@ -138,8 +143,6 @@ const SystemMessage = styled.div`
 
 export default observer(function ActiveChatMessages () {
     const activeChat = ChatRoomsController.getActiveChat();
-
-    const [isEditMode, setEditMode] = useState(false);
 
     const [readyMessages, setReadyMessages] = useState(false);
     const [isLoadMessages, setLoadMessages] = useState(false);
@@ -296,7 +299,7 @@ export default observer(function ActiveChatMessages () {
                 const savedMessage = MessageDto.fromJSON(response.data);
 
                 ClientController.sendMessage(
-                    new MessageRequest(
+                    new MessageSendRequest(
                         savedMessage.id,
                         savedMessage.sentAt,
                         UserController.getCurrentUser().id,
@@ -344,9 +347,8 @@ export default observer(function ActiveChatMessages () {
                                                onMouseUp={e => openMessageOptions(e, message)}>
                                         <MyMessageText>{message.text}</MyMessageText>
                                         <ButtonSection>
-                                            {
-                                                <ReadMark src={message.isRead ? WhiteCheckMarkImg : BlackCheckMark}/>
-                                            }
+                                            <EditMark>{message.isEdited && 'изменено'}</EditMark>
+                                            <ReadMark src={message.isRead ? WhiteCheckMarkImg : BlackCheckMark}/>
                                             <MyMessageSendDate>{DateParser.parseToHourAndMinute(message.sentAt)}</MyMessageSendDate>
                                         </ButtonSection>
                                     </MyMessage>
@@ -355,7 +357,7 @@ export default observer(function ActiveChatMessages () {
                                                   onMouseUp={e => openMessageOptions(e, message)}
                                                   ref={el => messageRefs.current[message.id] = el}>
                                         <OtherMessageText>{message.text}</OtherMessageText>
-                                        <OtherMessageSendDate>{DateParser.parseToHourAndMinute(message.sentAt)}</OtherMessageSendDate>
+                                        <OtherMessageSendDate>{DateParser.parseToHourAndMinute(message.sentAt)} {message.isEdited && 'изменено'}</OtherMessageSendDate>
                                     </OtherMessage>
                                 )}
                             </>

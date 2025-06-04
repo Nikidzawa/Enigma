@@ -2,14 +2,17 @@ import styled from "styled-components";
 import {useEffect, useRef, useState} from "react";
 import ActiveChatMessages from "./ActiveChatMessages";
 import ClientController from "../../../../../store/ClientController";
-import PresenceResponse from "../../../../../network/response/PresenceResponse";
-import TypingResponse from "../../../../../network/response/TypingResponse";
+import PresenceResponse from "../../../../../network/chat/user/PresenceResponse";
+import TypingResponse from "../../../../../network/chat/typing/TypingResponse";
 import OnlineStatusComponent from "../../../components/onlineStatus/OnlineStatusComponent";
 import OtherProfile from "../../../components/OtherProfile";
 import ModalController from "../../../../../store/ModalController";
 import {observer} from "mobx-react-lite";
 import userController from "../../../../../store/UserController";
 import ChatRoomsController from "../../../../../store/ChatRoomsController";
+import MessageOptionsModal from "./MessageOptionsModal";
+import MessageOptionsModalController from "../../../../../store/MessageOptionsModalController";
+import ActiveChatInputController from "../../../../../store/ActiveChatInputController";
 
 const MainContainer = styled.div`
     display: flex;
@@ -25,7 +28,7 @@ const UserData = styled.div`
     gap: 5px;
     border-bottom: 1px solid #707070;
     justify-content: center;
-    padding: 5px;
+    padding: 5px 10px;
 `
 
 const Name = styled.div`
@@ -46,6 +49,9 @@ export default observer(function ActiveChat () {
     const [isTyping, setTyping] = useState(false);
 
     useEffect(() => {
+        MessageOptionsModalController.stopEdit();
+        ActiveChatInputController.setText('');
+
         setLastOnlineDate(activeChat.companion.lastLogoutDate);
 
         if (stompClient && stompClient.connected) {
@@ -82,11 +88,7 @@ export default observer(function ActiveChat () {
                 presenceSubscription.unsubscribe();
             };
         }
-    }, [stompClient, activeChat.companion.id]);
-
-    useEffect(() => {
-        ModalController.setVisible(profileVisible)
-    }, [profileVisible]);
+    }, [stompClient]);
 
     return (isOnline != null) && (
         <>

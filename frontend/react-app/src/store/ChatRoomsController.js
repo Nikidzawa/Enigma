@@ -1,12 +1,14 @@
 import {makeAutoObservable, runInAction} from "mobx";
 import UserApi from "../api/internal/controllers/UserApi";
-import MessageReadResponse from "../network/response/MessageReadResponse";
+import MessageReadResponse from "../network/chat/message/read/MessageReadResponse";
 import MessageDto from "../api/internal/dto/MessageDto";
 import ChatRoomDto from "../api/internal/dto/ChatRoomDto";
 import IndividualDtoShort from "../api/internal/dto/IndividualDtoShort";
-import PresenceResponse from "../network/response/PresenceResponse";
+import PresenceResponse from "../network/chat/user/PresenceResponse";
 import UserController from "./UserController";
-import MessageDeleteResponse from "../network/response/MessageDeleteResponse";
+import MessageDeleteResponse from "../network/chat/message/delete/MessageDeleteResponse";
+import {StorableRequest as EditResponse} from "workbox-background-sync";
+import MessageEditResponse from "../network/chat/message/edit/MessageEditResponse";
 
 class ChatRoomsController {
     chatRooms = [];
@@ -66,6 +68,13 @@ class ChatRoomsController {
             this.handleMessageReadStatus(messageReadResponse.messageId, chatRoom.companion.id);
         });
         this.subscriptions.set(`read-status-${companionId}`, readStatusSubscription.unsubscribe);
+
+        // Подписка на обновление сообщений
+        const editMessageSubscription = this.stompClient.subscribe(`/client/${userId}/queue/chat/private/${companionId}/edit`, (message) => {
+            const updatedMessage = MessageEditResponse.fromRequest(JSON.parse(message.body));
+            this.editMessage(companionId, updatedMessage.messageId, updatedMessage.editedAt, updatedMessage.text)
+        });
+        this.subscriptions.set(`edit-message-${companionId}`, editMessageSubscription.unsubscribe);
 
         // Подписка на удаление сообщения
         const deleteMessageSubscription = this.stompClient.subscribe(`/client/${userId}/queue/chat/private/${companionId}/delete`, (message) => {
@@ -211,10 +220,11 @@ class ChatRoomsController {
         );
     }
 
-    changeMessage(companionId, messageId, newMessageText) {
+    // Либо MessageDto, либо MessageEditResponse
+    editMessage(companionId, messageId, editedAt, text) {
         this.chatRooms = this.chatRooms.map(chatRoom =>
             chatRoom.companion.id === companionId
-                ? {...chatRoom, messages: chatRoom.messages.map(message => message.id === messageId ? { ...message, text: newMessageText } : message)}
+                ? {...chatRoom, messages: chatRoom.messages.map(message => message.id === messageId ? { ...message, text: text, isEdited: true, editedAt: editedAt } : message)}
                 : chatRoom
         );
     }
