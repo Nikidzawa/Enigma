@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import EditImg from "../../../../../img/pencil.png";
 import DeleteImg from "../../../../../img/delete.png"
+import ReplyImg from "../../../../../img/reply.png"
 import WhiteCheckMarkImg from "../../../../../img/two-ticks.png";
 import BlackCheckMark from "../../../../../img/two-ticks-black.png";
 import MessageOptionsModalController from "../../../../../store/MessageOptionsModalController";
@@ -9,6 +10,7 @@ import MessagesApi from "../../../../../api/internal/controllers/MessagesApi";
 import ClientController from "../../../../../store/ClientController";
 import ChatRoomsController from "../../../../../store/ChatRoomsController";
 import ActiveChatInputController from "../../../../../store/ActiveChatInputController";
+import UserController from "../../../../../store/UserController";
 
 
 const Background = styled.div`
@@ -100,22 +102,38 @@ export default observer(function MessageOptionsModal () {
         ActiveChatInputController.setText(selectedMessageEntity.text)
     }
 
+    const isMyMessage = () => selectedMessageEntity.senderId === UserController.getCurrentUser().id;
+
     return (
         <Background isVisible={MessageOptionsModalController.getIsOpen()} onMouseUp={close}>
             <MainContainer
-                posX={selectedMessageCoordinates.x}
+                posX={isMyMessage() ? selectedMessageCoordinates.x - 190 : selectedMessageCoordinates.x}
                 posY={selectedMessageCoordinates.y}
                 onMouseUp={close}>
-                <Buttons>
-                    <Button onClick={handleEditMessage}>
-                        <ButtonImage src={EditImg}/>
-                        <ButtonName>Изменить</ButtonName>
-                    </Button>
-                    <Button onClick={handleDeleteMessage}>
-                        <ButtonImage src={DeleteImg}/>
-                        <ButtonName>Удалить</ButtonName>
-                    </Button>
-                </Buttons>
+                    {
+                        isMyMessage() ? (
+                            <Buttons>
+                                <Button>
+                                    <ButtonImage src={ReplyImg}/>
+                                    <ButtonName>Ответить</ButtonName>
+                                </Button>
+                                <Button onClick={handleEditMessage}>
+                                    <ButtonImage src={EditImg}/>
+                                    <ButtonName>Изменить</ButtonName>
+                                </Button>
+                                <Button onClick={handleDeleteMessage}>
+                                    <ButtonImage src={DeleteImg}/>
+                                    <ButtonName>Удалить</ButtonName>
+                                </Button>
+                            </Buttons>
+                        ) :
+                            <Buttons>
+                                <Button>
+                                    <ButtonImage src={ReplyImg}/>
+                                    <ButtonName>Ответить</ButtonName>
+                                </Button>
+                            </Buttons>
+                    }
                 <ReadData>
                     {selectedMessageEntity &&
                         (

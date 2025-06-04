@@ -1,10 +1,11 @@
 import {makeAutoObservable} from "mobx";
 import {Client} from "@stomp/stompjs";
 import UserController from "./UserController";
-import PresenceCheckResponse from "../network/response/PresenceCheckResponse";
-import TypingRequest from "../network/request/TypingRequest";
-import MessageDeleteRequest from "../network/request/MessageDeleteRequest";
-import MessageReadRequest from "../network/request/MessageReadRequest";
+import PresenceCheckResponse from "../network/chat/user/PresenceCheckResponse";
+import TypingRequest from "../network/chat/typing/TypingRequest";
+import MessageDeleteRequest from "../network/chat/message/delete/MessageDeleteRequest";
+import MessageReadRequest from "../network/chat/message/read/MessageReadRequest";
+import MessageEditRequest from "../network/chat/message/edit/MessageEditRequest";
 
 class ClientController {
 
@@ -56,6 +57,13 @@ class ClientController {
                 body: JSON.stringify(message)
             });
         }
+    }
+
+    async editMessage(companionId, updatedMessage) {
+        this.client.publish({
+            destination: '/server/message/edit',
+            body: JSON.stringify(new MessageEditRequest(companionId, UserController.getCurrentUser().id, updatedMessage.id, updatedMessage.editedAt, updatedMessage.text))
+        })
     }
 
     async deleteMessage(messageId, companionId) {

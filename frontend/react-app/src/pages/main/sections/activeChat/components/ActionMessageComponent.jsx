@@ -3,10 +3,11 @@ import EditActionImage from "../../../../../img/pencil.png";
 import CloseImage from "../../../../../img/close2.png";
 import MessageOptionsModalController from "../../../../../store/MessageOptionsModalController";
 import {observer} from "mobx-react-lite";
+import ActiveChatInputController from "../../../../../store/ActiveChatInputController";
 
 const Container = styled.div`
     background: #1b1b1b;
-    padding: 5px;
+    padding: 7px;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
@@ -14,6 +15,9 @@ const Container = styled.div`
 `;
 
 const TextContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     min-width: 0;
     overflow: hidden;
 `;
@@ -35,8 +39,8 @@ const MessageText = styled.div`
 `;
 
 const ActionIcon = styled.img`
-    width: 22px;
-    height: 22px;
+    width: 23px;
+    height: 23px;
     flex-shrink: 0;
 `;
 
@@ -48,14 +52,20 @@ const CloseButton = styled.img`
 `;
 
 export default observer(function ActionMessageComponent() {
+
+    function handleStopEdit() {
+        MessageOptionsModalController.setIsEditMode(false)
+        ActiveChatInputController.setText('');
+    }
+
     return (
         <Container>
             <ActionIcon src={EditActionImage} alt="ActionIcon"/>
             <TextContainer>
-                <ActionName>Редактировать</ActionName>
+                <ActionName>Редактирование</ActionName>
                 <MessageText>{MessageOptionsModalController.getSelectedMessageEntity().text}</MessageText>
             </TextContainer>
-            <CloseButton src={CloseImage} alt="Close" onClick={() => MessageOptionsModalController.setIsEditMode(false)}/>
+            <CloseButton src={CloseImage} alt="Close" onClick={handleStopEdit}/>
         </Container>
     );
 })
