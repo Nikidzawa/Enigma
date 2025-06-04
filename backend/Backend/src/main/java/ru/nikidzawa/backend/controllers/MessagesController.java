@@ -62,8 +62,8 @@ public class MessagesController {
     }
 
     @PutMapping(EDIT_MESSAGE)
-    public void edit(@PathVariable Long messageId, @RequestParam String text) {
-        service.edit(messageId, text);
+    public MessageDto edit(@PathVariable Long messageId, @RequestParam String text) {
+        return factory.convert(service.edit(messageId, text));
     }
 
     @DeleteMapping(DELETE_MESSAGE)

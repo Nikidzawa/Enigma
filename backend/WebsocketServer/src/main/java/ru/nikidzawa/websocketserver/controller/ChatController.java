@@ -23,6 +23,7 @@ public class ChatController {
 
     private static final String sendMessageDestination = "/queue/messages";
     private static final String typingDestination = "/queue/chat/private/%s/typing";
+    private static final String editMessageDestination = "/queue/chat/private/%s/edit";
     private static final String deleteMessageDestination = "/queue/chat/private/%s/delete";
     private static final String readMessageDestination = "/queue/chat/private/%s/read";
 
@@ -37,8 +38,24 @@ public class ChatController {
     }
 
     /**
+     * @Subscription: /client/{id подписчика}/queue/chat/private/{id собеседника}/edit
+     * @Description: Изменение сообщения
+     */
+    @MessageMapping("/message/edit")
+    public void editMessage(@Payload ChatMessageEditRequest chatMessageEditRequest) {
+        messagingTemplate.convertAndSendToUser(
+                chatMessageEditRequest.getSubscriberId(),
+                String.format(editMessageDestination, chatMessageEditRequest.getChatId()),
+                new ChatMessageEditResponse(chatMessageEditRequest.getMessageId(),
+                                            chatMessageEditRequest.getEditedAt(),
+                                            chatMessageEditRequest.getText()
+                )
+        );
+    }
+
+    /**
      * @Subscription: /client/{id подписчика}/queue/chat/private/{id собеседника}/read
-     * @Description: Статус "Прочитано" у сообщений.
+     * @Description: Статус "Прочитано" у сообщений
      */
     @MessageMapping("/message/read")
     public void readMessage(@Payload ChatMessageReadRequest chatMessageReadRequest) {

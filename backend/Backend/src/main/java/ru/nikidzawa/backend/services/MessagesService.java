@@ -9,6 +9,7 @@ import ru.nikidzawa.backend.exceptions.NotFoundException;
 import ru.nikidzawa.backend.store.entity.MessageEntity;
 import ru.nikidzawa.backend.store.repository.MessageEntityRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -38,10 +39,13 @@ public class MessagesService {
         messageRepository.saveAndFlush(message);
     }
 
-    public void edit (Long messageId, String text) {
+    public MessageEntity edit (Long messageId, String text) {
         MessageEntity message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new NotFoundException("Cообщение не найдено"));
         message.setText(text);
+        message.setIsEdited(true);
+        message.setEditedAt(LocalDateTime.now());
+        return messageRepository.saveAndFlush(message);
     }
 
     public boolean delete (Long messageId) {
